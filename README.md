@@ -1,6 +1,6 @@
 # Intelligent-DC-Fault-Discrimination-for-800VDC-AI-Data-Center-Power-Distribution
-Physics-based digital twin and machine learning pipeline for intelligent DC fault discrimination in 800VDC AI data center. Built for Delta Cup 2026
-**Delta Cup 2026 (Automation and Energy Track)**
+Physics-based digital twin and machine learning pipeline for intelligent DC fault discrimination in 800VDC AI data center.
+**Built for Delta Cup 2026 (Automation and Energy Track)**
 
 This repository contains the physics-based digital twin and machine-learning methodology for solving the "nuisance trip" dilemma in 800 VDC AI data center power distribution. 
 
