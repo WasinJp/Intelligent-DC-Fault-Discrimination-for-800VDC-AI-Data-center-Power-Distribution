@@ -1,6 +1,6 @@
 # MODEL.md — 800 VDC Distribution Segment Simulation Model
 
-**Version:** 0.1.1
+**Version:** 0.2
 **Status:** Single source of truth for the physics model. All simulator code, dataset generation, and proposal claims about the model MUST match this document. Changes require a version bump and an entry in the revision log.
 **Project:** Intelligent DC Fault Discrimination for 800 VDC AI Data Center Power Distribution — Delta Cup 2026
 
@@ -14,9 +14,9 @@ This document specifies the circuit-level model of a single 800 VDC distribution
 2. **Generate the labeled event dataset** used to train and validate the discrimination classifier.
 3. **Study protection coordination** between the fast analog trip layer and the intelligent discrimination layer.
 
-**In scope (v0.1):** one source converter, one busbar run, one lumped bus node, one aggregated constant-power load bank, one switchable fault branch, monopolar 800 V topology.
+**In scope (v0.2):** one source converter, one busbar run, one lumped bus node, one aggregated constant-power load bank, one switchable fault branch, one series-arc element (busbar-joint or load-path placement), monopolar 800 V topology, full §5 event taxonomy with composite events, §7 sensor synthesis, §9 gates 1–3.
 
-**Out of scope (v0.1, planned later):** bipolar ±400 V variant (v0.2), multi-segment tree with distributed sensing nodes (v0.3), Mayr dynamic arc conductance (v0.2), SSCB device thermal model, grounding/insulation-fault modeling, EMI/common-mode effects.
+**Out of scope (v0.2, planned later):** bipolar ±400 V variant, multi-segment tree with distributed per-rack sensing nodes (v0.3 — now motivated by the gate-3 results, see RESULTS.md), Mayr dynamic arc conductance, source-shelf transient-overload timer (OPEN-1), SSCB device thermal model, grounding/insulation-fault modeling, EMI/common-mode effects, benign train periods above 200 ms (dataset limit, §5 note).
 
 **Design rule carried over from the arm project:** the physics layer is kept pristine and deterministic given a seed; all sensor imperfection lives in a separate synthesis layer (§7). No exceptions.
 
@@ -79,7 +79,9 @@ Rationale: the converter regulates toward a droop-adjusted setpoint but with fin
 
 ### 4.2 Busbar
 
-    L_line · di_L/dt = v_c − R_line · i_L − v_bus
+    L_line · di_L/dt = v_c − R_line · i_L − V_arc(t)·[arc in busbar] − v_bus
+
+**v0.2:** the source shelf is unidirectional — i_L is clamped ≥ 0 (**[OPEN-7]**: explicit output-diode model). Without the clamp an arc striking in the busbar drove i_L to −300 A through the source.
 
 ### 4.3 Bus node (KCL, with capacitor ESR)
 
@@ -119,9 +121,9 @@ Initial fault front (arc absent, i_fault = 0⁺):
 
 ### 4.6 Series arc element (v0.1: static + stochastic)
 
-Arc inserted in the LOAD path (series arc) or fault branch (arcing fault):
+Arc inserted in the LOAD path (downstream of C_bus: i_load = P/(v_bus − V_arc)) or in the BUSBAR (upstream of C_bus, §4.2 KVL). Placement is a per-event parameter (`arc_place`) because the two are observed very differently at the feeder sensor (RESULTS.md, Figure 3b):
 
-    V_arc(t) = V_arc0 + eta(t)
+    V_arc(t) = ( V_arc0 + eta(t) ) · min(1, (t − t_arc)/t_arc_on)
 
     eta(t): band-limited noise, 1/f-weighted power spectral density over [f_arc_lo, f_arc_hi],
             RMS amplitude = m_arc · V_arc0, regenerated per event from seed.
@@ -144,7 +146,9 @@ Every generated event carries exactly one label and the full parameter draw that
 | `high_z` | Fault branch, 1 Ω < R_f ≤ 10 Ω | R_f, L_f, t_f |
 | `series_arc` | Arc element in load path | V_arc0, m_arc, band, onset ramp |
 
-Composite events (fault DURING workload transient) are REQUIRED in the dataset — they are the hardest cases and the honest test. Generation rule: for each fault class, ≥30% of samples have t_f drawn inside an active benign transient window.
+Composite events (fault DURING workload transient) are REQUIRED in the dataset — they are the hardest cases and the honest test. Generation rule: for each fault class, ≥30% of samples have t_f drawn inside an active benign transient window (v0.2 implementation: 35%).
+
+**v0.2 background rule:** every event sits on a background workload, drawn 50/50 as *flat* or *periodic train* (period 20–200 ms, duty 0.3–0.7, edge jitter ≤5%). `benign_train` is by definition the next scheduled rising edge; `benign_step` is by definition on a flat background. The 2 s upper period bound of v0.1 is deferred: the slow supervisory stream (§7) needs ≥2.5 periods of history and the coarse 2 µs physics step makes multi-second records expensive.
 
 ---
 
@@ -196,14 +200,14 @@ Applied to pristine physics output, in order:
 4. ADC quantization (mid-tread, per resolution)
 5. Optional channel latency skew between i and v channels (≤1 µs, **[OPEN-3]**: measure realistic skew for chosen front-end)
 
-Observables exposed to the classifier: i_L[n], v_bus[n] only. The classifier NEVER sees hidden states (v_c, i_fault) or ground truth.
+Two observable streams are produced, mirroring a protection relay: a **fast** capture buffer (2 MSa/s, from 0.2 ms before to 5 ms after the event anchor) and a **slow** supervisory log (50 kSa/s, whole record) from which workload cadence is learned. Observables exposed to the classifier: i_L[n], v_bus[n] on those two streams only, plus the segment's configuration ratings (I_rated, V_ref). The classifier NEVER sees hidden states (v_c, i_fault, i_load) or ground truth. Onset detection is done by the feature extractor on the observables, not taken from the truth anchor.
 
 ---
 
 ## 8. Numerical methods
 
 - Integrator: fixed-step RK4, Numba-JIT (same pattern as `simjoint`).
-- **Event-segmented time base:** quiescent segments at Δt = 1 µs; event windows at Δt = 50 ns from 10 ms before to 50 ms after each injected event (window edges configurable per event class).
+- **Event-segmented time base (implemented v0.2):** history and post-event segments at Δt = 2 µs (fastest healthy time constant tau_c ≥ 16 µs); event window at Δt = 50 ns from 0.2 ms before to 5 ms after the anchor. Fault branches are active for 5 ms (the SSCB clears by then; the discrimination window is ≤1 ms). Validation (c): the segmented schedule reproduces the uniform 50 ns solution on the stiffest fault-branch case (R_f = 10 Ω, tau_f = 0.2 µs) to 1e-13 RMS.
 - Stiffness check: fastest healthy time constant is the L_line–C_bus resonance, f_res = 1/(2π√(L_line·C_bus)) ≈ 712 Hz at baseline; fault-branch front requires the 50 ns step. Δt = 50 ns gives ≥40 steps per fault L_f/R_f time constant at baseline (τ_f = 400 µs for bolted; shortest relevant τ at high-R_f draws checked per draw).
 - Determinism: one master seed per event → all stochastic draws (parameters, arc noise, sensor noise) derived via seeded substreams. A dataset sample is fully reproducible from (MODEL.md version, seed).
 - Validation of integrator: closed-form checks — (a) RLC discharge of C_bus into R_f–L_f with source disconnected vs. analytic solution, ≤0.1% RMS error; (b) droop steady state v_bus = V_ref − (R_droop + R_line)·I vs. algebra, exact to solver tolerance.
@@ -212,7 +216,7 @@ Observables exposed to the classifier: i_L[n], v_bus[n] only. The classifier NEV
 
 ## 9. Experiment gates (ordered)
 
-1. **Sanity gate:** healthy-system stability for every parameter draw (Middlebrook check + no-event simulation shows bounded, settling response). Draws failing the check are logged and excluded (they represent mis-designed systems, not events).
+1. **Sanity gate:** healthy-system stability for every parameter draw. v0.2 implements the linearized source-R/L/C/CPL characteristic s² + (R/L − P/(CV²))s + (1/LC)(1 − RP/V²) = 0 with R = R_line + R_droop and requires damping ratio ζ ≥ 0.15 (a designed bus is not marginally damped; a ζ ≈ 0.09 draw rang ±500 A on a high-Z fault). Draws failing the check are logged and excluded (v0.2 dataset: 164 of 1564 draws, 10.5%).
 2. **Gray-zone study (first result, pre-classifier):** for each event class, compute threshold-detector performance (magnitude, di/dt, and dual-criterion AND) over the sweep. The gray zone = parameter region where no threshold setting achieves both false-trip < 0.1% on benign events and missed-trip < 1% on faults. Output: gray-zone maps per event class. Tests hypothesis H1.
 3. **Classifier study:** feature extraction + lightweight classifier on the event dataset; report false-trip rate, missed-detection rate, decision-latency distribution, robustness under held-out parameter regions (domain-shift protocol identical to the arm project's holdout methodology).
 
@@ -244,6 +248,8 @@ Classifier training MUST use `/waveforms` only. `/truth` is retained for debuggi
 | OPEN-4 | ±400 V bipolar variant equations (v0.2) | — | post-proposal |
 | OPEN-5 | Mayr arc upgrade decision after v0.1 classifier results | — | post-proposal |
 | OPEN-6 | Replace freewheel clamp (v_C, v_bus ≥ 0) with explicit diode branch | — | before dataset v1 |
+| OPEN-7 | Unidirectional source: replace i_L ≥ 0 clamp with explicit output-diode model | — | before 48 V testbed |
+| OPEN-8 | Statistical resolution: 600 benign events cannot measure a 0.1% false-trip rate (1 event = 0.17%). Dataset v1 needs ≥5 000 benign events to resolve the §9 target | — | before proposal claims |
 
 ## 12. Revision log
 
@@ -251,3 +257,4 @@ Classifier training MUST use `/waveforms` only. `/truth` is retained for debuggi
 |---|---|---|
 | 0.1 | 2026-08-13 | Initial draft: topology, state equations, event taxonomy, parameter table, numerical plan, dataset schema |
 | 0.1.1 | 2026-08-13 | First implementation feedback: added C_bus ESR (R_esr) and freewheel clamp (OPEN-6) after ideal fault loop rang v_bus to −446 V; documented I_lim hard-clamp behavior (capacitor-backed overload) under OPEN-1; RLC validation window restricted to pre-clamp interval |
+| 0.2 | 2026-09-07 | Stage 2. Segmented time base implemented (§8) with validation (c). Series-arc element with busbar/load-path placement (§4.2, §4.6). Unidirectional source clamp (OPEN-7). Sanity gate tightened to ζ ≥ 0.15 (§9). Full §5 taxonomy with background-workload rule and composite events. Sensor synthesis with fast/slow streams (§7). Dataset v0.2 (1 400 events, seed 20260907) and gates 2–3 run: see RESULTS.md. OPEN-8 added. Package restructured to `dcsim/`; all figures regenerated by `scripts/make_figures.py`. |
