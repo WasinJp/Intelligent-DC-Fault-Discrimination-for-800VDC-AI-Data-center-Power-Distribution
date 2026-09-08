@@ -11,7 +11,8 @@ from dcsim.events import BENIGN, FAULTS, build_schedule, _ramp, T_POST, FAULT_DU
 from dcsim.synth import synthesize
 from dcsim.features import CONV, PHYS, ALL
 from dcsim.studies import (threshold_study, classifier_study, operating_curve,
-                           latency_study, TRIP_CLASSES)
+                           latency_study, TRIP_CLASSES, GATED)   # v0.2.2
+MAIN = "+workload-aware"   # v0.2.2: single ungated model (gating tested and rejected, see studies.GATED)
 
 h5 = sys.argv[1] if len(sys.argv) > 1 else "data/events_v0.2.h5"
 csv = h5.replace(".h5", "_features.csv")
@@ -153,17 +154,19 @@ def fig_discriminator(df, ts, oc, cs):
     a.legend(frameon=False, fontsize=8)
     # (b) workload-aware: residual vs phase error on periodic backgrounds
     b = ax[1]
-    s = d[(d.background == "train") & d.resid_period.notna()]
+    s = d[(d.background == "train") & d.phase_err.notna()]   # v0.2.2
     for lab in BENIGN + TRIP_CLASSES:
         ss = s[s.label == lab]
         if len(ss) == 0:
             continue
-        b.scatter(ss.phase_err.clip(1e-3), ss.resid_period.clip(1e-3), s=14, alpha=0.65, color=COL[lab],
+        b.scatter(ss.phase_err.clip(1e-3), ss.di_max.clip(1e-3), s=14, alpha=0.65, color=COL[lab],   # v0.2.2
                   marker="o" if lab in BENIGN else "^", label=NAME[lab], edgecolor="none")
     b.set_xscale("log"); b.set_yscale("log")
-    b.set_xlabel("phase error vs. learned cadence  (fraction of period)")
-    b.set_ylabel("residual vs. predicted step  |Δi − Δi_pred| / I_rated")
-    b.set_title("(b) periodic backgrounds: scheduled steps land on time and on size", fontsize=10)
+    b.axvline(0.05, color=GREY, ls="--", lw=1)
+    b.text(0.055, 1.5e-3, "jitter\nceiling", color=GREY, fontsize=8)
+    b.set_xlabel("phase error vs. learned cadence  (fraction of period, folded to [0, 0.5])")
+    b.set_ylabel("current step magnitude  Δi / I_rated")
+    b.set_title("(b) periodic backgrounds: a scheduled step is on time whatever its size; a fault is not", fontsize=10)
     b.legend(frameon=False, fontsize=8, loc="lower right")
     # (c) operating curve
     c = ax[2]
@@ -172,7 +175,7 @@ def fig_discriminator(df, ts, oc, cs):
     c.scatter([0], [l1 * 100], color=RED, s=70, zorder=5, label="best conventional (Layer 1) at zero false trips")
     c.scatter([oc["false_trip"][np.argmin(np.abs(oc["missed"] - oc["miss_at_ft_target"]))] * 100],
               [oc["miss_at_ft_target"] * 100], color=PURPLE, s=70, zorder=5)
-    cv = cs["+workload-aware"]["cv"]
+    cv = cs[MAIN]["cv"]   # v0.2.2
     c.scatter([cv["false_trip"] * 100], [cv["missed"] * 100], color=PURPLE, marker="s", s=60, zorder=5,
               label="classifier default operating point")
     c.set_xlim(-0.3, 12); c.set_ylim(-1, 35)
@@ -192,7 +195,7 @@ def fig_discriminator(df, ts, oc, cs):
 # ------------------------------------------------------------------ fig 3: sensing architecture evidence
 def fig_sensing(df, cs, arcs):
     d = df[df.W_ms == 1.0].reset_index(drop=True)
-    pred = cs["+workload-aware"]["cv_pred"]
+    pred = cs[MAIN]["cv_pred"]   # v0.2.2
     hz = d[d.label == "high_z"].copy()
     hz["if_pu"] = (hz.V_ref / hz.R_f) / hz.I_rated          # v0.2.1 (B5)
     ph = pred[hz.index]
@@ -202,7 +205,15 @@ def fig_sensing(df, cs, arcs):
     for lo, hi in zip(bins[:-1], bins[1:]):
         m = ((hz.if_pu >= lo) & (hz.if_pu < hi)).values
         miss.append((ph[m] == "HOLD").mean() * 100 if m.any() else np.nan); ns.append(int(m.sum()))
-    fig, ax = plt.subplots(1, 2, figsize=(12, 4.6))
+    # v0.2.2: second driver -- bus capacitance. The capacitor feeds the first
+    # milliseconds of a small fault locally, so the feeder sees a slow ramp.
+    cq = pd.qcut(hz.C_bus, 3, labels=["low", "mid", "high"])
+    cmiss, cns, cmed = [], [], []
+    for q in ["low", "mid", "high"]:
+        m = (cq == q).values
+        cmiss.append((ph[m] == "HOLD").mean() * 100 if m.any() else np.nan)
+        cns.append(int(m.sum())); cmed.append(hz.C_bus[m].median() * 1e3)
+    fig, ax = plt.subplots(1, 3, figsize=(16, 4.6))
     a = ax[0]
     a.bar(labels_, miss, color=COL["high_z"])
     for i, (v, n) in enumerate(zip(miss, ns)):
@@ -212,7 +223,13 @@ def fig_sensing(df, cs, arcs):
     a.set_title("(a) Detectability scales with fault current / segment rating", fontsize=10)
     a.text(0.98, 0.9, "same 10 Ω fault: 6% of a 1 MW segment,\n32% of a 200 kW segment",
            transform=a.transAxes, ha="right", fontsize=9, color=GREY)
-    b = ax[1]
+    c = ax[1]
+    c.bar([f"{lbl}\n(~{m:.0f} mF)" for lbl, m in zip(["low", "mid", "high"], cmed)], cmiss, color=COL["high_z"])
+    for i, (v, n) in enumerate(zip(cmiss, cns)):
+        c.text(i, v + 1.5, f"n={n}", ha="center", fontsize=8, color=GREY)
+    c.set_xlabel("bus capacitance tercile"); c.set_ylabel("high-Z faults missed (%)"); c.set_ylim(0, 60)
+    c.set_title("(b) ... and with bus capacitance: C_bus feeds the fault front locally", fontsize=10)
+    b = ax[2]
     names = list(arcs.keys())
     vals = [arcs[k]["detected"] * 100 for k in names]
     b.bar(["busbar joint arc\n(upstream of C_bus)", "load-path arc\n(downstream of C_bus)"], vals,
@@ -220,8 +237,8 @@ def fig_sensing(df, cs, arcs):
     for i, v in enumerate(vals):
         b.text(i, v + 1.5, f"{v:.0f}%", ha="center", fontsize=9)
     b.set_ylabel("series arcs flagged ALERT (%)"); b.set_ylim(0, 110)
-    b.set_title("(b) The bus capacitor hides load-side arcs from the feeder sensor", fontsize=10)
-    fig.suptitle("Figure 3 — What feeder-level sensing can and cannot see: the case for a hybrid feeder + per-rack architecture", fontsize=11)
+    b.set_title("(c) The bus capacitor hides load-side arcs from the feeder sensor", fontsize=10)
+    fig.suptitle("Figure 3 — Where feeder-level sensing ends: fault current in p.u. and bus capacitance both push toward per-rack nodes", fontsize=11)
     fig.tight_layout(); fig.savefig(f"{FIG}/fig3_sensing_architecture.png", dpi=150); plt.close(fig)
 
 
