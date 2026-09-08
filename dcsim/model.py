@@ -262,3 +262,41 @@ def check_segmented_vs_uniform(p, tol=1e-3):
     err_i = np.sqrt(np.mean((out_u[1][m] - i_s) ** 2)) / (p["P_rated"] / p["V_ref"])
     err = max(err_v, err_i)
     return err, err < tol
+
+
+def check_history_tier(p, tol=1e-3):
+    """v0.3 validation (d): the DT_HIST history tier must reproduce the
+    all-coarse (2 us) solution on the slow-stream timescale. A two-tier
+    benign train (T1 = 0.3 s, EDP bursts) is run both ways at (i) the given
+    parameters with smoothed 3 ms ramps and (ii) the stiffest corner of the
+    §6 sweep (tau_c = 16 us, L = 1 uH, C = 1 mF, zeta ~ 0.2) with 0.5 ms
+    ramps; line current and bus voltage, low-passed at 2 kHz (the slow-stream
+    anti-alias), must agree to tol (normalised RMS). Returns the worse of the
+    two. At DT_HIST = 10 us: ~1e-4 baseline, ~3.5e-4 stiff corner; 20 us
+    passes the corner with no margin and 40 us fails it."""
+    from .events import build_schedule, two_tier_profile
+    from scipy import signal as _sig
+    stiff = dict(p)
+    stiff.update(tau_c=16e-6, L_line=1e-6, C_bus=1e-3, R_line=1e-3, R_esr=2e-3)
+    stiff["R_droop"] = 0.004 * stiff["V_ref"] / (stiff["P_rated"] / stiff["V_ref"])
+    worst = 0.0
+    for q, ramp1, dP1 in ((p, 3e-3, 0.4), (stiff, 0.5e-3, 0.6)):
+        T1, duty1 = 0.3, 0.5
+        t_pre = 2.5 * T1 + 0.1
+        edp = dict(T2=40e-3, duty2=0.5, dP2=0.15 * q["P_rated"], ramp2=ramp1, jit2=0.0, off2=0.03 * T1)
+        pv = param_vector(q)
+        outs = []
+        for use_hist in (False, True):
+            sched = build_schedule(t_pre, t_pre, 6e-3, fine_post=1e-3, use_hist=use_hist)
+            t = sched["t"]
+            P, _, _ = two_tier_profile(t, 0.3 * q["P_rated"], dP1 * q["P_rated"], T1, duty1, ramp1, 0.0,
+                                       t_pre, np.random.default_rng(11), edp, jit_k0=0.0)
+            tt, out = simulate(pv, sched["dt"], P, np.zeros(t.size), 10**9, 10**9)
+            outs.append((tt, out))
+        tu = np.arange(0.0, t_pre - 0.25, 20e-6)
+        sos = _sig.butter(4, 2e3, fs=1.0 / 20e-6, output="sos")
+        for ch, scale in ((1, q["P_rated"] / q["V_ref"]), (2, q["V_ref"])):
+            a = _sig.sosfiltfilt(sos, np.interp(tu, outs[0][0], outs[0][1][ch]))
+            b = _sig.sosfiltfilt(sos, np.interp(tu, outs[1][0], outs[1][1][ch]))
+            worst = max(worst, np.sqrt(np.mean((a - b) ** 2)) / scale)
+    return worst, worst < tol

@@ -5,19 +5,19 @@ additive sensor noise, ADC quantization. Two observable streams are produced,
 mirroring a protection relay's architecture:
 
   fast   2 MSa/s capture buffer over the fine window (event neighbourhood)
-  slow   50 kSa/s supervisory log over the whole record (workload history)
+  slow   5 kSa/s supervisory log over the whole record (workload history; v1)
 
 The classifier sees these two streams only — never hidden states or truth.
 """
 
 import numpy as np
 from scipy import signal
-from .events import DT_FINE, DT_COARSE
+from .events import DT_FINE, DT_COARSE, WORKLOAD_VERSION
 
 F_FAST = 2e6
-F_SLOW = 50e3
+F_SLOW = 5e3            # v1: 5 kSa/s supervisory log (was 50 kSa/s); 2 kHz anti-alias
 DECIM_FAST = int(round(1.0 / (F_FAST * DT_FINE)))     # 10
-SLOW_SRC_DT = 1.0 / (F_SLOW * 10)                      # 2 us grid feeding slow
+SLOW_SRC_DT = 1.0 / (F_SLOW * 10)                      # 20 us grid feeding slow
 
 
 def _aa_decimate(x, fs_in, decim, rng_state=None):
@@ -65,8 +65,13 @@ def synthesize(ev, t, out, seed):
     i_s = _aa_decimate(i_u, 1.0 / SLOW_SRC_DT, 10)
     v_s = _aa_decimate(v_u, 1.0 / SLOW_SRC_DT, 10)
     t_s = t_u[::10][: i_s.shape[0]]
-    i_s = _quantize(i_s + rng.standard_normal(i_s.shape[0]) * nf * fs_i, fs_i, bits)
-    v_s = _quantize(v_s + rng.standard_normal(v_s.shape[0]) * nf * fs_v, fs_v, bits)
+    # v1: noise_frac is the sensor rms at the fast-stream bandwidth. The slow
+    # stream is the same sensor averaged down, so its rms scales with
+    # sqrt(F_SLOW / F_FAST). (v0.2 added full rms at 50 kSa/s -- kept for
+    # exact reproduction of that dataset.)
+    nf_s = nf if WORKLOAD_VERSION == "v0.2" else nf * np.sqrt(F_SLOW / F_FAST)
+    i_s = _quantize(i_s + rng.standard_normal(i_s.shape[0]) * nf_s * fs_i, fs_i, bits)
+    v_s = _quantize(v_s + rng.standard_normal(v_s.shape[0]) * nf_s * fs_v, fs_v, bits)
 
     return dict(fast_t=t_f.astype(np.float64), fast_i=i_f.astype(np.float32),
                 fast_v=v_f.astype(np.float32),
