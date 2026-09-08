@@ -9,10 +9,10 @@ import time
 import h5py
 import numpy as np
 from .model import simulate, param_vector
-from .events import draw_event, LABELS
+from .events import draw_event, LABELS, WORKLOAD_VERSION
 from .synth import synthesize, F_FAST, F_SLOW, DECIM_FAST
 
-MODEL_VERSION = "0.2"
+MODEL_VERSION = "0.3"     # v1 workload (§5) + history time-base tier (§8); physics core unchanged
 
 
 def _git_hash():
@@ -49,6 +49,7 @@ def generate(path, master_seed=20260907, n_per_class=200, labels=LABELS, verbose
         g.attrs["generated"] = time.strftime("%Y-%m-%dT%H:%M:%S")
         g.attrs["f_fast"] = F_FAST
         g.attrs["f_slow"] = F_SLOW
+        g.attrs["workload_version"] = WORKLOAD_VERSION
         ge = h.create_group("events")
         idx = 0
         n_rej_total = 0
@@ -81,7 +82,9 @@ def generate(path, master_seed=20260907, n_per_class=200, labels=LABELS, verbose
                     pr.attrs[kk] = vv
                 for kk in ("period", "dP_bg", "t_ramp_bg", "P0", "dP", "t_ramp",
                            "R_f", "L_f", "V_arc0", "m_arc", "f_arc_hi", "t_arc_on",
-                           "arc_place"):
+                           "arc_place",
+                           "workload", "smoothed", "T1", "T2", "dP2", "ramp2",
+                           "sched_tier", "jit1", "duty1"):
                     if kk in ev:
                         pr.attrs["ev_" + kk] = ev[kk]
                 idx += 1
