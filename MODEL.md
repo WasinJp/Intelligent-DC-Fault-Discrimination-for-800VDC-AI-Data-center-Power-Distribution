@@ -1,6 +1,6 @@
 # MODEL.md — 800 VDC Distribution Segment Simulation Model
 
-**Version:** 0.2
+**Version:** 0.3
 **Status:** Single source of truth for the physics model. All simulator code, dataset generation, and proposal claims about the model MUST match this document. Changes require a version bump and an entry in the revision log.
 **Project:** Intelligent DC Fault Discrimination for 800 VDC AI Data Center Power Distribution — Delta Cup 2026
 
@@ -139,7 +139,7 @@ Every generated event carries exactly one label and the full parameter draw that
 | Label | Model | Key randomized parameters |
 |---|---|---|
 | `benign_step` | P(t) = P0 + ΔP·min(1, (t−t0)/t_ramp) | ΔP (±10–80% P_rated), t_ramp (0.5–10 ms) |
-| `benign_train` | Periodic step train, iteration cadence | period (20 ms–2 s), duty, shape jitter ≤5%, amplitude |
+| `benign_train` | Two-tier periodic step train (Workload v1) | regime, T₁, duty₁, ΔP₁, ramp₁, j₁; T₂, duty₂, ΔP₂, ramp₂, j₂ — see below |
 | `benign_idle_drop` | Fast drop to communication-idle floor | drop fraction (50–85%), t_ramp (1–5 ms) |
 | `bolted_pp` | Fault branch, R_f ≤ 20 mΩ | R_f, L_f, t_f (phase vs. workload) |
 | `resistive_pp` | Fault branch, 20 mΩ < R_f ≤ 1 Ω | R_f, L_f, t_f |
@@ -148,7 +148,17 @@ Every generated event carries exactly one label and the full parameter draw that
 
 Composite events (fault DURING workload transient) are REQUIRED in the dataset — they are the hardest cases and the honest test. Generation rule: for each fault class, ≥30% of samples have t_f drawn inside an active benign transient window (v0.2 implementation: 35%).
 
-**v0.2 background rule:** every event sits on a background workload, drawn 50/50 as *flat* or *periodic train* (period 20–200 ms, duty 0.3–0.7, edge jitter ≤5%). `benign_train` is by definition the next scheduled rising edge; `benign_step` is by definition on a flat background. The 2 s upper period bound of v0.1 is deferred: the slow supervisory stream (§7) needs ≥2.5 periods of history and the coarse 2 µs physics step makes multi-second records expensive.
+**Workload v1 (two-tier cadence).** Selected by `events.WORKLOAD_VERSION = "v1"`; `"v0.2"` reproduces dataset v0.2 exactly. Sources in EVIDENCE.md.
+
+*Regime* (50/50 per event): **unsmoothed** — steps of 0.30–0.80 p.u. with free ramps 0.5–10 ms (bulk-synchronous training without GPU power smoothing); **smoothed** — GPU power smoothing active (minimum power floor ≤ 90 % TDP, EDP 1.1×): steps 0.10–0.35 p.u. with programmed ramps 2–20 ms.
+
+*Tier 1 — iteration cadence.* Square wave, period T₁ log-uniform 0.3–3 s (the 0.2–3 Hz band of measured training traces; the 10 s tail is out of sweep for compute), duty 0.3–0.7. Rising edges on a phase-locked grid, each perturbed by U(−j, j)·T₁ with j ≤ 2 % (interval jitter, not drift). The event edge carries its own jitter.
+
+*Tier 2 — EDP-peak bursts.* Present with p = 0.6 on periodic backgrounds. Period T₂ log-uniform from 20 ms to min(200 ms, duty·T₁/3); duty 0.3–0.7; amplitude 0.05–0.25 p.u.; ramps 0.5–5 ms; jitter ≤ 2 % of T₂. Bursts exist only inside compute phases and are phase-locked to each phase's start (offset 2–10 % of T₁), i.e. bursts in different compute phases are not coherent modulo T₂.
+
+*Scheduled event.* `benign_train` is the next rising edge of tier 1, or of tier 2 when present (50/50); recorded as `sched_tier`. Other events on periodic backgrounds land at a random phase, ≥ 1.2 ramps from the nearest rising edge of either tier unless `composite` (35 %), in which case inside a ramp.
+
+*Background rule.* `benign_train` always periodic; `benign_step` always flat; all other labels 50/50.
 
 ---
 
@@ -180,6 +190,20 @@ All values are declared assumptions pending literature anchoring; each row cites
 | Sensor sample rate | f_s | 2 MSa/s | 1–10 MSa/s | arc-band Nyquist + margin |
 | ADC resolution | — | 14 bit | 12–16 bit | acquisition front-end study |
 | Sensor noise | — | 0.1% FS RMS | 0.05–0.5% | acquisition front-end study |
+| Workload regime | — | — | unsmoothed / smoothed, 50/50 | GPU power smoothing, Choukse et al. §IV-B |
+| Iteration period | T₁ | — | 0.3–3 s, log-uniform | measured 0.2–3 Hz training-trace band |
+| Iteration duty | duty₁ | — | 0.3–0.7 | — |
+| Iteration edge jitter | j₁ | — | 0–2 % of T₁ | working assumption **[OPEN-18]**; not published |
+| Iteration step amplitude | ΔP₁ | — | 0.30–0.80 p.u. (unsmoothed) / 0.10–0.35 (smoothed) | regime-dependent |
+| Iteration ramp | ramp₁ | — | 0.5–10 ms (unsmoothed) / 2–20 ms (smoothed) | regime-dependent |
+| EDP tier present | — | — | p = 0.6 | periodic backgrounds only |
+| EDP burst period | T₂ | — | 20 ms – min(200 ms, duty₁·T₁/3), log-uniform | EDP peaks at ~50 ms scale |
+| EDP burst amplitude | ΔP₂ | — | 0.05–0.25 p.u. | — |
+| EDP burst duty | duty₂ | — | 0.3–0.7 | — |
+| EDP burst ramp | ramp₂ | — | 0.5–5 ms | — |
+| EDP burst jitter | j₂ | — | 0–2 % of T₂ | per j₁ |
+
+Dropped from v0.2: single period 20–200 ms; per-edge jitter 0–5 %.
 
 ### 6.1 Derived sanity numbers (baseline draw)
 
@@ -200,7 +224,12 @@ Applied to pristine physics output, in order:
 4. ADC quantization (mid-tread, per resolution)
 5. Optional channel latency skew between i and v channels (≤1 µs, **[OPEN-3]**: measure realistic skew for chosen front-end)
 
-Two observable streams are produced, mirroring a protection relay: a **fast** capture buffer (2 MSa/s, from 0.2 ms before to 5 ms after the event anchor) and a **slow** supervisory log (50 kSa/s, whole record) from which workload cadence is learned. Observables exposed to the classifier: i_L[n], v_bus[n] on those two streams only, plus the segment's configuration ratings (I_rated, V_ref). The classifier NEVER sees hidden states (v_c, i_fault, i_load) or ground truth. Onset detection is done by the feature extractor on the observables, not taken from the truth anchor.
+Two observable streams are produced, mirroring a protection relay:
+
+- **Fast stream:** 2 MSa/s capture buffer, from 0.2 ms before to 5 ms after the event anchor.
+- **Slow stream:** 5 kSa/s supervisory log over the whole record (2 kHz anti-alias), ample for ms-scale edge timing across seconds of history. The slow stream is the same sensor averaged down: its additive noise rms is `noise_frac × FS × √(f_slow / f_fast)`. (v0.2 wrote the full sensor rms onto a 50 kSa/s stream, overstating slow-stream noise 6×; that behaviour is retained only under `WORKLOAD_VERSION = "v0.2"`.)
+
+Observables exposed to the classifier: i_L[n], v_bus[n] on those two streams only, plus the segment's configuration ratings (I_rated, V_ref). The classifier NEVER sees hidden states (v_c, i_fault, i_load) or ground truth. Onset detection is done by the feature extractor on the observables, not taken from the truth anchor. Cadence learning is done on the observable slow stream by the feature extractor (v0.3.1): tier 1 by an envelope search (the history smoothed over two periods of the shortest strong cadence, then the longest fundamental), tier 2 from averaged per-compute-phase autocorrelation, edges by a two-level model with onset walk-back, tier-2 phase referenced to the current compute phase only. Nothing in the extractor touches the generating schedule. Feature-extractor behaviour is versioned separately from the physics model (v0.3.1 as of 2026-09-08; see RESULTS.md v1). All feature filtering is **causal**: no feature at decision time t depends on samples after t.
 
 ---
 
@@ -208,6 +237,7 @@ Two observable streams are produced, mirroring a protection relay: a **fast** ca
 
 - Integrator: fixed-step RK4, Numba-JIT (same pattern as `simjoint`).
 - **Event-segmented time base (implemented v0.2):** history and post-event segments at Δt = 2 µs (fastest healthy time constant tau_c ≥ 16 µs); event window at Δt = 50 ns from 0.2 ms before to 5 ms after the anchor. Fault branches are active for 5 ms (the SSCB clears by then; the discrimination window is ≤1 ms). Validation (c): the segmented schedule reproduces the uniform 50 ns solution on the stiffest fault-branch case (R_f = 10 Ω, tau_f = 0.2 µs) to 1e-13 RMS.
+- **History tier (v0.3):** records longer than `HIST_MARGIN + FINE_PRE` = 200.2 ms before the anchor run the deep history at `DT_HIST = 10 µs`; the final 200 ms before the fine window stay at 2 µs. RK4 at 10 µs is stable for τ_c ≥ 16 µs (dt/τ = 0.6) and resolves the fastest healthy bus resonance (5 kHz) at 20 steps per period. A 7.6 s history costs ~0.75 M steps. Validation (d): compares the tiered schedule against an all-2 µs reference on a two-tier train at baseline parameters and at the stiffest §6 corner (τ_c 16 µs, L 1 µH, C 1 mF, ζ ≈ 0.2), after the 2 kHz slow-stream anti-alias: normalised RMS ≤ 3.5 × 10⁻⁴. 20 µs passes the corner with no margin; 40 µs fails. The tier does not touch the event window.
 - Stiffness check: fastest healthy time constant is the L_line–C_bus resonance, f_res = 1/(2π√(L_line·C_bus)) ≈ 712 Hz at baseline; fault-branch front requires the 50 ns step. Δt = 50 ns gives ≥40 steps per fault L_f/R_f time constant at baseline (τ_f = 400 µs for bolted; shortest relevant τ at high-R_f draws checked per draw).
 - Determinism: one master seed per event → all stochastic draws (parameters, arc noise, sensor noise) derived via seeded substreams. A dataset sample is fully reproducible from (MODEL.md version, seed).
 - Validation of integrator: closed-form checks — (a) RLC discharge of C_bus into R_f–L_f with source disconnected vs. analytic solution, ≤0.1% RMS error; (b) droop steady state v_bus = V_ref − (R_droop + R_line)·I vs. algebra, exact to solver tolerance.
@@ -217,8 +247,10 @@ Two observable streams are produced, mirroring a protection relay: a **fast** ca
 ## 9. Experiment gates (ordered)
 
 1. **Sanity gate:** healthy-system stability for every parameter draw. v0.2 implements the linearized source-R/L/C/CPL characteristic s² + (R/L − P/(CV²))s + (1/LC)(1 − RP/V²) = 0 with R = R_line + R_droop and requires damping ratio ζ ≥ 0.15 (a designed bus is not marginally damped; a ζ ≈ 0.09 draw rang ±500 A on a high-Z fault). Draws failing the check are logged and excluded (v0.2 dataset: 164 of 1564 draws, 10.5%).
+   - **(d) `check_history_tier`** (v0.3): must pass before dataset generation. Four checks total.
 2. **Gray-zone study (first result, pre-classifier):** for each event class, compute threshold-detector performance (magnitude, di/dt, and dual-criterion AND) over the sweep. The gray zone = parameter region where no threshold setting achieves both false-trip < 0.1% on benign events and missed-trip < 1% on faults. Output: gray-zone maps per event class. Tests hypothesis H1.
 3. **Classifier study:** feature extraction + lightweight classifier on the event dataset; report false-trip rate, missed-detection rate, decision-latency distribution, robustness under held-out parameter regions (domain-shift protocol identical to the arm project's holdout methodology).
+   - **Cadence report** (v0.3), emitted at `run_studies.py` startup: tier-1 period within 3 % of truth; tier-2 detection and false-detection counts; scheduled-event phase error by tier (median / p95 / max); alibi coverage (unscheduled events with phase error < 0.05); regime split. Acceptance for dataset v1: tier-1 ≥ 99 %, tier-2 false = 0, scheduled tier-1 max < 0.1.
 
 ---
 
@@ -250,6 +282,16 @@ Classifier training MUST use `/waveforms` only. `/truth` is retained for debuggi
 | OPEN-6 | Replace freewheel clamp (v_C, v_bus ≥ 0) with explicit diode branch | — | before dataset v1 |
 | OPEN-7 | Unidirectional source: replace i_L ≥ 0 clamp with explicit output-diode model | — | before 48 V testbed |
 | OPEN-8 | Statistical resolution: 600 benign events cannot measure a 0.1% false-trip rate (1 event = 0.17%). Dataset v1 needs ≥5 000 benign events to resolve the §9 target | — | before proposal claims |
+| OPEN-9 | ~~Two-tier workload cadence: iteration-scale envelope carrying sub-iteration steps.~~ **Resolved v0.3** — Workload v1, §5–§6. | — | closed |
+| OPEN-10 | ~~Jitter model: independent per-edge ±5 % random walk is not physical.~~ **Resolved v0.3** — interval jitter ≤ 2 % on a phase-locked grid, §5. Two of ten v0.2.2 scheduled-step phase failures were artifacts of the old model, not detection failures. | — | closed |
+| OPEN-11 | Sanity-gate censoring: ζ ≥ 0.15 rejects 24 % of 700 kW–1 MW draws vs 2 % of 100–200 kW. Either report the accepted P_rated marginal alongside every p.u. result, or resample to restore the log-uniform marginal. Also: Gate 2 sensitivity row at 99th-percentile thresholds. | — | dataset v1 |
+| OPEN-12 | Sample-rate / resolution sensitivity: sweep f_s ∈ {100 k, 250 k, 500 k, 1 M, 2 M} Sa/s × ADC {12, 14, 16} bit on the existing dataset. Determines the testbed acquisition front end. | — | **before testbed hardware selection** |
+| OPEN-13 | Managed energy storage on C_bus: rack power shelves now include a charge-management controller over the storage capacitors (GB300-class shelves, ~65 J/GPU). A controlled discharge during a fault sustains it and hides it from the feeder; model as a current-source overlay on C_bus. | — | v0.3 |
+| OPEN-14 | Hold-and-confirm decision stage: the residual ~2 % false trips are sharp large benign steps (≥ 0.4 p.u. in < 1 ms) indistinguishable from resistive faults at 1 ms. A benign step settles; a fault does not. Evaluate a second-stage confirmation over 2–5 ms on ambiguous events (I²t budget permits this for high-Z faults). Requires FINE_POST ≥ 5 ms (already true). | — | v0.3 |
+| OPEN-15 | Flat-background false cadence: 1 of 682 flat events acquired a learned period after the candidate threshold was lowered to 0.15. Harmless at this rate; monitor at dataset v1-large. | — | dataset v1-large |
+| OPEN-16 | Short tier-2 periods (20–30 ms) with multi-ms ramps are barely formed and missed ~5 %. Physically marginal; state as a limit rather than tune. | — | — |
+| OPEN-17 | Iteration periods above 3 s (measured up to ~10 s). History cost scales linearly; a 10 s upper bound needs ≈ 2.5 M steps/event. Decide at v1-large. | — | dataset v1-large |
+| OPEN-18 | Absolute iteration-edge jitter at rack level is not in the published literature; ≤ 2 % is the working assumption. Ask Delta / measure on the testbed. | — | finalist round |
 
 ## 12. Revision log
 
@@ -258,3 +300,5 @@ Classifier training MUST use `/waveforms` only. `/truth` is retained for debuggi
 | 0.1 | 2026-08-13 | Initial draft: topology, state equations, event taxonomy, parameter table, numerical plan, dataset schema |
 | 0.1.1 | 2026-08-13 | First implementation feedback: added C_bus ESR (R_esr) and freewheel clamp (OPEN-6) after ideal fault loop rang v_bus to −446 V; documented I_lim hard-clamp behavior (capacitor-backed overload) under OPEN-1; RLC validation window restricted to pre-clamp interval |
 | 0.2 | 2026-09-07 | Stage 2. Segmented time base implemented (§8) with validation (c). Series-arc element with busbar/load-path placement (§4.2, §4.6). Unidirectional source clamp (OPEN-7). Sanity gate tightened to ζ ≥ 0.15 (§9). Full §5 taxonomy with background-workload rule and composite events. Sensor synthesis with fast/slow streams (§7). Dataset v0.2 (1 400 events, seed 20260907) and gates 2–3 run: see RESULTS.md. OPEN-8 added. Package restructured to `dcsim/`; all figures regenerated by `scripts/make_figures.py`. |
+| 0.2.2 | 2026-09-08 | **No physics change.** Feature extractor and studies revised after a code audit; dataset v0.2 regenerated from seed on a second machine and Gate 2 reproduced exactly. Extractor: `phase_err` rebuilt as full-history folded phase (was bounded at 0.12 by a search-window artifact); two-level edge locator with onset walk-back; prominence-based period estimate; `resid_period` demoted to diagnostic (0.92-collinear with Δi_max); causal spectral filter (was zero-phase; load-path arc detection corrected 51 → 38 %); undetected onsets excluded from training. Studies: 10-seed repeated CV with mean ± std; `has_period` gating tested and rejected; V_ref carried into the feature table; C_bus identified as a second sensing-floor driver. Figures: waveform pairs now drawn from synthesized observables; Figure 2b re-axed to phase error vs step magnitude; Figure 3 gains a C_bus panel. OPEN-9 to OPEN-14 added. See RESULTS.md. |
+| 0.3 | 2026-09-08 | **Workload v1** (§5–§6): two-tier cadence — iteration 0.3–3 s + EDP-peak 20–200 ms — with smoothed/unsmoothed regimes and ≤ 2 % interval jitter, sourced in EVIDENCE.md; v0.2 workload retained behind a switch. **Time base** (§8): 10 µs history tier with validation (d) at baseline and stiffest corner. **Sensor** (§7): slow stream 5 kSa/s, noise scaled to bandwidth. **Extractor v0.3.1**: envelope-based tier-1 search, compute-phase tier-2 search, current-phase tier-2 reference, uncapped harmonic filter. Physics core unchanged; dataset v1 generated (1 400 events, seed 20260907). OPEN-9/10 closed; OPEN-15..18 added. See RESULTS.md (v1). |
