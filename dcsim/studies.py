@@ -13,6 +13,13 @@ import pandas as pd
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.model_selection import StratifiedKFold
 from .features import extract, CONV, PHYS, WORK, ALL
+
+# v0.2.2: gated Layer-2 spec -- two models routed on has_period. TESTED AND
+# REJECTED as the default: over 10 CV seeds it is worse than physics-only on
+# every metric (missed +0.30, high-Z +0.90), because halving the training data
+# per route costs more than removing NaN columns gains at n = 1400. Kept so
+# the comparison is reproducible; revisit at dataset v1 (>= 5 000 events).
+GATED = {"periodic": ALL, "flat": CONV + PHYS}
 from .dataset import load_obs
 from .events import BENIGN, FAULTS
 
@@ -41,7 +48,10 @@ def feature_table(h5path, windows=(0.25e-3, 0.5e-3, 1.0e-3), verbose=True):
                         C_bus=pr["C_bus"], L_line=pr["L_line"],
                         noise_frac=pr["noise_frac"], adc_bits=pr["adc_bits"],
                         R_f=pr.get("ev_R_f", np.nan), arc_place=pr.get("ev_arc_place", np.nan),
-                        t_ramp=pr.get("ev_t_ramp", pr.get("ev_t_ramp_bg", np.nan)))
+                        t_ramp=pr.get("ev_t_ramp", pr.get("ev_t_ramp_bg", np.nan)),
+                        smoothed=bool(pr.get("ev_smoothed", False)),          # v1
+                        T1=pr.get("ev_T1", np.nan), T2=pr.get("ev_T2", np.nan),
+                        sched_tier=int(pr.get("ev_sched_tier", 0)))
             for W in windows:
                 f = extract(obs, pr["I_rated"], pr["V_ref"], W=W)
                 rows.append({**base, "W_ms": W * 1e3, **f})
@@ -124,8 +134,13 @@ def _fit(Xtr, ytr):
     return clf.fit(Xtr, ytr)
 
 
-def _cv_predict(d, cols, n_splits=5, proba_class=None):
-    """v0.2.1 (D4). Stratified CV predictions for one window's rows.
+def _cv_predict(d, spec, n_splits=5, proba_class=None, seed=0):
+    """v0.2.1 (D4) / v0.2.2 (gating). Stratified CV predictions for one
+    window's rows.
+
+    spec: a column list (one model) or a dict {"periodic": cols, "flat": cols}
+    (two models routed on has_period, trained and applied to their own subset
+    inside each fold).
 
     Rows with onset_found == 0 carry features computed from a default index
     and are meaningless; they are excluded from every training fold and
@@ -133,24 +148,52 @@ def _cv_predict(d, cols, n_splits=5, proba_class=None):
     so an undetected fault is counted as a miss rather than learned from.
     With proba_class set, returns P(class) instead of labels (0 for undetected).
     """
-    X = d[cols].values.astype(np.float64)
     y, labels = d["decision"].values, d["label"].values
     ok = d["onset_found"].values > 0.5
-    skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=0)
+    if isinstance(spec, dict):
+        routes = {"periodic": (d["has_period"].values > 0.5, spec["periodic"]),
+                  "flat": (d["has_period"].values <= 0.5, spec["flat"])}
+    else:
+        routes = {"all": (np.ones(len(d), bool), spec)}
+    skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=seed)
     if proba_class is None:
         out = np.full(len(d), "HOLD", dtype=object)
     else:
         out = np.zeros(len(d))
-    for tr, te in skf.split(X, labels):
-        tr = tr[ok[tr]]
-        te = te[ok[te]]
-        clf = _fit(X[tr], y[tr])
-        if proba_class is None:
-            out[te] = clf.predict(X[te])
-        else:
-            k = list(clf.classes_).index(proba_class)
-            out[te] = clf.predict_proba(X[te])[:, k]
+    for tr, te in skf.split(np.zeros(len(d)), labels):
+        for _, (mask, cols) in routes.items():
+            X = d[cols].values.astype(np.float64)
+            tr_r = tr[ok[tr] & mask[tr]]
+            te_r = te[ok[te] & mask[te]]
+            if tr_r.size == 0 or te_r.size == 0:
+                continue
+            clf = _fit(X[tr_r], y[tr_r])
+            if proba_class is None:
+                out[te_r] = clf.predict(X[te_r])
+            else:
+                k = list(clf.classes_).index(proba_class)
+                out[te_r] = clf.predict_proba(X[te_r])[:, k]
     return out
+
+
+def _fit_predict_split(d, spec, tr, te):
+    """v0.2.2: single train/test split honouring the same routing and
+    onset_found rule as _cv_predict (used for the domain-shift holdout)."""
+    y = d["decision"].values
+    ok = d["onset_found"].values > 0.5
+    if isinstance(spec, dict):
+        routes = {"periodic": (d["has_period"].values > 0.5, spec["periodic"]),
+                  "flat": (d["has_period"].values <= 0.5, spec["flat"])}
+    else:
+        routes = {"all": (np.ones(len(d), bool), spec)}
+    out = np.full(len(d), "HOLD", dtype=object)
+    for _, (mask, cols) in routes.items():
+        X = d[cols].values.astype(np.float64)
+        tr_r = np.flatnonzero(tr & ok & mask)
+        te_r = np.flatnonzero(te & ok & mask)
+        if tr_r.size and te_r.size:
+            out[te_r] = _fit(X[tr_r], y[tr_r]).predict(X[te_r])
+    return out[te]
 
 
 def classifier_study(df, W_ms=1.0, feature_sets=None, n_splits=5, holdout_P=400e3):
@@ -162,23 +205,46 @@ def classifier_study(df, W_ms=1.0, feature_sets=None, n_splits=5, holdout_P=400e
     y = d["decision"].values
     labels = d["label"].values
     res = {}
-    ok = d["onset_found"].values > 0.5                       # v0.2.1 (D4)
     for name, cols in feature_sets.items():
-        X = d[cols].values.astype(np.float64)
-        pred = _cv_predict(d, cols, n_splits)                 # v0.2.1 (D4)
+        pred = _cv_predict(d, cols, n_splits)                 # v0.2.1 (D4) / v0.2.2 (gating)
         cv = _metrics(y, pred, labels)
         # composite subset
         comp = d.composite.values & np.isin(labels, TRIP_CLASSES)
         cv["missed_composite"] = float((pred[comp] == "HOLD").mean()) if comp.any() else np.nan
         # domain shift
-        tr = (d.P_rated.values < holdout_P) & ok
-        te = ~(d.P_rated.values < holdout_P)
-        p2 = np.full(te.sum(), "HOLD", dtype=object)
-        te_ok = ok[te]
-        p2[te_ok] = _fit(X[tr], y[tr]).predict(X[te][te_ok])
+        tr = d.P_rated.values < holdout_P
+        te = ~tr
+        p2 = _fit_predict_split(d, cols, tr, te)               # v0.2.2
         ds = _metrics(y[te], p2, labels[te])
         res[name] = dict(cv=cv, domain_shift=ds, cv_pred=pred)
     return res
+
+
+def repeated_study(df, W_ms=1.0, feature_sets=None, seeds=range(10), n_splits=5):
+    """v0.2.2 (D3). Repeat the CV ablation over fold seeds and report
+    mean +/- std of false-trip, missed and high-Z-missed rates, overall and on
+    the periodic / flat background subsets. Single-seed differences of a few
+    events are inside this spread; this is the table to quote."""
+    if feature_sets is None:
+        feature_sets = {"conventional": CONV, "+physics": CONV + PHYS, "+workload-aware": ALL}
+    d = df[df.W_ms == W_ms].reset_index(drop=True)
+    labels = d["label"].values
+    ben, trp = np.isin(labels, BENIGN), np.isin(labels, TRIP_CLASSES)
+    per = (d.background.values == "train")
+    hz = labels == "high_z"
+    keys = ["false_trip", "missed", "high_z_missed",
+            "periodic_false_trip", "periodic_missed", "flat_false_trip", "flat_missed"]
+    out = {}
+    for name, spec in feature_sets.items():
+        rows = []
+        for s in seeds:
+            p = _cv_predict(d, spec, n_splits, seed=s)
+            rows.append([(p[ben] == "TRIP").mean(), (p[trp] == "HOLD").mean(), (p[hz] == "HOLD").mean(),
+                         (p[per & ben] == "TRIP").mean(), (p[per & trp] == "HOLD").mean(),
+                         (p[~per & ben] == "TRIP").mean(), (p[~per & trp] == "HOLD").mean()])
+        r = np.array(rows)
+        out[name] = {k: dict(mean=float(r[:, i].mean()), std=float(r[:, i].std())) for i, k in enumerate(keys)}
+    return out
 
 
 def latency_study(df, windows=(0.25, 0.5, 1.0), cols=ALL, n_splits=5):
