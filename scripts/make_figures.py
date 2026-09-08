@@ -6,8 +6,9 @@ import numpy as np, pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from dcsim.model import PARAMS_BASELINE, run_uniform
-from dcsim.events import BENIGN, FAULTS
+from dcsim.model import PARAMS_BASELINE, run_uniform, simulate, param_vector
+from dcsim.events import BENIGN, FAULTS, build_schedule, _ramp, T_POST, FAULT_DURATION, DT_FINE
+from dcsim.synth import synthesize
 from dcsim.features import CONV, PHYS, ALL
 from dcsim.studies import (threshold_study, classifier_study, operating_curve,
                            latency_study, TRIP_CLASSES)
@@ -26,51 +27,74 @@ NAME = {"benign_step": "benign step", "benign_train": "benign train (scheduled)"
 
 
 # ------------------------------------------------------------------ fig 0a/0b: single-pair waveforms
+# v0.2.1 (P2): these figures used to plot pristine physics (run_uniform output).
+# They are captioned as what the relay sees, so they now go through the
+# same synthesis layer as the dataset: anti-alias, 2 MSa/s, noise, ADC.
+def _observed(kind, seed=1):
+    """One baseline-parameter event through simulate() + synthesize().
+    kind: 'step' (+60 % P_rated in 2 ms), 'bolted' (5 mOhm), 'highz' (5 Ohm)."""
+    p = dict(PARAMS_BASELINE)
+    p["noise_frac"], p["adc_bits"], p["I_rated"] = 0.001, 14, p["P_rated"] / p["V_ref"]
+    t_pre = 5e-3
+    sched = build_schedule(t_pre, t_pre, T_POST)
+    t = sched["t"]; n = t.size
+    P = np.full(n, p["P_rated"])
+    f0 = f1 = 10**9
+    if kind == "step":
+        P = P * (1 + 0.6 * _ramp(t, t_pre, 2e-3))
+    else:
+        p["R_f"], p["L_f"] = (5e-3, 2e-6) if kind == "bolted" else (5.0, 2e-6)
+        f0 = sched["idx_event"]
+        f1 = min(n, f0 + int(round(FAULT_DURATION / DT_FINE)))
+    tt, out = simulate(param_vector(p), sched["dt"], P, np.zeros(n), f0, f1)
+    ev = dict(params=p, sched=sched, t_event=t_pre)
+    obs = synthesize(ev, tt, out, seed)
+    obs["tms"] = (obs["fast_t"] - t_pre) * 1e3          # ms relative to onset
+    obs["p"] = p
+    return obs
+
+
 def fig_waveform_pairs():
-    p = PARAMS_BASELINE
-    dt, T = 1e-6, 20e-3
-    n = int(T / dt)
-    t = np.arange(n) * dt
-    ramp = np.clip((t - 5e-3) / 2e-3, 0, 1)
-    P = p["P_rated"] * (1 + 0.6 * ramp)
-    tb, ob = run_uniform(p, dt, T, P_profile=P)
-    tf_, of = run_uniform({**p, "R_f": 5e-3}, 5e-8, T, fault_start=5e-3, fault_end=7.5e-3)
+    ob, of, oh = _observed("step"), _observed("bolted"), _observed("highz")
+    p = ob["p"]
+    dt = 1.0 / 2e6
+
     fig, ax = plt.subplots(2, 2, figsize=(12, 6), sharex=True)
-    ax[0, 0].plot(tb * 1e3, ob[1], color=GREEN, label="line current $i_L$")
-    ax[0, 0].plot(tb * 1e3, ob[4], "--", color=GREY, lw=1, label="load current")
+    ax[0, 0].plot(ob["tms"], ob["fast_i"], color=GREEN, lw=0.8, label="line current $i_L$ (observed)")
     ax[0, 0].set_title("Benign workload step (+60% $P_{rated}$ in 2 ms)")
     ax[0, 0].legend(frameon=False); ax[0, 0].set_ylabel("current (A)")
-    d = np.max(np.abs(np.diff(ob[1]))) / dt * 1e-6
-    ax[0, 0].text(0.55, 0.5, f"max di/dt {d:.3f} A/µs\n(≈4 orders below fault)", transform=ax[0, 0].transAxes, color=GREEN)
-    ax[0, 1].plot(tf_ * 1e3, of[1], color=GREEN, label="line current $i_L$")
-    ax[0, 1].plot(tf_ * 1e3, of[3], color=ORANGE, label="fault current $i_f$")
+    d = np.max(np.abs(np.diff(ob["fast_i"].astype(float)))) / dt * 1e-6
+    ax[0, 0].text(0.45, 0.5, f"max di/dt {d:.2f} A/µs\n(noise-limited at 2 MSa/s)", transform=ax[0, 0].transAxes, color=GREEN)
+    ax[0, 1].plot(of["tms"], of["fast_i"], color=GREEN, lw=0.8, label="line current $i_L$ (observed)")
     ax[0, 1].set_title("Bolted pole-to-pole fault ($R_f$ = 5 mΩ)")
-    front = np.max(np.diff(of[3])) / 5e-8 * 1e-6
-    ax[0, 1].text(0.3, 0.8, f"front {front:.0f} A/µs", transform=ax[0, 1].transAxes, color=ORANGE)
+    front = np.max(np.diff(of["fast_i"].astype(float))) / dt * 1e-6
+    ax[0, 1].text(0.3, 0.8, f"front {front:.0f} A/µs (as sampled)", transform=ax[0, 1].transAxes, color=ORANGE)
     ax[0, 1].legend(frameon=False)
-    ax[1, 0].plot(tb * 1e3, ob[2], color=BLUE); ax[1, 0].set_ylabel("bus voltage (V)")
+    ax[1, 0].plot(ob["tms"], ob["fast_v"], color=BLUE, lw=0.8); ax[1, 0].set_ylabel("bus voltage (V)")
     ax[1, 0].axhline(p["V_uvlo"], ls=":", color=GREY); ax[1, 0].set_ylim(0, 850)
-    ax[1, 0].text(0.4, 0.85, f"sag {ob[2][:5000].mean() - ob[2].min():.0f} V, converter holds", transform=ax[1, 0].transAxes, color=BLUE)
+    pre = ob["fast_v"][:300].mean()
+    ax[1, 0].text(0.4, 0.85, f"sag {pre - ob['fast_v'].min():.0f} V, converter holds", transform=ax[1, 0].transAxes, color=BLUE)
     ax[1, 0].text(0.05, 0.05, "UVLO threshold", transform=ax[1, 0].transAxes, color=GREY)
-    ax[1, 1].plot(tf_ * 1e3, of[2], color=BLUE); ax[1, 1].axhline(p["V_uvlo"], ls=":", color=GREY); ax[1, 1].set_ylim(0, 850)
+    ax[1, 1].plot(of["tms"], of["fast_v"], color=BLUE, lw=0.8); ax[1, 1].axhline(p["V_uvlo"], ls=":", color=GREY); ax[1, 1].set_ylim(0, 850)
     ax[1, 1].text(0.35, 0.65, "collapse below UVLO\n(load sheds)", transform=ax[1, 1].transAxes, color=BLUE)
-    for a in ax[1]: a.set_xlabel("time (ms)")
-    fig.suptitle("Same bus, same sensors — two events a threshold breaker must tell apart")
+    for a in ax[1]: a.set_xlabel("time after onset (ms)")
+    ax[0, 0].set_xlim(-0.2, 5.0)
+    fig.suptitle("Same bus, same sensors — two events a threshold breaker must tell apart (2 MSa/s, 14-bit, 0.1 % FS noise)")
     fig.tight_layout(); fig.savefig(f"{FIG}/benign_vs_fault.png", dpi=150); plt.close(fig)
 
-    # high-Z pair: benign step vs 5 ohm fault, matched current
-    th, oh = run_uniform({**p, "R_f": 5.0, "L_f": 2e-6}, 5e-8, T, fault_start=5e-3, fault_end=T)
+    # high-Z pair: benign step vs 5 ohm fault, matched current, as observed
     fig, ax = plt.subplots(2, 2, figsize=(12, 6), sharex=True)
-    ax[0, 0].plot(tb * 1e3, ob[1], color=GREEN); ax[0, 0].set_title("Benign workload step (+60% $P_{rated}$, +152 A)")
+    ax[0, 0].plot(ob["tms"], ob["fast_i"], color=GREEN, lw=0.8); ax[0, 0].set_title("Benign workload step (+60% $P_{rated}$, +150 A)")
     ax[0, 0].text(0.55, 0.45, "settles — converter\nfollows commanded ramp", transform=ax[0, 0].transAxes, color=GREEN)
-    ax[0, 1].plot(th * 1e3, oh[1], color=GREEN); ax[0, 1].set_title("High-impedance fault ($R_f$ = 5 Ω, +~160 A)")
+    ax[0, 1].plot(oh["tms"], oh["fast_i"], color=GREEN, lw=0.8); ax[0, 1].set_title("High-impedance fault ($R_f$ = 5 Ω, +~160 A)")
     ax[0, 1].text(0.55, 0.45, "also settles — fault fed\nthrough droop like a load", transform=ax[0, 1].transAxes, color=GREEN)
-    ax[0, 0].set_ylabel("line current $i_L$ (A)")
-    ax[1, 0].plot(tb * 1e3, ob[2], color=BLUE); ax[1, 1].plot(th * 1e3, oh[2], color=BLUE)
-    ax[1, 0].set_ylabel("bus voltage (V)")
-    for a in ax[1]: a.set_xlabel("time (ms)"); a.set_ylim(770, 810)
+    ax[0, 0].set_ylabel("line current $i_L$ (A, observed)")
+    ax[1, 0].plot(ob["tms"], ob["fast_v"], color=BLUE, lw=0.8); ax[1, 1].plot(oh["tms"], oh["fast_v"], color=BLUE, lw=0.8)
+    ax[1, 0].set_ylabel("bus voltage (V, observed)")
+    for a in ax[1]: a.set_xlabel("time after onset (ms)"); a.set_ylim(770, 810)
     for a in ax[0]: a.set_ylim(240, 420)
-    fig.suptitle("The gray zone: on bus observables alone, a high-impedance fault is nearly indistinguishable from a legitimate load step")
+    ax[0, 0].set_xlim(-0.2, 5.0)
+    fig.suptitle("The gray zone: on the observable streams alone, a high-impedance fault is nearly indistinguishable from a legitimate load step")
     fig.tight_layout(); fig.savefig(f"{FIG}/grayzone_highz.png", dpi=150); plt.close(fig)
 
 
@@ -170,7 +194,7 @@ def fig_sensing(df, cs, arcs):
     d = df[df.W_ms == 1.0].reset_index(drop=True)
     pred = cs["+workload-aware"]["cv_pred"]
     hz = d[d.label == "high_z"].copy()
-    hz["if_pu"] = (800.0 / hz.R_f) / (hz.P_rated / 800.0)
+    hz["if_pu"] = (hz.V_ref / hz.R_f) / hz.I_rated          # v0.2.1 (B5)
     ph = pred[hz.index]
     bins = [0, 0.15, 0.3, 0.6, 1.0, 10]
     labels_ = ["<0.15", "0.15–0.3", "0.3–0.6", "0.6–1.0", ">1.0"]

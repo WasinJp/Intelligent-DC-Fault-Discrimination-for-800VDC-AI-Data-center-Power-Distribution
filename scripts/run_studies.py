@@ -9,12 +9,29 @@ from dcsim.studies import (feature_table, threshold_study, classifier_study,
 
 h5 = sys.argv[1] if len(sys.argv) > 1 else "data/events_v0.2.h5"
 csv = h5.replace(".h5", "_features.csv")
-if os.path.exists(csv):
-    df = pd.read_csv(csv)
-else:
+
+# v0.2.1 (B4): the cache is keyed on the feature-extractor source. Editing
+# features.py used to load stale features silently.
+import hashlib
+_feat_src = os.path.join(os.path.dirname(__file__), "..", "dcsim", "features.py")
+_feat_hash = hashlib.sha256(open(_feat_src, "rb").read()).hexdigest()[:16]
+_meta = csv + ".meta"
+_stale = True
+if os.path.exists(csv) and os.path.exists(_meta):
+    _stale = open(_meta).read().strip() != _feat_hash
+if _stale:
+    if os.path.exists(csv):
+        print(f"features.py changed (or no meta) -> regenerating {csv}")
     df = feature_table(h5)
     df.to_csv(csv, index=False)
+    open(_meta, "w").write(_feat_hash)
+else:
+    df = pd.read_csv(csv)
 print(f"{len(df)//3} events x 3 windows; onset found: {df[df.W_ms==1.0].onset_found.mean():.3f}")
+_d1 = df[df.W_ms == 1.0]
+_pe = _d1.groupby("label")["phase_err"].agg(["median", "max"]).round(3)
+print("phase_err by label (v0.2.1 check: max must approach 0.5 for faults, NOT 0.12):")
+print(_pe.to_string())
 
 def show(title, obj):
     print(f"\n=== {title}")
@@ -37,7 +54,7 @@ for name, r in cs2.items():
     pred = r['cv_pred']; ben = d.label.str.startswith('benign').values; trip = d.label.isin(['bolted_pp','resistive_pp','high_z']).values
     print(f"  {name:16s} periodic-background subset: false-trip {(pred[tr & ben]=='TRIP').mean():.3f}  missed {(pred[tr & trip]=='HOLD').mean():.3f}   | flat-background: false-trip {(pred[~tr & ben]=='TRIP').mean():.3f}  missed {(pred[~tr & trip]=='HOLD').mean():.3f}")
 # high_z miss vs fault current per unit
-hz = d[d.label=='high_z'].copy(); hz['if_pu'] = (800.0/hz.R_f)/(hz.P_rated/800.0)
+hz = d[d.label=='high_z'].copy(); hz['if_pu'] = (hz.V_ref/hz.R_f)/hz.I_rated   # v0.2.1 (B5)
 pred = cs2['+workload-aware']['cv_pred'][hz.index]
 for lo, hi in [(0,0.15),(0.15,0.3),(0.3,0.6),(0.6,10)]:
     m = (hz.if_pu>=lo)&(hz.if_pu<hi)

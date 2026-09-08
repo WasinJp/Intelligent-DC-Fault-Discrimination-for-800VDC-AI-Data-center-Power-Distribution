@@ -37,7 +37,8 @@ def feature_table(h5path, windows=(0.25e-3, 0.5e-3, 1.0e-3), verbose=True):
             pr = e["params"].attrs
             base = dict(event=k, label=e.attrs["label"], background=e.attrs["background"],
                         composite=bool(e.attrs["composite"]),
-                        P_rated=pr["P_rated"], C_bus=pr["C_bus"], L_line=pr["L_line"],
+                        P_rated=pr["P_rated"], V_ref=pr["V_ref"], I_rated=pr["I_rated"],  # v0.2.1 (B5)
+                        C_bus=pr["C_bus"], L_line=pr["L_line"],
                         noise_frac=pr["noise_frac"], adc_bits=pr["adc_bits"],
                         R_f=pr.get("ev_R_f", np.nan), arc_place=pr.get("ev_arc_place", np.nan),
                         t_ramp=pr.get("ev_t_ramp", pr.get("ev_t_ramp_bg", np.nan)))
@@ -123,6 +124,35 @@ def _fit(Xtr, ytr):
     return clf.fit(Xtr, ytr)
 
 
+def _cv_predict(d, cols, n_splits=5, proba_class=None):
+    """v0.2.1 (D4). Stratified CV predictions for one window's rows.
+
+    Rows with onset_found == 0 carry features computed from a default index
+    and are meaningless; they are excluded from every training fold and
+    scored as the relay would score them -- HOLD (nothing was detected) --
+    so an undetected fault is counted as a miss rather than learned from.
+    With proba_class set, returns P(class) instead of labels (0 for undetected).
+    """
+    X = d[cols].values.astype(np.float64)
+    y, labels = d["decision"].values, d["label"].values
+    ok = d["onset_found"].values > 0.5
+    skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=0)
+    if proba_class is None:
+        out = np.full(len(d), "HOLD", dtype=object)
+    else:
+        out = np.zeros(len(d))
+    for tr, te in skf.split(X, labels):
+        tr = tr[ok[tr]]
+        te = te[ok[te]]
+        clf = _fit(X[tr], y[tr])
+        if proba_class is None:
+            out[te] = clf.predict(X[te])
+        else:
+            k = list(clf.classes_).index(proba_class)
+            out[te] = clf.predict_proba(X[te])[:, k]
+    return out
+
+
 def classifier_study(df, W_ms=1.0, feature_sets=None, n_splits=5, holdout_P=400e3):
     """Ablation over feature sets with stratified CV and a domain-shift
     holdout (train on P_rated < holdout_P, test on >= holdout_P)."""
@@ -132,20 +162,20 @@ def classifier_study(df, W_ms=1.0, feature_sets=None, n_splits=5, holdout_P=400e
     y = d["decision"].values
     labels = d["label"].values
     res = {}
+    ok = d["onset_found"].values > 0.5                       # v0.2.1 (D4)
     for name, cols in feature_sets.items():
         X = d[cols].values.astype(np.float64)
-        pred = np.empty_like(y, dtype=object)
-        skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=0)
-        for tr, te in skf.split(X, labels):
-            pred[te] = _fit(X[tr], y[tr]).predict(X[te])
+        pred = _cv_predict(d, cols, n_splits)                 # v0.2.1 (D4)
         cv = _metrics(y, pred, labels)
         # composite subset
         comp = d.composite.values & np.isin(labels, TRIP_CLASSES)
         cv["missed_composite"] = float((pred[comp] == "HOLD").mean()) if comp.any() else np.nan
         # domain shift
-        tr = d.P_rated.values < holdout_P
-        te = ~tr
-        p2 = _fit(X[tr], y[tr]).predict(X[te])
+        tr = (d.P_rated.values < holdout_P) & ok
+        te = ~(d.P_rated.values < holdout_P)
+        p2 = np.full(te.sum(), "HOLD", dtype=object)
+        te_ok = ok[te]
+        p2[te_ok] = _fit(X[tr], y[tr]).predict(X[te][te_ok])
         ds = _metrics(y[te], p2, labels[te])
         res[name] = dict(cv=cv, domain_shift=ds, cv_pred=pred)
     return res
@@ -156,11 +186,7 @@ def latency_study(df, windows=(0.25, 0.5, 1.0), cols=ALL, n_splits=5):
     for W in windows:
         d = df[df.W_ms == W].reset_index(drop=True)
         y, labels = d["decision"].values, d["label"].values
-        X = d[cols].values.astype(np.float64)
-        pred = np.empty_like(y, dtype=object)
-        skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=0)
-        for tr, te in skf.split(X, labels):
-            pred[te] = _fit(X[tr], y[tr]).predict(X[te])
+        pred = _cv_predict(d, cols, n_splits)                 # v0.2.1 (D4)
         out[W] = _metrics(y, pred, labels)
     return out
 
@@ -169,11 +195,7 @@ def arc_placement_study(df, W_ms=1.0, cols=ALL, n_splits=5):
     """Series-arc detectability split by placement (line vs load path)."""
     d = df[df.W_ms == W_ms].reset_index(drop=True)
     y, labels = d["decision"].values, d["label"].values
-    X = d[cols].values.astype(np.float64)
-    pred = np.empty_like(y, dtype=object)
-    skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=0)
-    for tr, te in skf.split(X, labels):
-        pred[te] = _fit(X[tr], y[tr]).predict(X[te])
+    pred = _cv_predict(d, cols, n_splits)                     # v0.2.1 (D4)
     arc = labels == "series_arc"
     out = {}
     for place, name in ((1.0, "busbar (upstream of C_bus)"), (0.0, "load path (downstream of C_bus)")):
@@ -189,13 +211,7 @@ def operating_curve(df, W_ms=1.0, cols=ALL, n_splits=5):
     the miss rate at the MODEL.md false-trip target (0.1%)."""
     d = df[df.W_ms == W_ms].reset_index(drop=True)
     y, labels = d["decision"].values, d["label"].values
-    X = d[cols].values.astype(np.float64)
-    p_trip = np.zeros(len(d))
-    skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=0)
-    for tr, te in skf.split(X, labels):
-        clf = _fit(X[tr], y[tr])
-        k = list(clf.classes_).index("TRIP")
-        p_trip[te] = clf.predict_proba(X[te])[:, k]
+    p_trip = _cv_predict(d, cols, n_splits, proba_class="TRIP")   # v0.2.1 (D4)
     ben = np.isin(labels, BENIGN)
     trp = np.isin(labels, TRIP_CLASSES)
     ths = np.unique(np.concatenate([[0.0, 1.0], p_trip]))
