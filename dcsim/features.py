@@ -37,12 +37,13 @@ def _movavg(x, n):
     return np.concatenate([np.full(n - 1, y[0]), y])
 
 
-def detect_onset(fi, fv, n_pre, fs_i, fs_v):
+def detect_onset(fi, fv, n_pre, fs_i, fs_v, n_sm=10):
     """First sample after the pre-window where smoothed |di| or |dv|
-    leaves the noise band. Returns (k_on, i_pre, v_pre, sig_i, sig_v, found)."""
+    leaves the noise band. n_sm: smoothing window in samples (5 us at the
+    stream rate). Returns (k_on, i_pre, v_pre, sig_i, sig_v, found)."""
     i_pre, v_pre = fi[:n_pre].mean(), fv[:n_pre].mean()
-    si = _movavg(fi, 10)
-    sv = _movavg(fv, 10)
+    si = _movavg(fi, n_sm)
+    sv = _movavg(fv, n_sm)
     sig_i = si[:n_pre].std() + 1e-9
     sig_v = sv[:n_pre].std() + 1e-9
     thr_i = max(5.0 * sig_i, 0.004 * fs_i)
@@ -295,22 +296,26 @@ def extract(obs, I_rated, V_ref, W=1e-3):
     """Compute the feature dict for decision window W (s) after onset."""
     fi, fv, ft = obs["fast_i"].astype(np.float64), obs["fast_v"].astype(np.float64), obs["fast_t"]
     si_, sv_, st = obs["slow_i"].astype(np.float64), obs["slow_v"].astype(np.float64), obs["slow_t"]
-    n_pre = int(0.15e-3 * F_FAST)
-    k_on, i_pre, v_pre, sig_i, sig_v, found = detect_onset(fi, fv, n_pre, obs["fs_i"], obs["fs_v"])
-    nW = int(W * F_FAST)
+    # v0.3.2 (OPEN-12): all windows are times; sample counts follow the stream rate
+    fs = float(obs.get("fs_fast", F_FAST))
+    n_pre = max(int(0.15e-3 * fs), 4)
+    n5 = max(int(5e-6 * fs), 1)               # 5 us smoothing (onset detector, early windows)
+    n10 = max(int(10e-6 * fs), 1)             # 10 us smoothing (decision window)
+    k_on, i_pre, v_pre, sig_i, sig_v, found = detect_onset(fi, fv, n_pre, obs["fs_i"], obs["fs_v"], n_sm=n5)
+    nW = max(int(W * fs), 4)
     k1 = min(k_on + nW, fi.size)
     wi, wv = fi[k_on:k1], fv[k_on:k1]
-    smi = _movavg(wi, 20)     # 10 us
-    smv = _movavg(wv, 20)
+    smi = _movavg(wi, n10)
+    smv = _movavg(wv, n10)
 
     f = {}
     # ---- CONV
-    n_tail = max(int(0.1 * nW), 10)
+    n_tail = max(int(0.1 * nW), min(10, nW))
     di_end = smi[-n_tail:].mean() - i_pre
     f["di_end"] = di_end / I_rated
     f["di_max"] = (np.abs(smi - i_pre)).max() / I_rated
-    d = np.diff(smi) * F_FAST * 1e-6         # A/us
-    f["didt_max"] = np.abs(d).max() / I_rated
+    d = np.diff(smi) * fs * 1e-6             # A/us
+    f["didt_max"] = np.abs(d).max() / I_rated if d.size else 0.0
 
     # ---- PHYS
     a = np.abs(smi - i_pre)
@@ -318,12 +323,13 @@ def extract(obs, I_rated, V_ref, W=1e-3):
     if tgt > 3 * sig_i:
         k10 = np.argmax(a >= 0.1 * tgt)
         k90 = np.argmax(a >= 0.9 * tgt)
-        f["t_rise"] = max(k90 - k10, 1) / F_FAST * 1e3    # ms
+        f["t_rise"] = max(k90 - k10, 1) / fs * 1e3    # ms
     else:
         f["t_rise"] = W * 1e3
-    e0, e1 = max(k_on - int(50e-6 * F_FAST), 0), min(k_on + int(50e-6 * F_FAST), fi.size)
-    smv_all = _movavg(fv, 10)
-    smi_all = _movavg(fi, 10)
+    n50 = max(int(50e-6 * fs), 1)
+    e0, e1 = max(k_on - n50, 0), min(k_on + n50, fi.size)
+    smv_all = _movavg(fv, n5)
+    smi_all = _movavg(fi, n5)
     f["dv_early"] = (v_pre - smv_all[e0:e1].min()) / V_ref
     f["di_early"] = abs(smi_all[e1 - 1] - i_pre) / I_rated
     v_end = smv[-n_tail:].mean()
@@ -337,16 +343,17 @@ def extract(obs, I_rated, V_ref, W=1e-3):
     # (1 kHz corner -> ~160 us impulse response vs a 150 us pre-window), and a
     # relay cannot see the future. State is initialised at the pre-window
     # mean so the filter start-up transient does not inflate pre_i either.
-    sos = signal.butter(4, [1e3, 100e3], btype="bandpass", fs=F_FAST, output="sos")
+    f_hi = min(100e3, 0.4 * fs)               # band top follows the anti-alias corner
+    sos = signal.butter(4, [1e3, f_hi], btype="bandpass", fs=fs, output="sos")
     zi = signal.sosfilt_zi(sos)
     bp_i, _ = signal.sosfilt(sos, fi - i_pre, zi=zi * 0.0)
     bp_v, _ = signal.sosfilt(sos, fv - v_pre, zi=zi * 0.0)
-    n_skip = int(60e-6 * F_FAST)              # 60 us: let the 1 kHz section settle
+    n_skip = min(int(60e-6 * fs), n_pre - 3)  # 60 us: let the 1 kHz section settle
     pre_i = bp_i[n_skip:n_pre].std() + 1e-9
     pre_v = bp_v[n_skip:n_pre].std() + 1e-9
-    kh = min(k_on + int(0.3 * nW), fi.size - 10)
-    f["spec_i"] = np.log10(bp_i[kh:k1].std() / pre_i + 1e-9)
-    f["spec_v"] = np.log10(bp_v[kh:k1].std() / pre_v + 1e-9)
+    kh = min(k_on + int(0.3 * nW), fi.size - 4)
+    f["spec_i"] = np.log10(bp_i[kh:k1].std() / pre_i + 1e-9) if k1 > kh + 1 else 0.0
+    f["spec_v"] = np.log10(bp_v[kh:k1].std() / pre_v + 1e-9) if k1 > kh + 1 else 0.0
 
     # ---- WORK (slow-stream history before onset)
     # v1 (OPEN-9): up to two learned cadences; phase_err is the distance to the
@@ -395,5 +402,7 @@ def extract(obs, I_rated, V_ref, W=1e-3):
         f["resid_period"] = np.nan
 
     f["onset_found"] = 1.0 if found else 0.0
+    f["fs_fast"] = fs                                    # diagnostic
+    f["adc_bits_used"] = float(obs.get("adc_bits", np.nan))
     f["t_on_rel"] = (t_on - obs["t_event"]) * 1e3   # ms, diagnostic only (not a feature)
     return f

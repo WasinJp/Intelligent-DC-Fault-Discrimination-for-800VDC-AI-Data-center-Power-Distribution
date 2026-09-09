@@ -3,3 +3,11 @@ data/*.h5
 .venv/
 __pycache__/
 *.pyc
+
+data/rates/*.csv
+data/rates/*.csv.meta
+data/*_confirm.csv
+data/*_confirm.csv.meta
+
+data/rates/*.json
+data/*_confirm.json

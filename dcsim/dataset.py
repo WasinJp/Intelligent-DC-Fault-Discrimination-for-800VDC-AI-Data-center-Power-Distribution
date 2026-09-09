@@ -23,12 +23,21 @@ def _git_hash():
         return "unknown"
 
 
-def run_event(label, seed):
+def run_event(label, seed, rate_configs=None):
+    """rate_configs: optional list of (f_fast, bits) front ends (OPEN-12);
+    each is synthesized from the same physics output and returned under
+    obs["alt"][(f_fast, bits)] as dict(fast_t, fast_i, fast_v, adc_bits)."""
     ev = draw_event(label, seed)
     pv = param_vector(ev["params"])
     s = ev["sched"]
     t, out = simulate(pv, s["dt"], ev["P"], ev["Varc"], ev["fault_start"], ev["fault_end"])
     obs = synthesize(ev, t, out, seed)
+    if rate_configs:
+        obs["alt"] = {}
+        for (ff, b) in rate_configs:
+            o = synthesize(ev, t, out, seed, f_fast=ff, bits=b)
+            obs["alt"][(ff, b)] = dict(fast_t=o["fast_t"], fast_i=o["fast_i"], fast_v=o["fast_v"],
+                                       adc_bits=o["adc_bits"])
     # truth on the fast grid (debug / figures only, never training)
     i0, i1 = s["idx_fine_start"], s["idx_fine_end"]
     nf = obs["fast_i"].shape[0]
@@ -39,7 +48,14 @@ def run_event(label, seed):
     return ev, obs, truth
 
 
-def generate(path, master_seed=20260907, n_per_class=200, labels=LABELS, verbose=True):
+def _cfg_name(ff, b):
+    return f"fs{int(round(ff / 1e3))}k_b{int(b)}"
+
+
+def generate(path, master_seed=20260907, n_per_class=200, labels=LABELS, verbose=True,
+             rate_configs=None):
+    """rate_configs: list of (f_fast, bits) to store alongside the default
+    2 MSa/s stream under waveforms/alt/<fs..k_b..>/ (OPEN-12)."""
     t_start = time.time()
     with h5py.File(path, "w") as h:
         g = h.create_group("session_meta")
@@ -50,13 +66,14 @@ def generate(path, master_seed=20260907, n_per_class=200, labels=LABELS, verbose
         g.attrs["f_fast"] = F_FAST
         g.attrs["f_slow"] = F_SLOW
         g.attrs["workload_version"] = WORKLOAD_VERSION
+        g.attrs["rate_configs"] = ",".join(_cfg_name(ff, b) for ff, b in (rate_configs or []))
         ge = h.create_group("events")
         idx = 0
         n_rej_total = 0
         for label in labels:
             for k in range(n_per_class):
                 seed = master_seed * 1000 + idx
-                ev, obs, truth = run_event(label, seed)
+                ev, obs, truth = run_event(label, seed, rate_configs)
                 n_rej_total += ev["n_rejected"]
                 e = ge.create_group(f"{idx:05d}")
                 e.attrs["label"] = label
@@ -74,6 +91,13 @@ def generate(path, master_seed=20260907, n_per_class=200, labels=LABELS, verbose
                 w.attrs["slow_t0"] = obs["slow_t"][0]
                 w.attrs["fs_i"] = obs["fs_i"]
                 w.attrs["fs_v"] = obs["fs_v"]
+                for (ff, b), o in obs.get("alt", {}).items():
+                    ga = w.create_group("alt/" + _cfg_name(ff, b))
+                    ga.create_dataset("fast_i", data=o["fast_i"], compression="gzip")
+                    ga.create_dataset("fast_v", data=o["fast_v"], compression="gzip")
+                    ga.attrs["fast_t0"] = o["fast_t"][0]
+                    ga.attrs["fs_fast"] = float(ff)
+                    ga.attrs["adc_bits"] = int(o["adc_bits"])
                 tr = e.create_group("truth")
                 for kk, vv in truth.items():
                     tr.create_dataset(kk, data=vv, compression="gzip")
@@ -97,14 +121,24 @@ def generate(path, master_seed=20260907, n_per_class=200, labels=LABELS, verbose
               f"({n_rej_total} draws rejected by gate 1)")
 
 
-def load_obs(e):
-    """Rebuild the obs dict from an HDF5 event group."""
+def load_obs(e, config=None):
+    """Rebuild the obs dict from an HDF5 event group. config: None for the
+    default 2 MSa/s stream, or a (f_fast, bits) tuple / "fs..k_b.." name for
+    an alternative front end stored under waveforms/alt/."""
     w = e["waveforms"]
-    fi = w["fast_i"][...]
     si = w["slow_i"][...]
-    return dict(fast_i=fi, fast_v=w["fast_v"][...],
-                fast_t=w.attrs["fast_t0"] + np.arange(fi.shape[0]) / F_FAST,
+    if config is None:
+        fi = w["fast_i"][...]
+        fv = w["fast_v"][...]
+        fs_fast, t0, bits = F_FAST, w.attrs["fast_t0"], int(e["params"].attrs["adc_bits"])
+    else:
+        name = config if isinstance(config, str) else _cfg_name(*config)
+        ga = w["alt/" + name]
+        fi, fv = ga["fast_i"][...], ga["fast_v"][...]
+        fs_fast, t0, bits = float(ga.attrs["fs_fast"]), ga.attrs["fast_t0"], int(ga.attrs["adc_bits"])
+    return dict(fast_i=fi, fast_v=fv,
+                fast_t=t0 + np.arange(fi.shape[0]) / fs_fast,
                 slow_i=si, slow_v=w["slow_v"][...],
                 slow_t=w.attrs["slow_t0"] + np.arange(si.shape[0]) / F_SLOW,
                 fs_i=w.attrs["fs_i"], fs_v=w.attrs["fs_v"],
-                t_event=e.attrs["t_event"])
+                t_event=e.attrs["t_event"], fs_fast=fs_fast, adc_bits=bits)

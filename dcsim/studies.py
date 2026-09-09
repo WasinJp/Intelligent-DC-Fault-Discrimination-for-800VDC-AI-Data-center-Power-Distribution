@@ -31,8 +31,9 @@ TRIP_CLASSES = ("bolted_pp", "resistive_pp", "high_z")
 
 # ---------------------------------------------------------------- features
 
-def feature_table(h5path, windows=(0.25e-3, 0.5e-3, 1.0e-3), verbose=True):
+def feature_table(h5path, windows=(0.25e-3, 0.5e-3, 1.0e-3), verbose=True, config=None):
     """Extract features for every event at each decision window.
+    config: None for the default stream or a front-end config (see load_obs).
     Returns a DataFrame with one row per (event, window)."""
     rows = []
     with h5py.File(h5path, "r") as h:
@@ -40,7 +41,7 @@ def feature_table(h5path, windows=(0.25e-3, 0.5e-3, 1.0e-3), verbose=True):
         keys = sorted(ev.keys())
         for n, k in enumerate(keys):
             e = ev[k]
-            obs = load_obs(e)
+            obs = load_obs(e, config)
             pr = e["params"].attrs
             base = dict(event=k, label=e.attrs["label"], background=e.attrs["background"],
                         composite=bool(e.attrs["composite"]),
@@ -290,3 +291,43 @@ def operating_curve(df, W_ms=1.0, cols=ALL, n_splits=5):
     return dict(thresholds=ths, false_trip=ft, missed=ms, p_trip=p_trip,
                 miss_at_ft_target=miss_at_target,
                 high_z_miss_at_ft_target=float((p_trip[hz] <= t_star).mean()))
+
+
+# ---------------------------------------------------------------- OPEN-12: front-end study
+
+def rate_study(h5path, configs, seeds=range(10), n_splits=5, verbose=True, cache_dir=None):
+    """OPEN-12. For every (f_fast, bits) front end stored in the dataset:
+    extract features, run the 10-seed repeated CV for +physics and
+    +workload-aware, the Gate-2 gray-zone fraction, and the 0.25 ms latency
+    point. Returns {config_name: {...}} and caches each feature table."""
+    import os
+    from .dataset import _cfg_name
+    out = {}
+    for cfg in configs:
+        name = "default" if cfg is None else (cfg if isinstance(cfg, str) else _cfg_name(*cfg))
+        csv = None if cache_dir is None else os.path.join(cache_dir, f"features_{name}.csv")
+        if csv and os.path.exists(csv):
+            df = pd.read_csv(csv)
+        else:
+            if verbose:
+                print(f"  extracting {name} ...", flush=True)
+            df = feature_table(h5path, verbose=False, config=cfg)
+            if csv:
+                df.to_csv(csv, index=False)
+        rs = repeated_study(df, feature_sets={"+physics": CONV + PHYS, "+workload-aware": ALL},
+                            seeds=seeds, n_splits=n_splits)
+        ts = threshold_study(df)
+        lat = latency_study(df, windows=(0.25,), cols=ALL, n_splits=n_splits)[0.25]
+        d1 = df[df.W_ms == 1.0]
+        out[name] = dict(repeated=rs, gray_zone_high_z=ts["gray_zone_fraction"]["high_z"],
+                         layer1_high_z_missed=ts["miss_at_zero_ft"]["Layer 1 (mag OR di/dt OR v-collapse)"]["high_z"],
+                         latency_025=lat, onset_found=float(d1.onset_found.mean()),
+                         fs_fast=float(d1.fs_fast.iloc[0]), adc_bits=float(d1.adc_bits_used.median()))
+        if verbose:
+            w = rs["+workload-aware"]
+            print(f"  {name:14s} FT {w['false_trip']['mean']*100:5.2f}±{w['false_trip']['std']*100:4.2f}"
+                  f"  missed {w['missed']['mean']*100:5.2f}±{w['missed']['std']*100:4.2f}"
+                  f"  high-Z {w['high_z_missed']['mean']*100:5.2f}±{w['high_z_missed']['std']*100:4.2f}"
+                  f"  | gray-zone high-Z {ts['gray_zone_fraction']['high_z']*100:4.1f}%"
+                  f"  | 0.25 ms: FT {lat['false_trip']*100:4.1f} missed {lat['missed']*100:4.1f}", flush=True)
+    return out
