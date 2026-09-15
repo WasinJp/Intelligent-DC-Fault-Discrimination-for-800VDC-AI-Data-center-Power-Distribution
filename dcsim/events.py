@@ -7,11 +7,19 @@ time base) and §9 gate 1 (sanity gate). Every event is fully determined by
 
 import numpy as np
 from .model import PARAMS_BASELINE
+from . import model_v04
 
-LABELS = ("benign_step", "benign_train", "benign_idle_drop",
-          "bolted_pp", "resistive_pp", "high_z", "series_arc")
+CORE_VERSION = "v0.4"     # "v0.3": four-state segment with a CPL rack (datasets v0.2, v1)
+                          # "v0.4": rack conversion stage 800 V -> 48 V, per-rack node, 48 V faults
+MODEL_VERSION = "0.4" if CORE_VERSION == "v0.4" else "0.3"
+
+LABELS_V03 = ("benign_step", "benign_train", "benign_idle_drop",
+              "bolted_pp", "resistive_pp", "high_z", "series_arc")
+LABELS_V04 = LABELS_V03 + ("bolted_48", "high_z_48")
+LABELS = LABELS_V04 if CORE_VERSION == "v0.4" else LABELS_V03
 BENIGN = LABELS[:3]
 FAULTS = LABELS[3:]
+FAULTS_48 = ("bolted_48", "high_z_48")
 
 DT_COARSE = 2e-6      # s, near-event history / post-event (fastest healthy tau_c = 16 us)
 DT_HIST = 1e-5        # s, deep history tier (v1 workload): 10 us, RK4-stable at tau_c >= 16 us,
@@ -54,6 +62,75 @@ def draw_system(rng):
     p["adc_bits"] = int(rng.choice([12, 14, 16]))
     p["I_rated"] = I_rated
     return p
+
+
+def draw_system_v04(rng):
+    """v0.4 system draw: the v0.3 800 V side plus the rack conversion stage
+    (MODEL_v0.4 spec §4). C_in takes over the 1-50 mF sweep that C_bus had
+    (it was the rack input storage all along); C_bus becomes distribution
+    capacitance 0.1-2 mF."""
+    from .model_v04 import PARAMS_BASELINE as PB4
+    p = dict(PB4)
+    p["V_ref"] = rng.uniform(760.0, 840.0)
+    p["P_rated"] = _lu(rng, 100e3, 1e6)
+    I_rated = p["P_rated"] / p["V_ref"]
+    p["R_droop"] = rng.uniform(0.002, 0.05) * p["V_ref"] / I_rated
+    p["tau_c"] = _lu(rng, 16e-6, 320e-6)
+    p["C_bus"] = _lu(rng, 0.1e-3, 2e-3)
+    p["L_line"] = _lu(rng, 1e-6, 50e-6)
+    p["R_line"] = _lu(rng, 1e-3, 20e-3)
+    p["R_esr"] = _lu(rng, 2e-3, 20e-3)
+    p["V_uvlo"] = rng.uniform(600.0, 700.0) * p["V_ref"] / 800.0
+    p["I_lim"] = rng.uniform(1.5, 2.0) * I_rated
+    # rack input filter (v0.4.1: small, passive, behind an ORing stage)
+    p["L_in"] = _lu(rng, 1e-6, 20e-6)
+    p["R_in"] = _lu(rng, 1e-3, 10e-3)
+    p["C_in"] = _lu(rng, 0.1e-3, 5e-3)
+    p["R_in_esr"] = _lu(rng, 2e-3, 20e-3)
+    # bus-side storage (capacitance shelf / BBU without reverse blocking): ON the bus, can feed a fault
+    p["bus_storage"] = 1.0 if rng.uniform() < 0.5 else 0.0
+    p["C_store"] = _lu(rng, 1e-3, 50e-3) if p["bus_storage"] > 0.5 else 0.0
+    p["C_bus"] = p["C_bus"] + p["C_store"]
+    # converter-input ramp-rate limiter (power smoothing)
+    p["smooth_on"] = 1.0 if rng.uniform() < 0.5 else 0.0
+    p["S_max"] = _lu(rng, 10e3 / 1e-3, 1e6 / 1e-3)
+    p["tau_r"] = _lu(rng, 50e-6, 500e-6)
+    # 48 V side: the large energy storage lives here (65 J/GPU at 50 V ~ 3.7 F per 72-GPU rack)
+    p["V_ref48"] = rng.uniform(48.0, 54.0)
+    I48 = p["P_rated"] / p["V_ref48"]
+    p["C_out"] = _lu(rng, 0.2, 5.0) * (p["P_rated"] / 132e3)          # scales with rack power
+    p["f_v"] = _lu(rng, 20.0, 2e3)
+    p["zeta_v"] = 0.7
+    p["tau_i"] = _lu(rng, 10e-6, 50e-6)
+    p["I_lim_out"] = rng.uniform(1.2, 1.6) * I48
+    p["V_uvlo48"] = rng.uniform(0.75, 0.85) * p["V_ref48"]
+    p["t_uvlo48"] = rng.uniform(50e-6, 200e-6)
+    p["V_hyst48"] = 0.04 * p["V_ref48"]
+    p["R_out_esr"] = _lu(rng, 0.2e-3, 2e-3)
+    # sensor front-end (§6, §7)
+    p["noise_frac"] = _lu(rng, 0.0005, 0.005)
+    p["adc_bits"] = int(rng.choice([12, 14, 16]))
+    p["I_rated"] = I_rated
+    p["I_out_rated"] = I48
+    return p
+
+
+def sanity_gate_v04(p, zeta_min=0.15):
+    """Gate 1 for v0.4.1: (i) analytic 800 V criterion with C_bus + C_in (the
+    input is passive, so this is the right lumping); (ii) analytic 48 V loop
+    with the POL constant-power load; (iii) numeric: a 10 % load step must
+    ring down on both nodes with no UVLO trip (model_v04.decay_gate) -- the
+    two-stage input makes (i) approximate, and (iii) is what caught the v0.4
+    instability."""
+    from .model_v04 import sanity_gate_48, decay_gate
+    q = dict(p)
+    q["C_bus"] = p["C_bus"] + p["C_in"]
+    ok1, z1 = sanity_gate(q, zeta_min)
+    ok2, z2 = sanity_gate_48(p, zeta_min)
+    if not (ok1 and ok2):
+        return False, min(z1, z2)
+    ok3, _ = decay_gate(p)
+    return ok3, min(z1, z2)
 
 
 def sanity_gate(p, zeta_min=0.15):
@@ -246,13 +323,20 @@ def _workload_v1(rng, label, background, P_rated):
     min(200 ms, duty*T1/3), amplitude 0.05-0.25 p.u.
     benign_train lands on the next rising edge of tier 1 or tier 2 (sched_tier).
     """
-    smoothed = rng.uniform() < 0.5
-    if smoothed:
-        dP1 = rng.uniform(0.10, 0.35) * P_rated
-        ramp1 = _lu(rng, 2e-3, 20e-3)
-    else:
-        dP1 = rng.uniform(0.30, 0.80) * P_rated
+    if CORE_VERSION == "v0.4":
+        # v0.4: GPU-side power smoothing is modelled where it acts -- the rack
+        # front end (smooth_on / S_max). The GPU demand itself is one regime.
+        smoothed = False
+        dP1 = rng.uniform(0.10, 0.80) * P_rated
         ramp1 = _lu(rng, 0.5e-3, 10e-3)
+    else:
+        smoothed = rng.uniform() < 0.5
+        if smoothed:
+            dP1 = rng.uniform(0.10, 0.35) * P_rated
+            ramp1 = _lu(rng, 2e-3, 20e-3)
+        else:
+            dP1 = rng.uniform(0.30, 0.80) * P_rated
+            ramp1 = _lu(rng, 0.5e-3, 10e-3)
     T1 = _lu(rng, 0.3, 3.0)
     duty1 = rng.uniform(0.3, 0.7)
     jit1 = rng.uniform(0.0, 0.02)
@@ -336,8 +420,12 @@ def draw_event(label, seed):
     rng = np.random.default_rng(seed)
     n_rejected = 0
     while True:
-        p = draw_system(rng)
-        ok, margin = sanity_gate(p)
+        if CORE_VERSION == "v0.4":
+            p = draw_system_v04(rng)
+            ok, margin = sanity_gate_v04(p)
+        else:
+            p = draw_system(rng)
+            ok, margin = sanity_gate(p)
         if ok:
             break
         n_rejected += 1
@@ -370,7 +458,9 @@ def draw_event(label, seed):
     # ----- the event itself
     Varc = np.zeros(n)
     f_start, f_end = 10**9, 10**9
+    f48_start, f48_end = 10**9, 10**9
     p["R_f"], p["L_f"] = 5e-3, 2e-6
+    p["R_f48"], p["L_f48"] = 2e-3, 0.5e-6
     p["arc_place"] = 0.0
     if label == "benign_step":
         dP = rng.uniform(0.10, 0.80) * P_rated * (1 if rng.uniform() < 0.8 else -1)
@@ -400,6 +490,19 @@ def draw_event(label, seed):
         f_start = sched["idx_event"]
         f_end = min(n, f_start + int(round(FAULT_DURATION / DT_FINE)))
         ev.update(R_f=p["R_f"], L_f=p["L_f"])
+    elif label in FAULTS_48:
+        # v0.4: fault on the 48 V rack bus. Bolted: v_out collapses, the feeder
+        # sees the rack disappear. High-Z: chosen around v_out / I_lim_out so
+        # the converter may or may not reach its current limit -- the feeder
+        # sees a load step either way.
+        if label == "bolted_48":
+            p["R_f48"] = _lu(rng, 0.5e-3, 5e-3)
+        else:
+            p["R_f48"] = _lu(rng, 5e-3, 100e-3)
+        p["L_f48"] = _lu(rng, 0.1e-6, 2e-6)
+        f48_start = sched["idx_event"]
+        f48_end = min(n, f48_start + int(round(FAULT_DURATION / DT_FINE)))
+        ev.update(R_f48=p["R_f48"], L_f48=p["L_f48"])
     elif label == "series_arc":
         V_arc0 = rng.uniform(15.0, 40.0)
         m_arc = rng.uniform(0.05, 0.25)
@@ -422,6 +525,7 @@ def draw_event(label, seed):
         raise ValueError(label)
 
     ev.update(params=p, sched=sched, P=P, Varc=Varc,
-              fault_start=f_start, fault_end=f_end, edges=edges,
+              fault_start=f_start, fault_end=f_end,
+              fault48_start=f48_start, fault48_end=f48_end, edges=edges,
               t_event=t_event)
     return ev

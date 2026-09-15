@@ -25,24 +25,33 @@ from .events import BENIGN, FAULTS
 
 DECISION = {"benign_step": "HOLD", "benign_train": "HOLD", "benign_idle_drop": "HOLD",
             "bolted_pp": "TRIP", "resistive_pp": "TRIP", "high_z": "TRIP",
-            "series_arc": "ALERT"}
-TRIP_CLASSES = ("bolted_pp", "resistive_pp", "high_z")
+            "series_arc": "ALERT",
+            "bolted_48": "TRIP", "high_z_48": "TRIP"}                     # v0.4
+TRIP_CLASSES = ("bolted_pp", "resistive_pp", "high_z", "bolted_48", "high_z_48")
+TRIP_800 = ("bolted_pp", "resistive_pp", "high_z")
+TRIP_48 = ("bolted_48", "high_z_48")
 
 
 # ---------------------------------------------------------------- features
 
-def feature_table(h5path, windows=(0.25e-3, 0.5e-3, 1.0e-3), verbose=True, config=None):
+def feature_table(h5path, windows=(0.25e-3, 0.5e-3, 1.0e-3), verbose=True, config=None,
+                  node="feeder"):
     """Extract features for every event at each decision window.
     config: None for the default stream or a front-end config (see load_obs).
-    Returns a DataFrame with one row per (event, window)."""
+    node: "feeder" or "rack" (v0.4). Features are normalised to the node's
+    own rating. Returns a DataFrame with one row per (event, window)."""
     rows = []
     with h5py.File(h5path, "r") as h:
         ev = h["events"]
         keys = sorted(ev.keys())
         for n, k in enumerate(keys):
             e = ev[k]
-            obs = load_obs(e, config)
+            obs = load_obs(e, config, node=node)
             pr = e["params"].attrs
+            if node == "rack":
+                I_n, V_n = pr["I_out_rated"], pr["V_ref48"]
+            else:
+                I_n, V_n = pr["I_rated"], pr["V_ref"]
             base = dict(event=k, label=e.attrs["label"], background=e.attrs["background"],
                         composite=bool(e.attrs["composite"]),
                         P_rated=pr["P_rated"], V_ref=pr["V_ref"], I_rated=pr["I_rated"],  # v0.2.1 (B5)
@@ -52,9 +61,15 @@ def feature_table(h5path, windows=(0.25e-3, 0.5e-3, 1.0e-3), verbose=True, confi
                         t_ramp=pr.get("ev_t_ramp", pr.get("ev_t_ramp_bg", np.nan)),
                         smoothed=bool(pr.get("ev_smoothed", False)),          # v1
                         T1=pr.get("ev_T1", np.nan), T2=pr.get("ev_T2", np.nan),
-                        sched_tier=int(pr.get("ev_sched_tier", 0)))
+                        sched_tier=int(pr.get("ev_sched_tier", 0)),
+                        smooth_on=float(pr.get("smooth_on", np.nan)),        # v0.4
+                        C_in=pr.get("C_in", np.nan), C_out=pr.get("C_out", np.nan),
+                        S_max=pr.get("S_max", np.nan), R_f48=pr.get("ev_R_f48", np.nan),
+                        I_lim_out=pr.get("I_lim_out", np.nan), node=node,
+                        bus_storage=float(pr.get("bus_storage", 0.0)),         # v0.4.1
+                        C_store=float(pr.get("C_store", 0.0)))
             for W in windows:
-                f = extract(obs, pr["I_rated"], pr["V_ref"], W=W)
+                f = extract(obs, I_n, V_n, W=W)
                 rows.append({**base, "W_ms": W * 1e3, **f})
             if verbose and (n + 1) % 200 == 0:
                 print(f"  features {n + 1}/{len(keys)}", flush=True)
@@ -123,8 +138,12 @@ def _metrics(y_true, y_pred, labels):
     ft = float((y_pred[ben] == "TRIP").mean()) if ben.any() else np.nan
     miss = float((y_pred[trp] == "HOLD").mean()) if trp.any() else np.nan
     arc_det = float((y_pred[arc] == "ALERT").mean()) if arc.any() else np.nan
-    per = {c: float((y_pred[labels == c] == "HOLD").mean()) for c in TRIP_CLASSES}
+    per = {c: float((y_pred[labels == c] == "HOLD").mean()) for c in TRIP_CLASSES if (labels == c).any()}
+    t800 = np.isin(labels, TRIP_800)
+    t48 = np.isin(labels, TRIP_48)
     return dict(false_trip=ft, missed=miss, arc_detect=arc_det, missed_per_class=per,
+                missed_800=float((y_pred[t800] == "HOLD").mean()) if t800.any() else np.nan,
+                missed_48=float((y_pred[t48] == "HOLD").mean()) if t48.any() else np.nan,
                 acc=float((y_true == y_pred).mean()))
 
 
@@ -331,3 +350,68 @@ def rate_study(h5path, configs, seeds=range(10), n_splits=5, verbose=True, cache
                   f"  | gray-zone high-Z {ts['gray_zone_fraction']['high_z']*100:4.1f}%"
                   f"  | 0.25 ms: FT {lat['false_trip']*100:4.1f} missed {lat['missed']*100:4.1f}", flush=True)
     return out
+
+
+# ---------------------------------------------------------------- v0.4: sensing-node study
+
+def node_study(h5path, seeds=range(10), n_splits=5, verbose=True, cache_dir=None):
+    """v0.4. Repeated CV for three relay configurations on the same events:
+    feeder-only (i_L, v_bus), rack-only (i_co, v_out), and both (feature
+    concatenation). Reports the usual rates plus missed 800 V faults and
+    missed 48 V faults separately -- prediction 1 of the v0.4 spec."""
+    import os
+    tabs = {}
+    for node in ("feeder", "rack"):
+        csv = None if cache_dir is None else os.path.join(cache_dir, f"features_{node}.csv")
+        if csv and os.path.exists(csv):
+            tabs[node] = pd.read_csv(csv)
+        else:
+            if verbose:
+                print(f"  extracting {node} node ...", flush=True)
+            tabs[node] = feature_table(h5path, verbose=False, node=node)
+            if csv:
+                tabs[node].to_csv(csv, index=False)
+    fe, ra = tabs["feeder"], tabs["rack"]
+    both = fe.copy()
+    for c in ALL:
+        both[c + "_rack"] = ra[c].values
+    both["onset_found"] = np.maximum(fe.onset_found.values, ra.onset_found.values)
+    # v0.4.2: the feeder scored on its own responsibility -- 48 V faults are
+    # HOLD from the feeder's point of view (they belong to the rack relay)
+    fe_resp = fe.copy()
+    fe_resp["decision"] = fe_resp["label"].map(lambda l: "HOLD" if l in TRIP_48 else DECISION[l])
+    sets = {"feeder only": (fe, ALL), "feeder, 800 V duty": (fe_resp, ALL),
+            "rack only": (ra, ALL), "feeder + rack": (both, ALL + [c + "_rack" for c in ALL])}
+    out = {}
+    for name, (df, cols) in sets.items():
+        d = df[df.W_ms == 1.0].reset_index(drop=True)
+        labels = d["label"].values
+        ben, t800, t48 = np.isin(labels, BENIGN), np.isin(labels, TRIP_800), np.isin(labels, TRIP_48)
+        hz = labels == "high_z"
+        rows = []
+        for s in seeds:
+            p = _cv_predict(d, cols, n_splits, seed=s)
+            rows.append([(p[ben] == "TRIP").mean(), (p[t800] == "HOLD").mean(), (p[hz] == "HOLD").mean(),
+                         (p[t48] == "HOLD").mean(), (p[labels == "bolted_48"] == "HOLD").mean(),
+                         (p[labels == "high_z_48"] == "HOLD").mean()])
+        r = np.array(rows)
+        keys = ["false_trip", "missed_800", "high_z_missed", "missed_48", "bolted_48_missed", "high_z_48_missed"]
+        out[name] = {k: dict(mean=float(r[:, i].mean()), std=float(r[:, i].std())) for i, k in enumerate(keys)}
+        if verbose:
+            f = lambda k: f"{out[name][k]['mean']*100:5.2f}±{out[name][k]['std']*100:4.2f}"
+            print(f"  {name:14s} FT {f('false_trip')}  missed-800V {f('missed_800')}  high-Z {f('high_z_missed')}"
+                  f"  | missed-48V {f('missed_48')}  (bolted {f('bolted_48_missed')}, high-Z {f('high_z_48_missed')})", flush=True)
+    return out, tabs
+
+
+def feature_table_both(h5path, windows=(0.25e-3, 0.5e-3, 1.0e-3), verbose=True):
+    """v0.4: feeder and rack features side by side (rack columns suffixed
+    _rk), so a classifier can use one node or both. Same row structure."""
+    a = feature_table(h5path, windows, verbose, node="feeder")
+    b = feature_table(h5path, windows, verbose=False, node="rack")
+    feat = ALL + ["onset_found", "t_on_rel"]
+    b = b[["event", "W_ms"] + feat].rename(columns={c: c + "_rk" for c in feat})
+    return a.merge(b, on=["event", "W_ms"])
+
+
+ALL_RK = [c + "_rk" for c in ALL]

@@ -92,9 +92,28 @@ def synthesize(ev, t, out, seed, f_fast=F_FAST, bits=None):
     i_s = _quantize(i_s + rng.standard_normal(i_s.shape[0]) * nf_s * fs_i, fs_i, p["adc_bits"])
     v_s = _quantize(v_s + rng.standard_normal(v_s.shape[0]) * nf_s * fs_v, fs_v, p["adc_bits"])
 
-    return dict(fast_t=t_f.astype(np.float64), fast_i=i_f.astype(np.float32),
-                fast_v=v_f.astype(np.float32),
-                slow_t=t_s.astype(np.float64), slow_i=i_s.astype(np.float32),
-                slow_v=v_s.astype(np.float32),
-                fs_i=fs_i, fs_v=fs_v, t_event=ev["t_event"],
-                fs_fast=float(f_fast), adc_bits=bits_f)
+    res = dict(fast_t=t_f.astype(np.float64), fast_i=i_f.astype(np.float32),
+               fast_v=v_f.astype(np.float32),
+               slow_t=t_s.astype(np.float64), slow_i=i_s.astype(np.float32),
+               slow_v=v_s.astype(np.float32),
+               fs_i=fs_i, fs_v=fs_v, t_event=ev["t_event"],
+               fs_fast=float(f_fast), adc_bits=bits_f)
+    # ---- v0.4: per-rack node (converter output current i_co, 48 V bus v_out)
+    if out.shape[0] >= 14:
+        rng_r = np.random.default_rng(seed + 7919 + 31337)
+        fs_i48 = 2.0 * p["I_lim_out"]
+        fs_v48 = 1.25 * p["V_ref48"]
+        ri = _aa_decimate(out[14, i0:i1], 1.0 / DT_FINE, decim)      # v0.4.1: load-side busbar current
+        rv = _aa_decimate(out[9, i0:i1], 1.0 / DT_FINE, decim)
+        ri = _quantize(ri + rng_r.standard_normal(ri.shape[0]) * nf_f * fs_i48, fs_i48, bits_f)
+        rv = _quantize(rv + rng_r.standard_normal(rv.shape[0]) * nf_f * fs_v48, fs_v48, bits_f)
+        ri_u = np.interp(t_u, t, out[14])                          # v0.4.2: load-side current, same as the fast stream
+        rv_u = np.interp(t_u, t, out[9])
+        ri_s = _aa_decimate(ri_u, 1.0 / SLOW_SRC_DT, 10)
+        rv_s = _aa_decimate(rv_u, 1.0 / SLOW_SRC_DT, 10)
+        ri_s = _quantize(ri_s + rng_r.standard_normal(ri_s.shape[0]) * nf_s * fs_i48, fs_i48, p["adc_bits"])
+        rv_s = _quantize(rv_s + rng_r.standard_normal(rv_s.shape[0]) * nf_s * fs_v48, fs_v48, p["adc_bits"])
+        res.update(rack_fast_i=ri.astype(np.float32), rack_fast_v=rv.astype(np.float32),
+                   rack_slow_i=ri_s.astype(np.float32), rack_slow_v=rv_s.astype(np.float32),
+                   fs_i48=fs_i48, fs_v48=fs_v48)
+    return res

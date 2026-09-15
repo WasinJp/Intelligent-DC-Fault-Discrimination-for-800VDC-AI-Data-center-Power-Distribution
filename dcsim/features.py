@@ -211,6 +211,13 @@ def _tier2_from_segments(t, x, state1, T1, dts, lag_min=15e-3, thr=0.25, prom=0.
         return 0.0, 0.0
     h = props["peak_heights"]
     kp = k0 + peaks[h >= 0.85 * h.max()].min()
+    # v0.4.2: if a peak sits near half this lag with comparable height, the
+    # pick is the 2nd harmonic -- take the fundamental
+    half = kp / 2.0
+    for pk, hh in zip(k0 + peaks, h):
+        if abs(pk - half) < 0.06 * half and hh >= 0.6 * acc[kp - k0]:
+            kp = pk
+            break
     T2 = kp * dts
     if T2 > 0.4 * T1:
         return 0.0, 0.0

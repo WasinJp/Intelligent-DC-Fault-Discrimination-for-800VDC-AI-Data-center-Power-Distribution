@@ -8,11 +8,14 @@ import subprocess
 import time
 import h5py
 import numpy as np
-from .model import simulate, param_vector
-from .events import draw_event, LABELS, WORKLOAD_VERSION
+from .events import draw_event, LABELS, WORKLOAD_VERSION, CORE_VERSION, MODEL_VERSION as _MV
 from .synth import synthesize, F_FAST, F_SLOW, DECIM_FAST
-
-MODEL_VERSION = "0.3"     # v1 workload (§5) + history time-base tier (§8); physics core unchanged
+if _MV == "0.4":
+    from .model_v04 import simulate, param_vector
+    MODEL_VERSION = "0.4"     # rack conversion stage 800 V -> 48 V, per-rack node, 48 V faults
+else:
+    from .model import simulate, param_vector
+    MODEL_VERSION = "0.3"     # v1 workload (§5) + history time-base tier (§8)
 
 
 def _git_hash():
@@ -30,7 +33,11 @@ def run_event(label, seed, rate_configs=None):
     ev = draw_event(label, seed)
     pv = param_vector(ev["params"])
     s = ev["sched"]
-    t, out = simulate(pv, s["dt"], ev["P"], ev["Varc"], ev["fault_start"], ev["fault_end"])
+    if _MV == "0.4":
+        t, out = simulate(pv, s["dt"], ev["P"], ev["Varc"], ev["fault_start"], ev["fault_end"],
+                          ev["fault48_start"], ev["fault48_end"])
+    else:
+        t, out = simulate(pv, s["dt"], ev["P"], ev["Varc"], ev["fault_start"], ev["fault_end"])
     obs = synthesize(ev, t, out, seed)
     if rate_configs:
         obs["alt"] = {}
@@ -45,6 +52,13 @@ def run_event(label, seed, rate_configs=None):
                  i_load=out[4, i0:i1:DECIM_FAST][:nf].astype(np.float32),
                  v_c=out[0, i0:i1:DECIM_FAST][:nf].astype(np.float32),
                  load_on=out[5, i0:i1:DECIM_FAST][:nf].astype(np.float32))
+    if out.shape[0] >= 15:                                   # v0.4 extras
+        truth.update(v_Cin=out[7, i0:i1:DECIM_FAST][:nf].astype(np.float32),
+                     i_f48=out[10, i0:i1:DECIM_FAST][:nf].astype(np.float32),
+                     i_pol=out[11, i0:i1:DECIM_FAST][:nf].astype(np.float32),
+                     load_on48=out[12, i0:i1:DECIM_FAST][:nf].astype(np.float32),
+                     P_in=out[13, i0:i1:DECIM_FAST][:nf].astype(np.float32),
+                     i_co=out[8, i0:i1:DECIM_FAST][:nf].astype(np.float32))
     return ev, obs, truth
 
 
@@ -66,6 +80,7 @@ def generate(path, master_seed=20260907, n_per_class=200, labels=LABELS, verbose
         g.attrs["f_fast"] = F_FAST
         g.attrs["f_slow"] = F_SLOW
         g.attrs["workload_version"] = WORKLOAD_VERSION
+        g.attrs["core_version"] = CORE_VERSION
         g.attrs["rate_configs"] = ",".join(_cfg_name(ff, b) for ff, b in (rate_configs or []))
         ge = h.create_group("events")
         idx = 0
@@ -91,6 +106,11 @@ def generate(path, master_seed=20260907, n_per_class=200, labels=LABELS, verbose
                 w.attrs["slow_t0"] = obs["slow_t"][0]
                 w.attrs["fs_i"] = obs["fs_i"]
                 w.attrs["fs_v"] = obs["fs_v"]
+                if "rack_fast_i" in obs:                                     # v0.4 per-rack node
+                    for kk in ("rack_fast_i", "rack_fast_v", "rack_slow_i", "rack_slow_v"):
+                        w.create_dataset(kk, data=obs[kk], compression="gzip")
+                    w.attrs["fs_i48"] = obs["fs_i48"]
+                    w.attrs["fs_v48"] = obs["fs_v48"]
                 for (ff, b), o in obs.get("alt", {}).items():
                     ga = w.create_group("alt/" + _cfg_name(ff, b))
                     ga.create_dataset("fast_i", data=o["fast_i"], compression="gzip")
@@ -108,7 +128,7 @@ def generate(path, master_seed=20260907, n_per_class=200, labels=LABELS, verbose
                            "R_f", "L_f", "V_arc0", "m_arc", "f_arc_hi", "t_arc_on",
                            "arc_place",
                            "workload", "smoothed", "T1", "T2", "dP2", "ramp2",
-                           "sched_tier", "jit1", "duty1"):
+                           "sched_tier", "jit1", "duty1", "R_f48", "L_f48"):
                     if kk in ev:
                         pr.attrs["ev_" + kk] = ev[kk]
                 idx += 1
@@ -121,11 +141,24 @@ def generate(path, master_seed=20260907, n_per_class=200, labels=LABELS, verbose
               f"({n_rej_total} draws rejected by gate 1)")
 
 
-def load_obs(e, config=None):
+def load_obs(e, config=None, node="feeder"):
     """Rebuild the obs dict from an HDF5 event group. config: None for the
     default 2 MSa/s stream, or a (f_fast, bits) tuple / "fs..k_b.." name for
-    an alternative front end stored under waveforms/alt/."""
+    an alternative front end stored under waveforms/alt/. node: "feeder"
+    (i_L, v_bus) or "rack" (i_co, v_out; v0.4 datasets only). The returned
+    dict is node-agnostic so the feature extractor runs unchanged; the caller
+    passes the node's own rating (I_rated / I_rated48, V_ref / V_ref48)."""
     w = e["waveforms"]
+    if node == "rack":
+        fi, fv = w["rack_fast_i"][...], w["rack_fast_v"][...]
+        si, sv = w["rack_slow_i"][...], w["rack_slow_v"][...]
+        return dict(fast_i=fi, fast_v=fv,
+                    fast_t=w.attrs["fast_t0"] + np.arange(fi.shape[0]) / F_FAST,
+                    slow_i=si, slow_v=sv,
+                    slow_t=w.attrs["slow_t0"] + np.arange(si.shape[0]) / F_SLOW,
+                    fs_i=w.attrs["fs_i48"], fs_v=w.attrs["fs_v48"],
+                    t_event=e.attrs["t_event"], fs_fast=F_FAST,
+                    adc_bits=int(e["params"].attrs["adc_bits"]), node="rack")
     si = w["slow_i"][...]
     if config is None:
         fi = w["fast_i"][...]
