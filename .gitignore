@@ -11,3 +11,6 @@ data/*_confirm.csv.meta
 
 data/rates/*.json
 data/*_confirm.json
+data/nodes/
+data/events_v04*_features.csv
+data/events_v04*_features.csv.meta
