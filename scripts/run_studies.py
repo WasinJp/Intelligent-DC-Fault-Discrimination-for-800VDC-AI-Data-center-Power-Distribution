@@ -48,7 +48,11 @@ if "sched_tier" in _d1.columns and (_d1.sched_tier > 0).any():                  
     _oth = _tr[_tr.label != "benign_train"]
     print(f"  alibi cost: unscheduled events with phase_err < 0.05: {(_oth.phase_err < 0.05).mean():.3f}"
           f" (one uniform tier would give 0.100)")
-    print(f"  regimes: smoothed {int(_d1.smoothed.sum())} / unsmoothed {int((~_d1.smoothed.astype(bool)).sum())}")
+    if "smooth_on" in _d1.columns and _d1.smooth_on.notna().any():
+        print(f"  front end: smoothing on {int(_d1.smooth_on.sum())} / off {int((_d1.smooth_on == 0).sum())}"
+              + (f" | bus storage {int(_d1.bus_storage.sum())}" if "bus_storage" in _d1.columns else ""))
+    else:
+        print(f"  regimes: smoothed {int(_d1.smoothed.sum())} / unsmoothed {int((~_d1.smoothed.astype(bool)).sum())}")
 
 def show(title, obj):
     print(f"\n=== {title}")
@@ -84,7 +88,15 @@ for lo, hi in [(0,0.15),(0.15,0.3),(0.3,0.6),(0.6,10)]:
     m = (hz.if_pu>=lo)&(hz.if_pu<hi)
     print(f"  high_z fault current {lo:.2f}-{hi:.2f} p.u.: n={m.sum():3d} missed={(pred[m.values]=='HOLD').mean():.3f}")
 # v0.2.2: second sensing-floor driver -- bus capacitance hides the fault front from the feeder
-hz['C_q'] = pd.qcut(hz.C_bus, 3, labels=['low C_bus', 'mid C_bus', 'high C_bus'])
-for q in ['low C_bus', 'mid C_bus', 'high C_bus']:
-    m = (hz.C_q == q).values
-    print(f"  high_z {q:10s} (median {hz.C_bus[m].median()*1e3:.1f} mF): n={m.sum():3d} missed={(pred[m]=='HOLD').mean():.3f}")
+if "bus_storage" in hz.columns and hz.bus_storage.sum() >= 9:                      # v0.4.2
+    m0 = (hz.bus_storage == 0).values
+    print(f"  high_z no bus storage: n={m0.sum():3d} missed={(pred[m0]=='HOLD').mean():.3f}")
+    hs = hz[hz.bus_storage == 1].copy(); hs['C_q'] = pd.qcut(hs.C_store, 3, labels=['low', 'mid', 'high'])
+    for q in ['low', 'mid', 'high']:
+        m = (hz.bus_storage == 1).values & (hz.C_store.isin(hs.C_store[hs.C_q == q])).values
+        print(f"  high_z bus storage C_store {q:4s} (median {hz.C_store[m].median()*1e3:.1f} mF): n={m.sum():3d} missed={(pred[m]=='HOLD').mean():.3f}")
+else:
+    hz['C_q'] = pd.qcut(hz.C_bus, 3, labels=['low C_bus', 'mid C_bus', 'high C_bus'])
+    for q in ['low C_bus', 'mid C_bus', 'high C_bus']:
+        m = (hz.C_q == q).values
+        print(f"  high_z {q:10s} (median {hz.C_bus[m].median()*1e3:.1f} mF): n={m.sum():3d} missed={(pred[m]=='HOLD').mean():.3f}")
