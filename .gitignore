@@ -20,3 +20,8 @@ simscape/slprj/
 *.asv
 data/events_v1large_features.csv
 data/events_v1large_features.csv.meta
+
+data/simscape/
+data/nodes_v1large044/
+simscape/*.autosave
+simscape/crosscheck_log.txt
