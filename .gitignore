@@ -14,3 +14,9 @@ data/*_confirm.json
 data/nodes/
 data/events_v04*_features.csv
 data/events_v04*_features.csv.meta
+
+simscape/slprj/
+*.slxc
+*.asv
+data/events_v1large_features.csv
+data/events_v1large_features.csv.meta

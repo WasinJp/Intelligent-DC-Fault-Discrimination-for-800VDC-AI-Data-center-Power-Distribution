@@ -68,8 +68,10 @@ def _cfg_name(ff, b):
 
 def generate(path, master_seed=20260907, n_per_class=200, labels=LABELS, verbose=True,
              rate_configs=None):
-    """rate_configs: list of (f_fast, bits) to store alongside the default
+    """n_per_class: int, or dict {label: n} (v1-large: more benign events).
+    rate_configs: list of (f_fast, bits) to store alongside the default
     2 MSa/s stream under waveforms/alt/<fs..k_b..>/ (OPEN-12)."""
+    from .events import POST_LONG, POST_LONG_ITER, POST_LONG_FLAT, FAULT_MODE
     t_start = time.time()
     with h5py.File(path, "w") as h:
         g = h.create_group("session_meta")
@@ -82,11 +84,16 @@ def generate(path, master_seed=20260907, n_per_class=200, labels=LABELS, verbose
         g.attrs["workload_version"] = WORKLOAD_VERSION
         g.attrs["core_version"] = CORE_VERSION
         g.attrs["rate_configs"] = ",".join(_cfg_name(ff, b) for ff, b in (rate_configs or []))
+        g.attrs["post_long"] = bool(POST_LONG)
+        g.attrs["post_long_iter"] = POST_LONG_ITER
+        g.attrs["post_long_flat"] = POST_LONG_FLAT
+        g.attrs["fault_mode"] = FAULT_MODE
         ge = h.create_group("events")
         idx = 0
         n_rej_total = 0
         for label in labels:
-            for k in range(n_per_class):
+            n_this = n_per_class[label] if isinstance(n_per_class, dict) else n_per_class
+            for k in range(n_this):
                 seed = master_seed * 1000 + idx
                 ev, obs, truth = run_event(label, seed, rate_configs)
                 n_rej_total += ev["n_rejected"]

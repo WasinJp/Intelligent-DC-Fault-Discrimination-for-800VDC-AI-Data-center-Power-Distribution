@@ -1,7 +1,7 @@
 # MODEL.md — 800 VDC AI Data Center Distribution Segment: Physics Model Specification
 
-**Version:** 0.4.2
-**Date:** 2026-09-16
+**Version:** 0.4.3
+**Date:** 2026-09-17
 **Status:** single source of truth for `dcsim`. Every dataset records the MODEL.md version and master seed it was generated from; a dataset is reproducible from those two values alone.
 **Project:** Intelligent DC Fault Discrimination for 800 VDC AI Data Center Power Distribution — Delta Cup 2026, Energy Track.
 
@@ -205,6 +205,7 @@ The feature extractor is rate-aware (all windows are times) and node-agnostic (n
 | deep history | `DT_HIST = 10 µs` | from 0 to 200.2 ms before the anchor (only when t_pre exceeds that) |
 | near history / post-event | `DT_COARSE = 2 µs` | last 200 ms before the fine window; after it to t_post = 10 ms |
 | event window | `DT_FINE = 50 ns` | −0.2 ms to +5 ms around the anchor (fault-branch τ down to 0.2 µs) |
+| post-event history (v1-large) | `DT_HIST = 10 µs` | from +10 ms to 1.2 iterations after the anchor (0.5 s on flat backgrounds), so the workload timescale after the event is observable (Layer 3). Faults persist to the end of the record in `FAULT_MODE = "held"` — the relay did not trip, so the fault is still there. |
 
 RK4 at 10 µs is stable for τ_c ≥ 16 µs and τ_i ≥ 10 µs (dt/τ ≤ 1) and resolves the fastest healthy resonance (5 kHz) at 20 steps per period. A 7.6 s history costs ~0.75 M steps. Per event: ~0.7–1.5 s.
 
@@ -219,7 +220,7 @@ RK4 at 10 µs is stable for τ_c ≥ 16 µs and τ_i ≥ 10 µs (dt/τ ≤ 1) an
 | (f) | converter output current after a POL power step vs the exact linearised closed loop (PI, capacitor plant, CPL incremental conductance) | ≤ 10⁻² | 8 × 10⁻³ |
 | (g) | converter-input ramp limiter: cumulative output-storage energy balance at every sample (KCL × v), input power slew ≤ S_max, input tracks demand after the ramp | ≤ 10⁻² | 3 × 10⁻⁴ |
 | (h) | 48 V bolted fault: i_co saturates at I_lim,out; early di_f48/dt = V48 / L_f48 | ≤ 5 × 10⁻² | 4 × 10⁻³ |
-| (i) | **Simscape Electrical cross-check** (independent implementation): single-shelf case, variable-step; benign step, high_z (800 V), high_z_48, bolted_48; feeder and rack waveforms overlaid | normalised RMS ≤ 1 % over the fine window | *pending* |
+| (i) | **Simscape Electrical cross-check** (independent implementation): single shelf, variable-step; step, high_z, high_z_48, bolted_48, each with smoothing off and on (8 runs); feeder and rack waveforms on the 1 µs reference grid | (1) discontinuity-excluded normalised RMS ≤ 1 % on i_L, v_bus, i_rack, v_out, exclusions ±5 µs around adjacent-sample jumps > 0.1 p.u. in the reference (the POL-UVLO edge in bolted_48; 5 µs is 20× the reference-grid jitter and 1/20 of t_uvlo48); (2) every such edge matched in the Simscape run within 5 µs and 20 % in size; (3) raw RMS reported alongside. Registered 2026-09-17 (window narrowed from ±50 µs the same day, before any Simscape result). | *pending* |
 
 `scripts/validate_model.py` runs (a)–(h) and prints ALL PASS. (i) is the independent-implementation credential and is built from this document.
 
@@ -311,5 +312,7 @@ Per-event seed `master_seed × 1000 + idx`; synthesis noise seed `+ 7919` (feede
 | 0.4.1 | 2026-09-16 | **Corrections after the first v0.4 run.** (1) Storage moved to the 48 V output side: C_out 0.2–5 F (65 J/GPU at 50 V), C_in reduced to a small passive input filter behind an ORing stage; bus-side storage (`bus_storage`, C_store 1–50 mF on the bus) added as a separate sweep element for the capacitance-shelf / BBU case. (2) Smoothing re-implemented as a converter-input ramp limiter with the output storage supplying the deficit; the v0.4 current-source front end decoupled the storage from the bus and left it stabilised by C_bus alone (ζ ≈ 0.13 at baseline), which the analytic gate missed — half the v0.4 dataset was generated on a ringing bus and is discarded. (3) Gate 1 gains a numeric decay test on both nodes. (4) Rack-node observable moved to the load-side busbar current i_pol + i_f48, downstream of the storage. (5) Checks (g) and (d) updated. Valid half of the v0.4 run recorded in §4.11. OPEN-24/25 added. Predictions §9.4 re-registered. |
 
 | 0.4.2 | 2026-09-16 | Rack-node slow stream corrected to the load-side current (it was still the converter output; cadence learning at the rack was seeing bursts through the converter's response — 12 of 15 tier-2 scheduled-event failures at the rack fixed on regeneration). Harmonic guard in the tier-2 segment search. Node study gains the "feeder, 800 V duty" row; prediction printout splits the gray zone by bus storage; `run_studies` reports the front-end state and bus-storage terciles. OPEN-26 added. Physics unchanged; datasets generated with 0.4.1 have a wrong rack slow stream and must be regenerated. |
+
+| 0.4.3 | 2026-09-17 | Dataset v1-large support: post-event history tier to 1.2 iterations, `FAULT_MODE = "held"`, per-class counts (`--large`: ≥ 5 000 benign). Simscape cross-check tooling: `simscape_cases.py` exports eight reference runs with `params.json`; `compare_simscape.py` scores check (i); `SIMSCAPE_build_sheet.md` maps every element of the core to a block. Physics unchanged. |
 
 *Sources referenced in this document are collected in EVIDENCE.md. Results for each dataset are in RESULTS.md (v1) and, after the first v0.4 run, RESULTS_v04.md.*

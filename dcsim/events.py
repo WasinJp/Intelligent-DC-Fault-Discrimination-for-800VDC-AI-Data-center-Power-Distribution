@@ -32,8 +32,15 @@ WORKLOAD_VERSION = "v1"   # "v0.2": single 20-200 ms train (dataset v0.2 reprodu
                           #         smoothed / unsmoothed regimes, interval jitter <= 2 %  (EVIDENCE.md)
 FINE_PRE = 0.2e-3     # s, fine window starts this long before the anchor
 FINE_POST = 5e-3      # s, fine window length after the anchor
-T_POST = 10e-3        # s, total simulated time after anchor
-FAULT_DURATION = 5e-3  # s, fault branch active (SSCB clears by then)
+T_POST = 10e-3        # s, simulated time after anchor at DT_COARSE (event neighbourhood)
+FAULT_DURATION = 5e-3  # s, fault branch active (SSCB clears by then) -- "cleared" mode
+# v1-large / Layer 3 (OPEN-14 residue): extend the post-event record at DT_HIST so the
+# workload timescale after the event is observable, and keep the fault in ("held" mode:
+# the relay did not trip, so the fault persists) for the whole record.
+POST_LONG = True      # extend the post-event record to POST_LONG_ITER iterations (train) / POST_LONG_FLAT s (flat)
+POST_LONG_ITER = 1.2
+POST_LONG_FLAT = 0.5
+FAULT_MODE = "held"   # "cleared": fault ends at FAULT_DURATION; "held": fault persists to end of record
 
 
 # ---------------------------------------------------------------- draws
@@ -150,7 +157,7 @@ def sanity_gate(p, zeta_min=0.15):
 
 def build_schedule(t_pre, t_event, t_post, dt_coarse=DT_COARSE, dt_fine=DT_FINE,
                    fine_pre=FINE_PRE, fine_post=FINE_POST,
-                   dt_hist=DT_HIST, hist_margin=HIST_MARGIN, use_hist=True):
+                   dt_hist=DT_HIST, hist_margin=HIST_MARGIN, use_hist=True, t_post_long=None):
     """Segmented time base (§8). [history tier at dt_hist, v1] -> coarse to
     t_pre (last hist_margin seconds) -> fine from t_event - fine_pre to
     t_event + fine_post -> coarse to t_event + t_post. The history tier is
@@ -166,16 +173,21 @@ def build_schedule(t_pre, t_event, t_post, dt_coarse=DT_COARSE, dt_fine=DT_FINE,
         n_c1 = int(round((t_pre - fine_pre) / dt_coarse))
     n_f = int(round((fine_pre + fine_post) / dt_fine))
     n_c2 = int(round((t_post - fine_post) / dt_coarse))
+    n_h2 = 0
+    if t_post_long is not None and t_post_long > t_post:
+        n_h2 = int(round((t_post_long - t_post) / dt_hist))       # post-event history tier (Layer 3)
     dt = np.concatenate([np.full(n_h, dt_hist),
                          np.full(n_c1, dt_coarse),
                          np.full(n_f, dt_fine),
-                         np.full(n_c2, dt_coarse)])
+                         np.full(n_c2, dt_coarse),
+                         np.full(n_h2, dt_hist)])
     t = np.concatenate([[0.0], np.cumsum(dt)[:-1]])
     idx_fine_start = n_h + n_c1
     idx_event = idx_fine_start + int(round(fine_pre / dt_fine))
     idx_fine_end = idx_fine_start + n_f
     return dict(dt=dt, t=t, idx_event=idx_event, idx_hist_end=n_h,
-                idx_fine_start=idx_fine_start, idx_fine_end=idx_fine_end)
+                idx_fine_start=idx_fine_start, idx_fine_end=idx_fine_end,
+                idx_post_hist_start=idx_fine_end + n_c2)
 
 
 # ---------------------------------------------------------------- profiles
@@ -352,11 +364,13 @@ def _workload_v1(rng, label, background, P_rated):
                        off2=rng.uniform(0.02, 0.10) * T1)
     if background == "train":
         t_pre = 2.5 * T1 + 0.1
+        t_long = POST_LONG_ITER * T1 if POST_LONG else None
     else:
         t_pre = 60e-3
         P0 = rng.uniform(0.3, 0.9) * P_rated
+        t_long = POST_LONG_FLAT if POST_LONG else None
     t_event = t_pre
-    sched = build_schedule(t_pre, t_event, T_POST)
+    sched = build_schedule(t_pre, t_event, T_POST, t_post_long=t_long)
     t = sched["t"]
     edges, edges2 = [], []
     composite = False
@@ -488,7 +502,7 @@ def draw_event(label, seed):
             p["R_f"] = _lu(rng, 1.0, 10.0)
         p["L_f"] = _lu(rng, 0.5e-6, 10e-6)
         f_start = sched["idx_event"]
-        f_end = min(n, f_start + int(round(FAULT_DURATION / DT_FINE)))
+        f_end = n if FAULT_MODE == "held" else min(n, f_start + int(round(FAULT_DURATION / DT_FINE)))
         ev.update(R_f=p["R_f"], L_f=p["L_f"])
     elif label in FAULTS_48:
         # v0.4: fault on the 48 V rack bus. Bolted: v_out collapses, the feeder
@@ -501,7 +515,7 @@ def draw_event(label, seed):
             p["R_f48"] = _lu(rng, 5e-3, 100e-3)
         p["L_f48"] = _lu(rng, 0.1e-6, 2e-6)
         f48_start = sched["idx_event"]
-        f48_end = min(n, f48_start + int(round(FAULT_DURATION / DT_FINE)))
+        f48_end = n if FAULT_MODE == "held" else min(n, f48_start + int(round(FAULT_DURATION / DT_FINE)))
         ev.update(R_f48=p["R_f48"], L_f48=p["L_f48"])
     elif label == "series_arc":
         V_arc0 = rng.uniform(15.0, 40.0)
@@ -515,8 +529,13 @@ def draw_event(label, seed):
         eta = np.zeros(n)
         i0, i1 = sched["idx_fine_start"], sched["idx_fine_end"]
         eta[i0:i1] = arc_noise(i1 - i0, DT_FINE, 1e3, f_hi, m_arc * V_arc0, rng)
-        eta[i1:] = arc_noise(n - i1, DT_COARSE, 1e3, min(f_hi, 0.4 / DT_COARSE),
-                             m_arc * V_arc0, rng)
+        i2 = sched.get("idx_post_hist_start", n)
+        if i2 > i1:
+            eta[i1:i2] = arc_noise(i2 - i1, DT_COARSE, 1e3, min(f_hi, 0.4 / DT_COARSE),
+                                   m_arc * V_arc0, rng)
+        if n > i2:
+            eta[i2:] = arc_noise(n - i2, DT_HIST, 1e3, min(f_hi, 0.4 / DT_HIST),
+                                 m_arc * V_arc0, rng)
         Varc = (V_arc0 + eta) * _ramp(t, t_event, t_on)
         Varc = np.where(t >= t_event, Varc, 0.0)
         ev.update(V_arc0=V_arc0, m_arc=m_arc, f_arc_hi=f_hi, t_arc_on=t_on,
