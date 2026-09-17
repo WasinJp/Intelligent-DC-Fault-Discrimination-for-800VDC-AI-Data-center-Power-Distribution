@@ -20,7 +20,7 @@ from .features import extract, CONV, PHYS, WORK, ALL
 # per route costs more than removing NaN columns gains at n = 1400. Kept so
 # the comparison is reproducible; revisit at dataset v1 (>= 5 000 events).
 GATED = {"periodic": ALL, "flat": CONV + PHYS}
-from .dataset import load_obs
+from .dataset import load_obs, iter_events, h5_files
 from .events import BENIGN, FAULTS
 
 DECISION = {"benign_step": "HOLD", "benign_train": "HOLD", "benign_idle_drop": "HOLD",
@@ -41,11 +41,8 @@ def feature_table(h5path, windows=(0.25e-3, 0.5e-3, 1.0e-3), verbose=True, confi
     node: "feeder" or "rack" (v0.4). Features are normalised to the node's
     own rating. Returns a DataFrame with one row per (event, window)."""
     rows = []
-    with h5py.File(h5path, "r") as h:
-        ev = h["events"]
-        keys = sorted(ev.keys())
-        for n, k in enumerate(keys):
-            e = ev[k]
+    if True:                                            # one file, a glob of shard files, or a list
+        for n, (k, e) in enumerate(iter_events(h5path)):
             obs = load_obs(e, config, node=node)
             pr = e["params"].attrs
             if node == "rack":
@@ -72,7 +69,7 @@ def feature_table(h5path, windows=(0.25e-3, 0.5e-3, 1.0e-3), verbose=True, confi
                 f = extract(obs, I_n, V_n, W=W)
                 rows.append({**base, "W_ms": W * 1e3, **f})
             if verbose and (n + 1) % 200 == 0:
-                print(f"  features {n + 1}/{len(keys)}", flush=True)
+                print(f"  features {n + 1}", flush=True)
     df = pd.DataFrame(rows)
     df["decision"] = df["label"].map(DECISION)
     return df
@@ -124,9 +121,21 @@ def threshold_study(df, W_ms=1.0, ft_target=1e-3, miss_target=1e-2):
                 reach = True
             if ft <= ft_target and ms < best[1]:
                 best = (ft, ms)
+    # OPEN-11: the max-of-benign envelope is set by ONE event and moves with n. Percentile rows put the
+    # same Layer-1 OR detector at the q-th percentile of each benign axis (v_min: the (1-q)-th) and
+    # report the false-trip rate that setting actually costs, next to what it buys.
+    rows = {}
+    for q in (1.0, 0.999, 0.99):
+        tm, td, tv = ben.di_max.quantile(q), ben.didt_max.quantile(q), ben.v_min.quantile(1.0 - q)
+        fire = lambda s_, tm=tm, td=td, tv=tv: (s_.di_max > tm) | (s_.didt_max > td) | (s_.v_min < tv)
+        ins = ~fire(trip)
+        rows["max" if q == 1.0 else f"p{q*100:g}"] = dict(
+            q=q, false_trip=float(fire(ben).mean()), missed_all=float(ins.mean()),
+            gray_zone={c: float(ins[trip.label == c].mean()) for c in TRIP_CLASSES if (trip.label == c).any()},
+            thresholds=dict(di_max=float(tm), didt_max=float(td), v_min=float(tv)))
     return dict(miss_at_zero_ft=out, gray_zone_fraction=gz,
                 envelope=dict(di_max=m_max, didt_max=d_max, v_min=v_env),
-                targets_reachable=reach, best_miss_at_ft_target=best)
+                targets_reachable=reach, best_miss_at_ft_target=best, percentile_rows=rows)
 
 
 # ---------------------------------------------------------------- gate 3
@@ -354,6 +363,22 @@ def rate_study(h5path, configs, seeds=range(10), n_splits=5, verbose=True, cache
 
 # ---------------------------------------------------------------- v0.4: sensing-node study
 
+def _cache_matches(csv, h5path, verbose=True):
+    """The node cache path does not carry the dataset name, so a table left by ANOTHER dataset
+    would be reused silently. Accept the cache only if it holds exactly the h5's events."""
+    try:
+        n = 0
+        for f in h5_files(h5path):
+            with h5py.File(f, "r") as h:
+                n += len(h["events"])
+    except OSError:
+        return True                                   # no h5 to check against (cache-only use)
+    n_csv = pd.read_csv(csv, usecols=["event"]).event.nunique()
+    if n_csv != n and verbose:
+        print(f"  cache {csv} holds {n_csv} events, {h5path} has {n}: re-extracting", flush=True)
+    return n_csv == n
+
+
 def node_study(h5path, seeds=range(10), n_splits=5, verbose=True, cache_dir=None):
     """v0.4. Repeated CV for three relay configurations on the same events:
     feeder-only (i_L, v_bus), rack-only (i_co, v_out), and both (feature
@@ -363,7 +388,7 @@ def node_study(h5path, seeds=range(10), n_splits=5, verbose=True, cache_dir=None
     tabs = {}
     for node in ("feeder", "rack"):
         csv = None if cache_dir is None else os.path.join(cache_dir, f"features_{node}.csv")
-        if csv and os.path.exists(csv):
+        if csv and os.path.exists(csv) and _cache_matches(csv, h5path, verbose):
             tabs[node] = pd.read_csv(csv)
         else:
             if verbose:
@@ -372,16 +397,13 @@ def node_study(h5path, seeds=range(10), n_splits=5, verbose=True, cache_dir=None
             if csv:
                 tabs[node].to_csv(csv, index=False)
     fe, ra = tabs["feeder"], tabs["rack"]
-    both = fe.copy()
-    for c in ALL:
-        both[c + "_rack"] = ra[c].values
-    both["onset_found"] = np.maximum(fe.onset_found.values, ra.onset_found.values)
+    both, both_cols = two_node_table(fe, ra)
     # v0.4.2: the feeder scored on its own responsibility -- 48 V faults are
     # HOLD from the feeder's point of view (they belong to the rack relay)
     fe_resp = fe.copy()
     fe_resp["decision"] = fe_resp["label"].map(lambda l: "HOLD" if l in TRIP_48 else DECISION[l])
     sets = {"feeder only": (fe, ALL), "feeder, 800 V duty": (fe_resp, ALL),
-            "rack only": (ra, ALL), "feeder + rack": (both, ALL + [c + "_rack" for c in ALL])}
+            "rack only": (ra, ALL), "feeder + rack": (both, both_cols)}
     out = {}
     for name, (df, cols) in sets.items():
         d = df[df.W_ms == 1.0].reset_index(drop=True)
@@ -402,6 +424,77 @@ def node_study(h5path, seeds=range(10), n_splits=5, verbose=True, cache_dir=None
             print(f"  {name:14s} FT {f('false_trip')}  missed-800V {f('missed_800')}  high-Z {f('high_z_missed')}"
                   f"  | missed-48V {f('missed_48')}  (bolted {f('bolted_48_missed')}, high-Z {f('high_z_48_missed')})", flush=True)
     return out, tabs
+
+
+def two_node_table(fe, ra):
+    """Feeder + rack feature concatenation with the "detected at either node" onset rule
+    (the 'feeder + rack' relay of node_study). Returns (table, column list)."""
+    both = fe.copy()
+    for c in ALL:
+        both[c + "_rack"] = ra[c].values
+    both["onset_found"] = np.maximum(fe.onset_found.values, ra.onset_found.values)
+    return both, ALL + [c + "_rack" for c in ALL]
+
+
+def _threshold_at_budget(p_ben, budget):
+    """Lowest P(TRIP) threshold whose false-trip rate on p_ben is <= budget (decision: p > t).
+    k = floor(budget * n) benign events are allowed above it."""
+    k = int(np.floor(budget * p_ben.size + 1e-9))
+    srt = np.sort(p_ben)[::-1]
+    return float(srt[k]) if k < srt.size else 0.0
+
+
+def operating_points(df, cols, budgets=(1e-3, 5e-4, 2e-4), seeds=range(10), n_splits=5,
+                     W_ms=1.0, nested=False, verbose=True):
+    """Operating curve of one relay at fixed false-trip budgets, repeated over fold seeds.
+
+    nested=False  'in-sample': the threshold is the best one on the same out-of-fold P(TRIP)
+                  it is scored on. Optimistic; this is what the hand computation did.
+    nested=True   'held-out calibration': inside every outer fold the threshold is chosen on
+                  inner-CV probabilities of the TRAINING part only, then applied to the held-out
+                  fold, which took no part in choosing it. The realised false-trip rate is then
+                  a result, not a constraint - it can land above the budget.
+    Returns {budget: {metric: {mean, std}}} with metrics false_trip, missed, missed_800,
+    high_z_missed, missed_48, threshold."""
+    d = df[df.W_ms == W_ms].reset_index(drop=True)
+    labels = d["label"].values
+    ben, trp = np.isin(labels, BENIGN), np.isin(labels, TRIP_CLASSES)
+    t800, t48, hz = np.isin(labels, TRIP_800), np.isin(labels, TRIP_48), labels == "high_z"
+    acc = {b: [] for b in budgets}
+    for s in seeds:
+        if not nested:
+            p = _cv_predict(d, cols, n_splits, proba_class="TRIP", seed=s)
+            trips = {b: (p > _threshold_at_budget(p[ben], b), _threshold_at_budget(p[ben], b)) for b in budgets}
+        else:
+            skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=s)
+            fired = {b: np.zeros(len(d), bool) for b in budgets}
+            ths = {b: [] for b in budgets}
+            for tr, te in skf.split(np.zeros(len(d)), labels):
+                dtr = d.iloc[tr].reset_index(drop=True)
+                p_in = _cv_predict(dtr, cols, n_splits, proba_class="TRIP", seed=1000 + s)   # calibration
+                okm = d["onset_found"].values > 0.5
+                X, y = d[cols].values.astype(np.float64), d["decision"].values
+                clf = _fit(X[tr[okm[tr]]], y[tr[okm[tr]]])
+                p_te = np.zeros(te.size)
+                m = okm[te]
+                p_te[m] = clf.predict_proba(X[te[m]])[:, list(clf.classes_).index("TRIP")]
+                for b in budgets:
+                    t = _threshold_at_budget(p_in[ben[tr]], b)
+                    fired[b][te] = p_te > t
+                    ths[b].append(t)
+            trips = {b: (fired[b], float(np.mean(ths[b]))) for b in budgets}
+        for b, (f, t) in trips.items():
+            acc[b].append([f[ben].mean(), (~f[trp]).mean(), (~f[t800]).mean(), (~f[hz]).mean(), (~f[t48]).mean(), t])
+        if verbose:
+            print(f"    seed {s} done", flush=True)
+    keys = ["false_trip", "missed", "missed_800", "high_z_missed", "missed_48", "threshold"]
+    out = {}
+    for b in budgets:
+        r = np.array(acc[b])
+        out[b] = {k: dict(mean=float(r[:, i].mean()), std=float(r[:, i].std())) for i, k in enumerate(keys)}
+        out[b]["n_benign"] = int(ben.sum())
+        out[b]["rows"] = r.tolist()                      # per-seed values, columns = keys (for pooling runs)
+    return out
 
 
 def feature_table_both(h5path, windows=(0.25e-3, 0.5e-3, 1.0e-3), verbose=True):

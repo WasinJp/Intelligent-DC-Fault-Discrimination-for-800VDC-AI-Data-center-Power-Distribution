@@ -1,12 +1,13 @@
 """v0.4 node study: feeder-only vs rack-only vs both, on the same events.
-Usage: python scripts/run_node_study.py [events_v04.h5]"""
+Usage: python scripts/run_node_study.py [events.h5 | "shard_glob*.h5"] [cache_dir]"""
 import sys, os, json
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 import numpy as np, pandas as pd
 from dcsim.studies import node_study, threshold_study
 
-h5 = sys.argv[1] if len(sys.argv) > 1 else "data/events_v04.h5"
-cache = os.path.join(os.path.dirname(h5), "nodes")
+h5 = sys.argv[1] if len(sys.argv) > 1 else "data/events_v04.h5"       # a glob of shard files also works
+# second argument: cache folder. Give every dataset its own (data/nodes is v1-large's).
+cache = sys.argv[2] if len(sys.argv) > 2 else os.path.join(os.path.dirname(h5), "nodes")
 os.makedirs(cache, exist_ok=True)
 res, tabs = node_study(h5, cache_dir=cache)
 with open(os.path.join(cache, "node_study.json"), "w") as fh:
