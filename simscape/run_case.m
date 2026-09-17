@@ -14,7 +14,12 @@ t_abs = simOut.get('t_abs'); i_L = simOut.get('i_L'); v_bus = simOut.get('v_bus'
 i_rack = simOut.get('i_rack'); v_out = simOut.get('v_out');
 m = (t_abs >= c.t_event - 0.2e-3 - 1e-9) & (t_abs <= c.t_event + 5e-3 + 1e-9);
 t = t_abs(m) - c.t_event; i_L = i_L(m); v_bus = v_bus(m); i_rack = i_rack(m); v_out = v_out(m);
-save(fullfile(datadir, ['sim_' case_name '.mat']), 't', 'i_L', 'v_bus', 'i_rack', 'v_out');
+S = struct('t', t, 'i_L', i_L, 'v_bus', v_bus, 'i_rack', i_rack, 'v_out', v_out);
+who_ = simOut.who;                                         % diagnostic logs, if the model has them
+for q = 1:numel(who_)
+    if strncmp(who_{q}, 'dbg_', 4), z = simOut.get(who_{q}); if numel(z) == numel(m), S.(who_{q}) = z(m); end, end
+end
+save(fullfile(datadir, ['sim_' case_name '.mat']), '-struct', 'S');
 out = struct('t', t, 'i_L', i_L, 'v_bus', v_bus, 'i_rack', i_rack, 'v_out', v_out);
 fprintf('sim_%s.mat written (%d samples)\n', case_name, numel(t));
 end

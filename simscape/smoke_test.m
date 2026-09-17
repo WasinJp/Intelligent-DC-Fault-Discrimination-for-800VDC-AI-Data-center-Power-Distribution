@@ -1,3 +1,4 @@
+function ok = smoke_test()
 %SMOKE_TEST  First run after building: the step case must sit EXACTLY at the Python steady state
 %   before the event (t < 0). Any wrong sign, diode direction or initial condition shows up here
 %   as a drift or a jump, long before the comparison against the reference.
@@ -20,3 +21,4 @@ for f = fieldnames(expect)'
 end
 if ok, fprintf('SMOKE TEST PASS: flat at the Python steady state.\n');
 else,  fprintf('SMOKE TEST FAIL: see README "Reading a failure"; send me this printout.\n'); end
+end

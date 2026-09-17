@@ -2,10 +2,11 @@ function [c, shared, ref] = load_case(case_name, datadir)
 %LOAD_CASE  Put one cross-check case's parameters, initial conditions and P_gpu profile into the
 %   base workspace, where dcsim_shelf reads them by name. Used by run_case and verify_build.
 if nargin < 2, P = project_paths(); datadir = P.data; end
+ensure_cases(datadir);
 shared = jsondecode(fileread(fullfile(datadir, 'params.json')));
 cases  = jsondecode(fileread(fullfile(datadir, 'cases.json')));
 c = cases.(case_name);
-ref = load(fullfile(datadir, ['ref_' case_name '.mat']));
+ref = load(fullfile(datadir, ['ref_' case_name '.mat']), 't', 'P_gpu');   % only what is used (the file also holds a variable named 'case')
 
 names = {'V_ref','P_rated','R_droop','tau_c','C_bus','L_line','R_line','R_esr','V_uvlo','I_lim', ...
          'L_in','R_in','C_in','R_in_esr','S_max','tau_r','p_fix','k2','V_ref48','C_out','R_out_esr', ...
@@ -25,6 +26,7 @@ prm = [shared.V_ref, shared.P_rated, shared.V_uvlo, c.smooth_on, shared.S_max, s
        shared.p_fix, shared.k2, shared.V_ref48, shared.K_p, shared.K_i, shared.tau_i, shared.I_lim_out, ...
        shared.V_uvlo48, 1.0, shared.t_uvlo48, shared.V_hyst48];          % prm(15) = conv_on (input UVLO never trips here)
 assignin('base', 'prm', prm);
+assignin('base', 'tau_sense', 0.2e-6);   % sense lag on v_Cin / v_out into ctrl (algebraic-loop breaker, see builder)
 % GPU demand: the reference window starts 0.2 ms before the event; before that hold P0
 t_ref = ref.t(:) + c.t_event;
 P_gpu_ts = [0, c.P0; t_ref(1) - 1e-9, c.P0; t_ref, ref.P_gpu(:)];

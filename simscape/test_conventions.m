@@ -1,18 +1,21 @@
-function test_conventions()
-%TEST_CONVENTIONS  README check 1, proven numerically: the port conventions in shelf_ports.m.
-%   Builds a throw-away model 'conv_test' of small one-resistor circuits wired with the SAME
-%   port struct the shelf builder uses, simulates 1 ms, and compares every reading with what
-%   the convention predicts.
-%   - A wrong port INDEX fails loudly while building (add_line refuses to join a physical
-%     port to a signal port): read the error, fix shelf_ports.m.
-%   - A wrong POLARITY builds fine and only shows as a wrong sign. That is what the
-%     readings below catch, before it can hide inside the full shelf model.
-%   Only relative signs matter to the shelf (the physics is symmetric under a global flip),
-%   so a FAIL names the pair of entries involved.
-P = shelf_ports();
+function [nfail, r] = test_conventions(P)
+%TEST_CONVENTIONS  Prove the port conventions numerically in this MATLAB release.
+%   test_conventions()      tests shelf_ports.m            (normal use; must print ALL PASS)
+%   [nfail, r] = test_conventions(P)   tests a given struct and returns the raw readings
+%                                      (used by detect_ports.m to find the polarities)
+%   Builds a throw-away model 'conv_test' of one-resistor circuits wired with the SAME port
+%   struct the shelf builder uses, simulates 1 ms, and compares every reading with what the
+%   convention predicts.
+%   - A wrong port ROLE fails loudly while building (add_line refuses to join a physical
+%     signal port to an electrical port). Run detect_ports; do not edit shelf_ports.m by hand.
+%   - A wrong POLARITY builds fine and only shows as a wrong sign. That is what the readings
+%     below catch, before it can hide inside the full shelf model.
+%   Only relative signs matter to the shelf (the physics is symmetric under a global flip);
+%   the Controlled Voltage Source is the anchor.
+if nargin < 1, P = shelf_ports(); end
 mdl = 'conv_test';
 if bdIsLoaded(mdl), close_system(mdl, 0); end
-new_system(mdl); open_system(mdl);
+new_system(mdl);
 set_param(mdl, 'StopTime', '1e-3', 'Solver', 'ode23t', 'MaxStep', '1e-5');
 FL = 'fl_lib/Electrical/'; NU = 'nesl_utility/'; SL = 'simulink/';
 CVS  = [FL 'Electrical Sources/Controlled Voltage Source'];
@@ -32,7 +35,12 @@ nb = 0;  notes = {};
         end
     end
     function ln(src, sp, dst, dp)
-        add_line(mdl, [src '/' sp], [dst '/' dp], 'autorouting', 'on');
+        try
+            add_line(mdl, [src '/' sp], [dst '/' dp], 'autorouting', 'on');
+        catch err
+            error('test_conventions:line', 'Cannot connect %s/%s to %s/%s (%s). A port ROLE is wrong: run detect_ports.', ...
+                src, sp, dst, dp, err.message);
+        end
     end
     function sname = cmd(tag, value)           % Simulink constant -> physical signal
         blk([SL 'Sources/Constant'], [tag '_k'], 'Value', num2str(value));
@@ -60,7 +68,7 @@ blk([FL 'Electrical Elements/Electrical Reference'], 'GND');
 blk([NU 'Solver Configuration'], 'SolverCfg');
 ln('SolverCfg', P.solv, 'GND', P.ref);
 
-% T1  controlled voltage source (+10 V) -> current sensor -> 1 ohm
+% T1  controlled voltage source (+10 V) -> current sensor -> 1 ohm          (the anchor)
 s = cmd('t1', 10);
 blk(CVS, 'T1_cvs'); ln(s, P.s2p.out, 'T1_cvs', P.cvs.ctl); ln('T1_cvs', P.cvs.n, 'GND', P.ref);
 blk(ISEN, 'T1_isen'); ln('T1_cvs', P.cvs.p, 'T1_isen', P.isen.p);
@@ -68,36 +76,38 @@ res('T1_R', 'T1_isen', P.isen.n, '1');
 meas('T1_isen', P.isen.out, 't1_i');
 vsen('T1_vs', 'T1_cvs', P.cvs.p, 't1_v');
 
-% T2  controlled current source (+1 A), '+' on a node with 1 ohm to ground
+% T2  controlled current source (+1 A), 'p' on a node with 1 ohm to ground
 s = cmd('t2', 1);
 blk([FL 'Electrical Sources/Controlled Current Source'], 'T2_ccs');
 ln(s, P.s2p.out, 'T2_ccs', P.ccs.ctl); ln('T2_ccs', P.ccs.n, 'GND', P.ref);
 res('T2_R', 'T2_ccs', P.ccs.p, '1');
 vsen('T2_vs', 'T2_ccs', P.ccs.p, 't2_v');
 
-% T3  DC current source (1 A), '+' on a node with 1 ohm to ground
+% T3  DC current source (1 A), 'p' on a node with 1 ohm to ground
 blk([FL 'Electrical Sources/DC Current Source'], 'T3_dcs'); setp('T3_dcs', {'i0', '1'});
-ln('T3_dcs', P.two.n, 'GND', P.ref);
-res('T3_R', 'T3_dcs', P.two.p, '1');
-vsen('T3_vs', 'T3_dcs', P.two.p, 't3_v');
+ln('T3_dcs', P.dcs.n, 'GND', P.ref);
+res('T3_R', 'T3_dcs', P.dcs.p, '1');
+vsen('T3_vs', 'T3_dcs', P.dcs.p, 't3_v');
 
-% T4  +10 V -> diode (P.two.p toward the source) -> 1 ohm   (default diode parameters)
+% T4  +10 V -> diode ('p' toward the source) -> 1 ohm   (default diode parameters)
 s = cmd('t4', 10);
 blk(CVS, 'T4_cvs'); ln(s, P.s2p.out, 'T4_cvs', P.cvs.ctl); ln('T4_cvs', P.cvs.n, 'GND', P.ref);
-blk([FL 'Electrical Elements/Diode'], 'T4_d'); ln('T4_cvs', P.cvs.p, 'T4_d', P.two.p);
-res('T4_R', 'T4_d', P.two.n, '1');
-vsen('T4_vs', 'T4_d', P.two.n, 't4_v');
+blk([FL 'Electrical Elements/Diode'], 'T4_d'); ln('T4_cvs', P.cvs.p, 'T4_d', P.dio.p);
+res('T4_R', 'T4_d', P.dio.n, '1');
+vsen('T4_vs', 'T4_d', P.dio.n, 't4_v');
 
-% T5  capacitor 1 F with initial voltage 10 V, 1e9 ohm across it
-blk([FL 'Electrical Elements/Capacitor'], 'T5_c'); setp('T5_c', {'c', '1', 'v0', '10', 'v0_priority', 'High'});
-ln('T5_c', P.two.n, 'GND', P.ref);
-res('T5_R', 'T5_c', P.two.p, '1e9');
-vsen('T5_vs', 'T5_c', P.two.p, 't5_v');
+% T5  capacitor 1 F with initial capacitor voltage 10 V, 1e9 ohm across it
+blk([FL 'Electrical Elements/Capacitor'], 'T5_c');
+setp('T5_c', {'c', '1', 'vc_specify', 'on', 'vc_priority', 'High', 'vc', '10'});
+ln('T5_c', P.cap.n, 'GND', P.ref);
+res('T5_R', 'T5_c', P.cap.p, '1e9');
+vsen('T5_vs', 'T5_c', P.cap.p, 't5_v');
 
-% T6  inductor 1 H with initial current 1 A (p -> n), '-' into a current sensor, 1 mOhm loop
-blk([FL 'Electrical Elements/Inductor'], 'T6_L'); setp('T6_L', {'l', '1', 'i0', '1'});
-ln('T6_L', P.two.p, 'GND', P.ref);
-blk(ISEN, 'T6_isen'); ln('T6_L', P.two.n, 'T6_isen', P.isen.p);
+% T6  inductor 1 H with initial inductor current 1 A (p -> n), 'n' into a current sensor, 1 mOhm loop
+blk([FL 'Electrical Elements/Inductor'], 'T6_L');
+setp('T6_L', {'l', '1', 'i_L_specify', 'on', 'i_L_priority', 'High', 'i_L', '1'});
+ln('T6_L', P.ind.p, 'GND', P.ref);
+blk(ISEN, 'T6_isen'); ln('T6_L', P.ind.n, 'T6_isen', P.isen.p);
 res('T6_R', 'T6_isen', P.isen.n, '1e-3');
 meas('T6_isen', P.isen.out, 't6_i');
 
@@ -116,26 +126,28 @@ so = sim(mdl, 'ReturnWorkspaceOutputs', 'on');
 checks = {
  't1_v',   @(x) abs(x - 10) < 0.5,  '+10',      'P.cvs.p/n vs P.vsen.p/n'
  't1_i',   @(x) abs(x - 10) < 0.5,  '+10',      'P.cvs.p/n vs P.isen.p/n'
- 't2_v',   @(x) abs(x + 1) < 0.05,  '-1',       'P.ccs.p/n: a current source must DRAW from the node on its + port'
- 't3_v',   @(x) abs(x + 1) < 0.05,  '-1',       'DC Current Source ports (P.two.p/n) or its i0 name'
- 't4_v',   @(x) x > 5,              '> 5 (conducting)', 'P.two.p/n on the Diode: P.two.p must be the ANODE'
- 't5_v',   @(x) abs(x - 10) < 0.5,  '+10',      'Capacitor P.two.p/n, or its initial-voltage parameter names'
- 't6_i',   @(x) abs(x - 1) < 0.05,  '+1',       'Inductor P.two.p/n, or its initial-current parameter names'
+ 't2_v',   @(x) abs(x + 1) < 0.05,  '-1',       'P.ccs.p/n: a current source must DRAW from the node on its p port'
+ 't3_v',   @(x) abs(x + 1) < 0.05,  '-1',       'P.dcs.p/n (DC Current Source), or its i0 name'
+ 't4_v',   @(x) x > 5,              '> 5 (conducting)', 'P.dio.p/n: p must be the ANODE'
+ 't5_v',   @(x) abs(x - 10) < 0.5,  '+10',      'P.cap.p/n, or the vc / vc_specify parameter names'
+ 't6_i',   @(x) abs(x - 1) < 0.05,  '+1',       'P.ind.p/n, or the i_L / i_L_specify parameter names'
  't7_on',  @(x) abs(x - 10) < 0.5,  '+10',      'P.sw.p/n/ctl (closed at control 1)'
  't7_off', @(x) abs(x) < 0.05,      '0',        'P.sw.ctl (open at control 0)'
 };
-nfail = 0;
+nfail = 0; r = struct();
 fprintf('\n%-7s %12s   %-18s %s\n', 'test', 'reading', 'expected', 'result');
 for kk = 1:size(checks, 1)
     v = so.get(checks{kk,1}); x = double(v(end));
+    r.(checks{kk,1}) = x;
     pass = checks{kk,2}(x);
     if pass, verdict = 'PASS'; else, verdict = ['FAIL -> ' checks{kk,4}]; nfail = nfail + 1; end
     fprintf('%-7s %12.4g   %-18s %s\n', checks{kk,1}, x, checks{kk,3}, verdict);
 end
 for kk = 1:numel(notes), fprintf('NOTE  %s\n', notes{kk}); end
-if nfail == 0 && isempty(notes)
-    fprintf('\nALL PASS: shelf_ports.m is correct for this release.\n');
-else
-    fprintf('\n%d failure(s), %d note(s). Send me this printout (and probe_blocks output if there are notes).\n', nfail, numel(notes));
+nfail = nfail + numel(notes);
+close_system(mdl, 0);
+if nargin < 1
+    if nfail == 0, fprintf('\nALL PASS: shelf_ports.m is correct for this release.\n');
+    else, fprintf('\n%d problem(s). Run detect_ports (it rewrites shelf_ports.m); if it still fails, send me the printout.\n', nfail); end
 end
 end

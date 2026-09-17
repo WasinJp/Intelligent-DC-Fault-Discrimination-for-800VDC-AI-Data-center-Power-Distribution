@@ -8,6 +8,8 @@ Everything numeric comes from `scripts/simscape_cases.py`: `params.json` (shared
 
 **Revision 2026-09-17.** The first version of this sheet had nine errors that would have failed check (i) for non-physics reasons; they were found by reading the reference runs before any Simscape model existed. Corrected below: the POL UVLO *does* trip in `bolted_48`; the source current limit *is* reached in three runs; the ORing diode blocks in `high_z`; the ramp limiter is one saturated integrator; controls read capacitor voltages, UVLO comparators read node voltages; the anti-windup rule is exact and includes the power bound; block defaults must be zeroed; per-case parameters and initial states are now exported.
 
+**Revision 2026-09-18 (first R2026a runs).** Port conventions are detected by `detect_ports.m`, not assumed (sources, sensors and the Switch have one left and two right ports in this release). Initial conditions are variable targets: capacitor `vc` / `vc_specify`, inductor `i_L` / `i_L_specify`. The two capacitor voltages read by the control pass through a 0.2 µs sense lag to break the Simulink–Simscape algebraic loop (README §0); no element of the map below changes. Run everything with `crosscheck`.
+
 ---
 
 ## 1. Element map

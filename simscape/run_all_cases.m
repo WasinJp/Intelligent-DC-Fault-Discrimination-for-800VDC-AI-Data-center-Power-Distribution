@@ -14,5 +14,10 @@ for k = 1:numel(names)
     cmd = sprintf('"%s" "%s" "%s" "%s"', P.python, P.compare, ...
         fullfile(P.data, ['ref_' names{k} '.mat']), fullfile(P.data, ['sim_' names{k} '.mat']));
     [~, txt] = system(cmd); fprintf('%s\n%s\n', names{k}, txt);
+    if contains(txt, 'FAIL')                                % which internal state departs first, and when
+        [~, txt] = system(sprintf('"%s" "%s" "%s" "%s"', P.python, fullfile(P.root, 'scripts', 'diagnose_simscape.py'), ...
+            fullfile(P.data, ['ref_' names{k} '.mat']), fullfile(P.data, ['sim_' names{k} '.mat'])));
+        fprintf('%s\n', txt);
+    end
 end
 end

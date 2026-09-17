@@ -3,8 +3,8 @@
 %   ports and full parameter list. Send the printed output back if anything says MISSING.
 used = {
   'fl_lib/Electrical/Electrical Elements/Resistor',                {'R'}
-  'fl_lib/Electrical/Electrical Elements/Capacitor',               {'c','r','g','v0','v0_priority'}
-  'fl_lib/Electrical/Electrical Elements/Inductor',                {'l','r','g','i0'}
+  'fl_lib/Electrical/Electrical Elements/Capacitor',               {'c','r','g','vc','vc_specify','vc_priority'}
+  'fl_lib/Electrical/Electrical Elements/Inductor',                {'l','r','g','i_L','i_L_specify','i_L_priority'}
   'fl_lib/Electrical/Electrical Elements/Diode',                   {'Vf','Ron','Goff'}
   'fl_lib/Electrical/Electrical Elements/Switch',                  {'Threshold','R_closed','G_open'}
   'fl_lib/Electrical/Electrical Elements/Electrical Reference',    {}

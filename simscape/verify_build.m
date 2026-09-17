@@ -1,3 +1,4 @@
+function ok = verify_build()
 %VERIFY_BUILD  README checks 2 and 3 on the built model, proven before any simulation:
 %   (2) both MATLAB Function blocks actually contain the injected code,
 %   (3) uvlo48 and its delay run at a discrete 1 us sample time,
@@ -8,7 +9,8 @@ ok = true;
 
 % ---- check 2: script injection
 rt = sfroot;
-want = {'ctrl',   {'function [i_in, d_xi, d_Pcmd, d_ico, i_pol]', 'sat == i_ref', 'd_Pcmd = min(max('};
+want = {'ctrl',   {'function [i_in, d_xi, d_Pcmd, d_ico, i_pol', 'sat == i_ref', 'd_Pcmd = min(max('};
+        'ctrl_d', {'function [xi_v, P_cmd, i_co] = ctrl_d', 'persistent x', 'x = x + (h/6)*(k1 + 2*k2 + 2*k3 + k4)'};
         'uvlo48', {'function load_on48 = uvlo48', 'persistent tmr on', 'v_out_cap > V_uvlo48 + V_hyst48'}};
 for k = 1:size(want, 1)
     ch = rt.find('-isa', 'Stateflow.EMChart', 'Path', [mdl '/' want{k,1}]);
@@ -30,11 +32,11 @@ set_param(mdl, 'AlgebraicLoopMsg', 'error');
 try
     feval(mdl, [], [], [], 'compile');
     fprintf('compile  no algebraic loops\n');
-    for b = {'uvlo48', 'z_uvlo', 'ctrl'}
+    for b = {'uvlo48', 'z_uvlo', 'ctrl_d', 'ctrl'}
         ts = get_param([mdl '/' b{1}], 'CompiledSampleTime');
         if iscell(ts), ts = ts{1}; end
         fprintf('check 3  %-7s compiled sample time [%g %g]', b{1}, ts(1), ts(2));
-        if any(strcmp(b{1}, {'uvlo48', 'z_uvlo'}))
+        if any(strcmp(b{1}, {'uvlo48', 'z_uvlo', 'ctrl_d'}))
             if abs(ts(1) - 1e-6) < 1e-12, fprintf('  OK\n'); else, fprintf('  WRONG, must be [1e-06 0]\n'); ok = false; end
         else
             fprintf('  (continuous expected: [0 0])\n');
@@ -43,7 +45,8 @@ try
     feval(mdl, [], [], [], 'term');
 catch e
     try, feval(mdl, [], [], [], 'term'); catch, end
-    fprintf('compile  FAILED: %s\n', e.message); ok = false;
+    fprintf('compile  FAILED. Full cause tree:\n'); print_error(e); ok = false;
 end
 set_param(mdl, 'AlgebraicLoopMsg', oldmsg);
 if ok, fprintf('\nVERIFY PASS: run smoke_test next.\n'); else, fprintf('\nVERIFY FAIL: send me this printout.\n'); end
+end
