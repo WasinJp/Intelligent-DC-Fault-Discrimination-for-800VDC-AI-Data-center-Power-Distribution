@@ -12,6 +12,7 @@ from . import model_v04
 CORE_VERSION = "v0.4"     # "v0.3": four-state segment with a CPL rack (datasets v0.2, v1)
                           # "v0.4": rack conversion stage 800 V -> 48 V, per-rack node, 48 V faults
 MODEL_VERSION = "0.4" if CORE_VERSION == "v0.4" else "0.3"
+MODEL_PATCH = "0.4.4" if CORE_VERSION == "v0.4" else "0.3.3"   # full MODEL.md version, stored with every dataset
 
 LABELS_V03 = ("benign_step", "benign_train", "benign_idle_drop",
               "bolted_pp", "resistive_pp", "high_z", "series_arc")

@@ -94,7 +94,7 @@ def _loss(P_out, P_rated, p_fix, k2):
 
 
 @njit(cache=True)
-def _derivs(y, pv, P_gpu, V_arc, fault_on, fault48_on, conv_on, load_on48):
+def _derivs(y, pv, P_gpu, V_arc, fault_on, fault48_on, conv_on, load_on48, qs800=False, qs48=False):
     (V_ref, P_rated, R_droop, tau_c, C_bus, L_line, R_line, R_esr,
      V_uvlo, t_uvlo_delay, V_hyst, I_lim, R_f, L_f, arc_place,
      L_in, R_in, C_in, R_in_esr,
@@ -110,6 +110,12 @@ def _derivs(y, pv, P_gpu, V_arc, fault_on, fault48_on, conv_on, load_on48):
     i_pol = 0.0
     if load_on48:
         i_pol = P_gpu / (v_out if v_out > V_uvlo48 else V_uvlo48)
+    if qs48 and fault48_on:
+        # v0.4.4 (§8.1): quasi-static 48 V fault branch in a tier too coarse to integrate it. Slow limit of
+        # L_f48 di/dt = v_node - R_f48 i with v_node = v_out + R_out_esr (i_co - i_pol - i): the inductor drops out.
+        i_f48 = (v_out + R_out_esr * (i_co - i_pol)) / (R_f48 + R_out_esr)
+        if i_f48 < 0.0:
+            i_f48 = 0.0
     i_Cout = i_co - i_pol - i_f48
     v_out_node = v_out + R_out_esr * i_Cout
     if v_out_node < 0.0:
@@ -149,7 +155,7 @@ def _derivs(y, pv, P_gpu, V_arc, fault_on, fault48_on, conv_on, load_on48):
     di_co = (sat - i_co) / tau_i if conv_on else (0.0 - i_co) / tau_i
     dv_out = i_Cout / C_out
     di_f48 = 0.0
-    if fault48_on:
+    if fault48_on and not qs48:
         di_f48 = (v_out_node - R_f48 * i_f48) / L_f48
         if v_out <= 0.0 and di_f48 < 0.0 and i_f48 <= 0.0:
             di_f48 = 0.0
@@ -161,6 +167,11 @@ def _derivs(y, pv, P_gpu, V_arc, fault_on, fault48_on, conv_on, load_on48):
     v_Cin_node = v_Cin + R_in_esr * i_Cin
 
     # ---- 800 V bus node (algebraic, cap ESR)
+    if qs800 and fault_on:
+        # v0.4.4 (§8.1): same slow limit for the 800 V fault branch, v_bus = v_C + R_esr (i_L - i_Lin - i_f)
+        i_f = (v_C + R_esr * (i_L - i_Lin)) / (R_f + R_esr)
+        if i_f < 0.0:
+            i_f = 0.0
     i_C = i_L - i_Lin - i_f
     v_bus = v_C + R_esr * i_C
     if v_bus < 0.0:
@@ -174,7 +185,7 @@ def _derivs(y, pv, P_gpu, V_arc, fault_on, fault48_on, conv_on, load_on48):
 
     # ---- 800 V fault branch and feeder (v0.3)
     di_f = 0.0
-    if fault_on:
+    if fault_on and not qs800:
         di_f = (v_bus - R_f * i_f) / L_f
         if v_C <= 0.0 and di_f < 0.0 and i_f <= 0.0:
             di_f = 0.0
@@ -191,10 +202,21 @@ def _derivs(y, pv, P_gpu, V_arc, fault_on, fault48_on, conv_on, load_on48):
 
 @njit(cache=True)
 def simulate(pv, dt_arr, P_profile, Varc_profile, fault_start_idx, fault_end_idx,
-             fault48_start_idx, fault48_end_idx):
+             fault48_start_idx, fault48_end_idx, qs_dt_min=1.5e-6, qs_ratio=0.5):
     """Fixed-schedule RK4 (§8). P_profile is the GPU (POL-level) power demand.
     Two UVLO state machines: the converter's input (on v_Cin, v0.3 thresholds)
-    and the POL stage (on v_out). Returns t (n,), out (14, n)."""
+    and the POL stage (on v_out). Returns t (n,), out (14, n).
+
+    v0.4.4 (MODEL.md §8.1, check (j)): a fault that is still on outside the event window (FAULT_MODE =
+    "held") meets the 2 us and 10 us tiers with a branch time constant tau_f = L_f / (R_f + R_esr) down to
+    0.05 us; RK4 is unstable for dt / tau_f > 2.785 and the branch current diverged (NaN post-event records
+    in 90 % of high_z, 15 % of resistive_pp, 13 % of high_z_48 of dataset v1-large). In a step with
+    dt >= qs_dt_min AND dt > qs_ratio * tau_f the branch current is set to the slow limit of its own
+    equation, i_f = v_node / R_f (the node equation solved with the ESR drop). qs_dt_min = 1.5 us sits
+    between the grids that integrate a fault FRONT (50 ns event window; the 1 us uniform grid of the
+    Simscape references) and the coarse tiers (2 us, 10 us), so every Layer-1/2 observable and every
+    check-(i) reference is bit-identical to v0.4.3. (A 1 us floor moved two references: caught by the
+    regression test, 2026-09-18.)"""
     (V_ref, P_rated, R_droop, tau_c, C_bus, L_line, R_line, R_esr,
      V_uvlo, t_uvlo_delay, V_hyst, I_lim, R_f, L_f, arc_place,
      L_in, R_in, C_in, R_in_esr,
@@ -239,6 +261,21 @@ def simulate(pv, dt_arr, P_profile, Varc_profile, fault_start_idx, fault_end_idx
         V_arc = Varc_profile[k]
         f_on = fault_start_idx <= k < fault_end_idx
         f48_on = fault48_start_idx <= k < fault48_end_idx
+
+        # ---- v0.4.4: quasi-static fault branches in coarse tiers (state kept consistent for the record)
+        q8 = f_on and dt >= qs_dt_min and dt > qs_ratio * L_f / (R_f + R_esr)
+        q4 = f48_on and dt >= qs_dt_min and dt > qs_ratio * L_f48 / (R_f48 + R_out_esr)
+        if q8:
+            y[3] = (y[2] + R_esr * (y[1] - y[4])) / (R_f + R_esr)
+            if y[3] < 0.0:
+                y[3] = 0.0
+        if q4:
+            i_pq = 0.0
+            if load_on48:
+                i_pq = P_gpu / (y[9] if y[9] > V_uvlo48 else V_uvlo48)
+            y[10] = (y[9] + R_out_esr * (y[8] - i_pq)) / (R_f48 + R_out_esr)
+            if y[10] < 0.0:
+                y[10] = 0.0
 
         # ---- observables for the supervisory logic (from current state)
         i_pol0 = 0.0
@@ -287,10 +324,10 @@ def simulate(pv, dt_arr, P_profile, Varc_profile, fault_start_idx, fault_end_idx
         out[14, k] = i_pol0 + y[10]                        # load-side 48 V busbar current (rack node)
 
         # ---- RK4
-        k1 = _derivs(y, pv, P_gpu, V_arc, f_on, f48_on, conv_on, load_on48)
-        k2_ = _derivs(y + 0.5 * dt * k1, pv, P_gpu, V_arc, f_on, f48_on, conv_on, load_on48)
-        k3 = _derivs(y + 0.5 * dt * k2_, pv, P_gpu, V_arc, f_on, f48_on, conv_on, load_on48)
-        k4 = _derivs(y + dt * k3, pv, P_gpu, V_arc, f_on, f48_on, conv_on, load_on48)
+        k1 = _derivs(y, pv, P_gpu, V_arc, f_on, f48_on, conv_on, load_on48, q8, q4)
+        k2_ = _derivs(y + 0.5 * dt * k1, pv, P_gpu, V_arc, f_on, f48_on, conv_on, load_on48, q8, q4)
+        k3 = _derivs(y + 0.5 * dt * k2_, pv, P_gpu, V_arc, f_on, f48_on, conv_on, load_on48, q8, q4)
+        k4 = _derivs(y + dt * k3, pv, P_gpu, V_arc, f_on, f48_on, conv_on, load_on48, q8, q4)
         y = y + (dt / 6.0) * (k1 + 2 * k2_ + 2 * k3 + k4)
         if not f_on:
             y[3] = 0.0
@@ -428,6 +465,46 @@ def check_fault48_limit(p, tol=5e-2):
     err_slope = abs(slope - q["V_ref48"] / q["L_f48"]) / (q["V_ref48"] / q["L_f48"])
     err = max(err_lim, err_slope)
     return err, err < tol
+
+
+def check_held_fault_tiers(p, tol=1e-3, T_post=60e-3, verbose=False):
+    """(j), v0.4.4: a fault HELD through the coarse tiers. Production tiers after the event (50 ns to
+    +5 ms, 2 us to +10 ms, 10 us beyond) with the quasi-static fault branch, against an all-50 ns
+    reference in which the branch equation is integrated everywhere. Four corners of the sweep where
+    dataset v1-large went non-finite: high_z at baseline and at its stiffest (tau_f 0.05 us),
+    resistive_pp at 1 ohm, high_z_48 at 100 mohm / 0.1 uH. Normalised RMS on i_L, v_bus, i_rack, v_out
+    over +5 ms .. T_post; every production sample must be finite. Also confirms the defect: the same
+    schedule WITHOUT the quasi-static rule must go non-finite (else the check is not testing anything)."""
+    t_ev = 2e-3
+    corners = (("800", dict(R_f=5.0, L_f=2e-6)), ("800", dict(R_f=10.0, L_f=0.5e-6)),
+               ("800", dict(R_f=1.0, L_f=0.5e-6)), ("48", dict(R_f48=0.1, L_f48=0.1e-6)))
+    n_fine = int(round((t_ev + 5e-3) / 5e-8))
+    dt_prod = np.concatenate([np.full(n_fine, 5e-8), np.full(int(round(5e-3 / 2e-6)), 2e-6),
+                              np.full(int(round((T_post - 10e-3) / 1e-5)), 1e-5)])
+    dt_ref = np.full(int(round((t_ev + T_post) / 5e-8)), 5e-8)
+    worst, defect_seen = 0.0, True
+    for side, ov in corners:
+        q = {**p, **ov, "smooth_on": 0.0}
+        pv = param_vector(q)
+        runs = {}
+        for tag, dts, dtmin in (("ref", dt_ref, 1e30), ("prod", dt_prod, 1.5e-6), ("old", dt_prod, 1e30)):
+            n = dts.size
+            t = np.concatenate([[0.0], np.cumsum(dts)[:-1]])
+            k0 = int(np.searchsorted(t, t_ev - 1e-12))
+            big = n + 10
+            idx = (k0, big, big, big) if side == "800" else (big, big, k0, big)
+            runs[tag] = simulate(pv, dts, np.full(n, 0.5 * q["P_rated"]), np.zeros(n), *idx, dtmin, 0.5)
+        (tr, ref), (tp, prod), (_, old) = runs["ref"], runs["prod"], runs["old"]
+        if not (np.isfinite(prod).all() and np.isfinite(ref).all()):
+            return np.inf, False
+        defect_seen &= not np.isfinite(old).all()
+        m = tp > t_ev + 5e-3
+        for ch, sc in ((1, q["P_rated"] / q["V_ref"]), (2, q["V_ref"]), (14, q["P_rated"] / q["V_ref48"]), (9, q["V_ref48"])):
+            e = np.sqrt(np.mean((prod[ch][m] - np.interp(tp[m], tr, ref[ch])) ** 2)) / sc
+            worst = max(worst, e)
+            if verbose:
+                print(f"    {side:>3s} {ov}  ch {ch:2d}  {e:.1e}")
+    return worst, (worst < tol) and defect_seen
 
 
 def check_history_tier(p, tol=1e-3):

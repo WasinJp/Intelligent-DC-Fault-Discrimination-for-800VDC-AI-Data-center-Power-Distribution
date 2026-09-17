@@ -67,15 +67,20 @@ def _cfg_name(ff, b):
 
 
 def generate(path, master_seed=20260907, n_per_class=200, labels=LABELS, verbose=True,
-             rate_configs=None):
+             rate_configs=None, shard=None):
     """n_per_class: int, or dict {label: n} (v1-large: more benign events).
     rate_configs: list of (f_fast, bits) to store alongside the default
-    2 MSa/s stream under waveforms/alt/<fs..k_b..>/ (OPEN-12)."""
+    2 MSa/s stream under waveforms/alt/<fs..k_b..>/ (OPEN-12).
+    shard: None, or (i, n) to write only the events with idx % n == i. Event indices, labels and
+    per-event seeds are those of the full dataset, so n shard files generated in parallel hold
+    exactly the events of one monolithic run (read them together with iter_events / a glob)."""
     from .events import POST_LONG, POST_LONG_ITER, POST_LONG_FLAT, FAULT_MODE
     t_start = time.time()
     with h5py.File(path, "w") as h:
         g = h.create_group("session_meta")
         g.attrs["model_version"] = MODEL_VERSION
+        from .events import MODEL_PATCH
+        g.attrs["model_patch"] = MODEL_PATCH
         g.attrs["master_seed"] = master_seed
         g.attrs["git_hash"] = _git_hash()
         g.attrs["generated"] = time.strftime("%Y-%m-%dT%H:%M:%S")
@@ -94,6 +99,9 @@ def generate(path, master_seed=20260907, n_per_class=200, labels=LABELS, verbose
         for label in labels:
             n_this = n_per_class[label] if isinstance(n_per_class, dict) else n_per_class
             for k in range(n_this):
+                if shard is not None and idx % shard[1] != shard[0]:
+                    idx += 1
+                    continue
                 seed = master_seed * 1000 + idx
                 ev, obs, truth = run_event(label, seed, rate_configs)
                 n_rej_total += ev["n_rejected"]
@@ -139,13 +147,43 @@ def generate(path, master_seed=20260907, n_per_class=200, labels=LABELS, verbose
                     if kk in ev:
                         pr.attrs["ev_" + kk] = ev[kk]
                 idx += 1
-                if verbose and idx % 50 == 0:
-                    print(f"  {idx:5d} events  {time.time() - t_start:6.0f} s", flush=True)
-        g.attrs["n_events"] = idx
+                n_done = len(ge)                 # events written by THIS process (a shard owns every n-th index)
+                if verbose and n_done % 50 == 0:
+                    print(f"  {n_done:5d} written (index {idx:5d})  {time.time() - t_start:6.0f} s", flush=True)
+        g.attrs["n_events"] = len(ge)
+        g.attrs["n_events_full"] = idx
+        g.attrs["shard"] = "" if shard is None else f"{shard[0]}/{shard[1]}"
         g.attrs["n_rejected_draws"] = n_rej_total
     if verbose:
-        print(f"wrote {idx} events to {path} in {time.time() - t_start:.0f} s "
+        print(f"wrote {len(h5py.File(path, 'r')['events'])} of {idx} events to {path} in {time.time() - t_start:.0f} s "
               f"({n_rej_total} draws rejected by gate 1)")
+
+
+def h5_files(h5path):
+    """One dataset may be one file or several shard files. Accepts a path, a glob pattern
+    ("data/events_v1xl_s*.h5") or a list; returns the sorted list of files."""
+    import glob
+    if isinstance(h5path, (list, tuple)):
+        files = sorted(h5path)
+    elif any(c in h5path for c in "*?["):
+        files = sorted(glob.glob(h5path))
+    else:
+        files = [h5path]
+    if not files:
+        raise FileNotFoundError(h5path)
+    return files
+
+
+def iter_events(h5path):
+    """Yield (key, event group) over every file of the dataset, in event-index order."""
+    hs = [h5py.File(f, "r") for f in h5_files(h5path)]
+    try:
+        index = sorted((k, n) for n, h in enumerate(hs) for k in h["events"].keys())
+        for k, n in index:
+            yield k, hs[n]["events"][k]
+    finally:
+        for h in hs:
+            h.close()
 
 
 def load_obs(e, config=None, node="feeder"):
