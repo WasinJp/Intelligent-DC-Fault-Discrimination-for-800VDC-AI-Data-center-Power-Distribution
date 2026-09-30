@@ -1,0 +1,49 @@
+bench: P_rated 120 W | feeder 48 V, 2.50 A rated | rack bus 12 V, 10.00 A rated
+scales: feeder Z x3.960, C x0.2525 | rack Z x63.36, C x0.01578
+
+quantity                                          model          bench unit  note
+
+-- FEEDER SIDE ('800 V' bus at 48 V)
+source droop R_droop                            0.02424          0.096 ohm   lab supply output impedance; measure, then set in simulator
+source tau_c                                      8e-05          8e-05 s     supply loop; measure step response
+source current limit I_lim                        288.8          4.375 A     supply limit set to this (1.75 x rated)
+L_line                                            5e-06       1.98e-05 H     sweep 1-50 uH -> 4-198 uH
+R_line                                            0.005         0.0198 ohm   sweep 1-20 mohm -> 4-79 mohm
+C_bus                                            0.0005      0.0001263 F     sweep 0.1-2 mF -> 25-505 uF
+R_esr (bus cap)                                   0.008        0.03168 ohm   
+800 V fault R_f (high-Z, 5 ohm)                       5           19.8 ohm   sweep 1-10 ohm -> 4.0-39.6 ohm; extra 12.1 A from the supply at the low end
+800 V fault L_f                                   2e-06       7.92e-06 H     sweep 0.5-10 uH -> 2.0-40 uH
+
+-- RACK INPUT FILTER
+L_in                                              5e-06       1.98e-05 H     sweep 1-20 uH -> 4-79 uH
+R_in                                              0.003        0.01188 ohm   
+C_in                                              0.001      0.0002525 F     sweep 0.1-5 mF -> 25-1263 uF
+R_in_esr                                          0.008        0.03168 ohm   
+
+-- CONVERTER (time constants unchanged)
+V_ref48 -> V_rack                                    50             12 V     
+I_lim_out                                          3696             14 A     1.4 x rated; sweep 1.2-1.6 x
+tau_i (inner current loop)                        2e-05          2e-05 s     sweep 10-50 us; measure on the built converter
+f_v (voltage loop)                                  100            100 Hz    sweep 20-2000 Hz; a fast commercial loop is allowed, measure it
+tau_r, S_max (ramp limiter)               0.0002, 1e+08            off       smoothing OFF on the bench (not implementable in a plain buck); dataset flag smooth_on = 0
+efficiency model p_fix, k2               0.0101, 0.0103        measure       fit from efficiency at 20 / 50 / 100 % load
+
+-- RACK SIDE ('48 V' bus at 12 V)
+C_out (storage bank)                                3.7         0.0584 F     sweep 0.2-5 F -> 3-79 mF; energy/P = 35 ms
+R_out_esr                                        0.0003        0.01901 ohm   sweep 0.2-2 mohm -> 13-127 mohm (the v_out ESR step is a feature)
+48 V fault R_f48 bolted (1 mohm)                  0.001        0.06336 ohm   sweep 0.5-5 mohm -> 32-317 mohm
+48 V fault R_f48 high-Z (20 mohm)                  0.02          1.267 ohm   sweep 5-100 mohm -> 0.32-6.3 ohm
+48 V fault L_f48                                  5e-07      3.168e-05 H     sweep 0.1-2 uH -> 6.3-127 uH: ADD a coil, bench wiring (~0.5 uH) is BELOW this range
+POL UVLO V_uvlo48 / hysteresis                   40 / 2    9.60 / 0.48 V     load-control MCU: trip after t_uvlo48 = 100 us below
+rated rack current                                 2640             10 A     
+
+DERIVED
+bolted 48 V fault on the bench: R_f48 63 mohm + ESR 19 mohm + 10 mohm wiring -> peak about 130 A = 13.0 x rated (model bolted_48 peaks at 12.5 x)
+  energy in the fault resistor for a 5 ms pulse: <= 5 J; I2t <= 84 A2s -> hardware one-shot limits the pulse to 5 ms
+storage bank energy: 4.2 J (model 4.6 kJ)
+feeder current: benign up to 2.50 A; an 800 V-side fault is CAPPED by the source limit at 4.38 A (model: limit reached in high_z). Supply in constant-current mode at that value; it must hold CC, not shut down; its CC transition time replaces tau_c in the simulator
+
+SENSING (16-bit ADC, 3.3 V full scale, 500 kSa/s)
+  rack   shunt  1.0 mohm, gain  20: rated  200.0 mV =  3972 LSB, full scale 13 x rated at 2.60 V, shunt dissipation at rated 100 mW
+  feeder shunt  5.0 mohm, gain 100: rated 1250.0 mV = 24824 LSB, full scale 2 x rated at 2.50 V, shunt dissipation at rated 31 mW
+  feeder shunt 10.0 mohm, gain  50: rated 1250.0 mV = 24824 LSB, full scale 2 x rated at 2.50 V, shunt dissipation at rated 62 mW
