@@ -25,3 +25,9 @@ data/simscape/
 data/nodes_v1large044/
 simscape/*.autosave
 simscape/crosscheck_log.txt
+
+data/nodes_v1xl/
+hardware/bench_block_diagram.png
+hardware/bench_block_diagram.svg
+
+data/nodes_v1xl6k/

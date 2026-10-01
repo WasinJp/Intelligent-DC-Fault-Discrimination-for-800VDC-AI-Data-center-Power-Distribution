@@ -157,9 +157,13 @@ def _metrics(y_true, y_pred, labels):
 
 
 def _fit(Xtr, ytr):
+    # early_stopping=False (2026-10-01): sklearn's default 'auto' switches early stopping ON above
+    # 10 000 rows (10 % validation split, 50-150 iterations, fold-dependent); found by the firmware
+    # model export (firmware/docs/DEVIATIONS.md #9). Tables up to v1-large (6 201 events) were below
+    # the limit; v1xl / v1xl6k studies run before this date used 'auto' and were rerun.
     clf = HistGradientBoostingClassifier(max_iter=300, learning_rate=0.06,
                                          max_leaf_nodes=15, l2_regularization=0.5,
-                                         random_state=0)
+                                         early_stopping=False, random_state=0)
     return clf.fit(Xtr, ytr)
 
 
