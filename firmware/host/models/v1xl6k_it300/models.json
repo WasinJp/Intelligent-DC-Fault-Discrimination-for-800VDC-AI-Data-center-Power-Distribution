@@ -1,0 +1,140 @@
+{
+ "generated": "2026-10-01T17:07:09",
+ "sklearn": "1.9.0",
+ "cache": "data/nodes_v1xl6k",
+ "window_ms": 0.25,
+ "max_iter": 300,
+ "early_stopping": "off",
+ "tables": {
+  "feeder": {
+   "path": "data/nodes_v1xl6k\\features_feeder.csv",
+   "sha256": "c902e4c5742823487d649c48d9815f3c171bff72a8c6e3a6f2a0797858c74726",
+   "rows": 108000
+  },
+  "rack": {
+   "path": "data/nodes_v1xl6k\\features_rack.csv",
+   "sha256": "8c362ef3fcaa80ced3fc63a430ccd7bc6e78bc5cf36aea9d8579cf3c595c2be0",
+   "rows": 108000
+  }
+ },
+ "classifier": "HistGradientBoostingClassifier(max_iter=300, learning_rate=0.06, max_leaf_nodes=15, l2_regularization=0.5, random_state=0)",
+ "models": {
+  "feeder": {
+   "joblib": "firmware\\host\\models\\v1xl6k_it300\\feeder.joblib",
+   "n_rows": 35946,
+   "n_rows_total": 36000,
+   "class_counts": {
+    "ALERT": 969,
+    "HOLD": 29979,
+    "TRIP": 4998
+   },
+   "n_iter": 300,
+   "features": [
+    "di_end",
+    "di_max",
+    "didt_max",
+    "t_rise",
+    "dv_early",
+    "di_early",
+    "r_dyn",
+    "v_sag_end",
+    "v_min",
+    "collapse",
+    "spec_i",
+    "spec_v",
+    "has_period",
+    "period_strength",
+    "phase_err"
+   ],
+   "train_seconds": 3.4,
+   "train_accuracy": 0.9692594447226395,
+   "n_trees": 900,
+   "n_nodes": 26100,
+   "bytes": 316804,
+   "n_features": 15
+  },
+  "rack": {
+   "joblib": "firmware\\host\\models\\v1xl6k_it300\\rack.joblib",
+   "n_rows": 34660,
+   "n_rows_total": 36000,
+   "class_counts": {
+    "ALERT": 332,
+    "HOLD": 29998,
+    "TRIP": 4330
+   },
+   "n_iter": 300,
+   "features": [
+    "di_end",
+    "di_max",
+    "didt_max",
+    "t_rise",
+    "dv_early",
+    "di_early",
+    "r_dyn",
+    "v_sag_end",
+    "v_min",
+    "collapse",
+    "spec_i",
+    "spec_v",
+    "has_period",
+    "period_strength",
+    "phase_err"
+   ],
+   "train_seconds": 3.4,
+   "train_accuracy": 0.9952394691286786,
+   "n_trees": 900,
+   "n_nodes": 26100,
+   "bytes": 316804,
+   "n_features": 15
+  },
+  "both": {
+   "joblib": "firmware\\host\\models\\v1xl6k_it300\\both.joblib",
+   "n_rows": 35971,
+   "n_rows_total": 36000,
+   "class_counts": {
+    "ALERT": 971,
+    "HOLD": 30000,
+    "TRIP": 5000
+   },
+   "n_iter": 300,
+   "features": [
+    "di_end",
+    "di_max",
+    "didt_max",
+    "t_rise",
+    "dv_early",
+    "di_early",
+    "r_dyn",
+    "v_sag_end",
+    "v_min",
+    "collapse",
+    "spec_i",
+    "spec_v",
+    "has_period",
+    "period_strength",
+    "phase_err",
+    "di_end_rack",
+    "di_max_rack",
+    "didt_max_rack",
+    "t_rise_rack",
+    "dv_early_rack",
+    "di_early_rack",
+    "r_dyn_rack",
+    "v_sag_end_rack",
+    "v_min_rack",
+    "collapse_rack",
+    "spec_i_rack",
+    "spec_v_rack",
+    "has_period_rack",
+    "period_strength_rack",
+    "phase_err_rack"
+   ],
+   "train_seconds": 4.8,
+   "train_accuracy": 1.0,
+   "n_trees": 900,
+   "n_nodes": 26100,
+   "bytes": 316804,
+   "n_features": 30
+  }
+ }
+}

@@ -1,0 +1,143 @@
+{
+ "generated": "2026-10-01T04:56:29",
+ "sklearn": "1.9.0",
+ "cache": "data/nodes_v1large044",
+ "window_ms": 0.25,
+ "tables": {
+  "feeder": {
+   "path": "data/nodes_v1large044\\features_feeder.csv",
+   "sha256": "124ae7af029e416adbd410248c36dc125da506ebab1689a31620161c6138651c",
+   "rows": 18603
+  },
+  "rack": {
+   "path": "data/nodes_v1large044\\features_rack.csv",
+   "sha256": "b7938e7c7fddbb5d3c47fd510209df36f40ef28b4de75d9cb51d980323032112",
+   "rows": 18603
+  }
+ },
+ "classifier": "HistGradientBoostingClassifier(max_iter=300, learning_rate=0.06, max_leaf_nodes=15, l2_regularization=0.5, random_state=0)",
+ "models": {
+  "feeder": {
+   "joblib": "firmware\\host\\models\\feeder.joblib",
+   "n_rows": 6187,
+   "n_rows_total": 6201,
+   "class_counts": {
+    "ALERT": 189,
+    "HOLD": 4998,
+    "TRIP": 1000
+   },
+   "n_iter": 300,
+   "features": [
+    "di_end",
+    "di_max",
+    "didt_max",
+    "t_rise",
+    "dv_early",
+    "di_early",
+    "r_dyn",
+    "v_sag_end",
+    "v_min",
+    "collapse",
+    "spec_i",
+    "spec_v",
+    "has_period",
+    "period_strength",
+    "phase_err"
+   ],
+   "train_seconds": 2.6,
+   "train_accuracy": 0.9998383707774365,
+   "n_trees": 900,
+   "n_nodes": 26100,
+   "bytes": 316804,
+   "n_features": 15
+  },
+  "rack": {
+   "joblib": "firmware\\host\\models\\rack.joblib",
+   "n_rows": 5926,
+   "n_rows_total": 6201,
+   "class_counts": {
+    "ALERT": 61,
+    "HOLD": 5001,
+    "TRIP": 864
+   },
+   "n_iter": 300,
+   "features": [
+    "di_end",
+    "di_max",
+    "didt_max",
+    "t_rise",
+    "dv_early",
+    "di_early",
+    "r_dyn",
+    "v_sag_end",
+    "v_min",
+    "collapse",
+    "spec_i",
+    "spec_v",
+    "has_period",
+    "period_strength",
+    "phase_err"
+   ],
+   "train_seconds": 2.2,
+   "train_accuracy": 1.0,
+   "n_trees": 900,
+   "n_nodes": 26100,
+   "bytes": 316804,
+   "n_features": 15
+  },
+  "both": {
+   "joblib": "firmware\\host\\models\\both.joblib",
+   "n_rows": 6192,
+   "n_rows_total": 6201,
+   "class_counts": {
+    "ALERT": 191,
+    "HOLD": 5001,
+    "TRIP": 1000
+   },
+   "n_iter": 300,
+   "features": [
+    "di_end",
+    "di_max",
+    "didt_max",
+    "t_rise",
+    "dv_early",
+    "di_early",
+    "r_dyn",
+    "v_sag_end",
+    "v_min",
+    "collapse",
+    "spec_i",
+    "spec_v",
+    "has_period",
+    "period_strength",
+    "phase_err",
+    "di_end_rack",
+    "di_max_rack",
+    "didt_max_rack",
+    "t_rise_rack",
+    "dv_early_rack",
+    "di_early_rack",
+    "r_dyn_rack",
+    "v_sag_end_rack",
+    "v_min_rack",
+    "collapse_rack",
+    "spec_i_rack",
+    "spec_v_rack",
+    "has_period_rack",
+    "period_strength_rack",
+    "phase_err_rack"
+   ],
+   "train_seconds": 2.6,
+   "train_accuracy": 1.0,
+   "n_trees": 900,
+   "n_nodes": 26098,
+   "bytes": 316780,
+   "n_features": 30
+  }
+ },
+ "reference_scores_max_dev_exported_tables": {
+  "feeder": 0.0,
+  "rack": 0.0,
+  "both": 0.0
+ }
+}
