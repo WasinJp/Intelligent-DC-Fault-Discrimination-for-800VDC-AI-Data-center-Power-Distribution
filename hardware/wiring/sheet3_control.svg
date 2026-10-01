@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2000 820" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#12263A"><rect width="2000" height="820" fill="#fff"/>
+<text x="24" y="34" font-size="20" font-weight="700" fill="#12263A">Sheet 3 — Bench control, gate drivers and the hardware fault limit (one driver board + Nucleo-H743ZI2 #3)</text>
+<rect x="60" y="120" width="300" height="420" rx="4" fill="#fff" stroke="#12263A" stroke-width="2"/>
+<text x="210.0" y="279.0" text-anchor="middle" font-size="12" fill="#12263A" font-weight="700">NUCLEO-H743ZI2 #3</text>
+<text x="210.0" y="295.0" text-anchor="middle" font-size="12" fill="#12263A" >BENCH CONTROL</text>
+<text x="210.0" y="311.0" text-anchor="middle" font-size="12" fill="#12263A" ></text>
+<text x="210.0" y="327.0" text-anchor="middle" font-size="12" fill="#12263A" >workload profile (two-tier</text>
+<text x="210.0" y="343.0" text-anchor="middle" font-size="12" fill="#12263A" >cadence, staircase ramps)</text>
+<text x="210.0" y="359.0" text-anchor="middle" font-size="12" fill="#12263A" >fault scheduling</text>
+<text x="210.0" y="375.0" text-anchor="middle" font-size="12" fill="#12263A" >POL-UVLO emulation</text>
+<text x="210.0" y="391.0" text-anchor="middle" font-size="12" fill="#12263A" >SYNC · DAC replay · CLI</text>
+<path d="M360,150 L430,150" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="436" y="154" text-anchor="start" font-size="11" fill="#12263A" >LOAD1</text>
+<path d="M360,184 L430,184" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="436" y="188" text-anchor="start" font-size="11" fill="#12263A" >LOAD2</text>
+<path d="M360,218 L430,218" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="436" y="222" text-anchor="start" font-size="11" fill="#12263A" >LOAD3</text>
+<path d="M360,252 L430,252" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="436" y="256" text-anchor="start" font-size="11" fill="#12263A" >LOAD4</text>
+<path d="M360,286 L430,286" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="436" y="290" text-anchor="start" font-size="11" fill="#12263A" >LOAD5</text>
+<rect x="520" y="135" width="110" height="170" rx="4" fill="#fff" stroke="#12263A" stroke-width="2"/>
+<text x="575.0" y="201.0" text-anchor="middle" font-size="11" fill="#12263A" font-weight="700">U10..U14</text>
+<text x="575.0" y="217.0" text-anchor="middle" font-size="11" fill="#12263A" >gate drivers</text>
+<text x="575.0" y="233.0" text-anchor="middle" font-size="11" fill="#12263A" >TC4420 /</text>
+<text x="575.0" y="249.0" text-anchor="middle" font-size="11" fill="#12263A" >UCC27517</text>
+<path d="M490,150 L520,150" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M630,150 L700,150" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="706" y="154" text-anchor="start" font-size="11" fill="#12263A" >→ Q_L1 gate (Sheet 1 load bank)</text>
+<path d="M490,184 L520,184" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M630,184 L700,184" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="706" y="188" text-anchor="start" font-size="11" fill="#12263A" >→ Q_L2 gate (Sheet 1 load bank)</text>
+<path d="M490,218 L520,218" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M630,218 L700,218" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="706" y="222" text-anchor="start" font-size="11" fill="#12263A" >→ Q_L3 gate (Sheet 1 load bank)</text>
+<path d="M490,252 L520,252" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M630,252 L700,252" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="706" y="256" text-anchor="start" font-size="11" fill="#12263A" >→ Q_L4 gate (Sheet 1 load bank)</text>
+<path d="M490,286 L520,286" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M630,286 L700,286" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="706" y="290" text-anchor="start" font-size="11" fill="#12263A" >→ Q_L5 gate (Sheet 1 load bank)</text>
+<rect x="430" y="318" width="200" height="36" rx="4" fill="#fff" stroke="#12263A" stroke-width="2"/>
+<text x="530.0" y="341.0" text-anchor="middle" font-size="10" fill="#12263A" font-weight="700">AND  thermal switch 90 °C (NC) · arm key</text>
+<path d="M530,305 L530,318" fill="none" stroke="#7A8794" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="640" y="342" text-anchor="start" font-size="11" fill="#7A8794" >enable for all five load drivers</text>
+<path d="M360,400 L430,400" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="436" y="404" text-anchor="start" font-size="11" fill="#12263A" >FAULT_A</text>
+<rect x="520" y="375" width="130" height="50" rx="4" fill="#fff" stroke="#12263A" stroke-width="2"/>
+<text x="585.0" y="397.0" text-anchor="middle" font-size="11" fill="#12263A" font-weight="700">U15A 74HC123</text>
+<text x="585.0" y="413.0" text-anchor="middle" font-size="11" fill="#12263A" >one-shot, 10 ms</text>
+<path d="M495,400 L520,400" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M585,425 L585,428.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M585,472.0 L585,475" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="577" y="428.0" width="16" height="44" fill="#fff" stroke="#12263A" stroke-width="2"/>
+<text x="599" y="454.0" text-anchor="start" font-size="13" fill="#12263A" >R_t, C_t set the</text>
+<text x="599" y="469.0" text-anchor="start" font-size="13" fill="#12263A" >pulse width</text>
+<path d="M585,475 L585,487" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="569" y1="487" x2="601" y2="487" stroke="#12263A" stroke-width="2.5"/>
+<line x1="575" y1="493" x2="595" y2="493" stroke="#12263A" stroke-width="2.5"/>
+<line x1="581" y1="499" x2="589" y2="499" stroke="#12263A" stroke-width="2.5"/>
+<path d="M650,400 L700,400" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="700" y="375" width="90" height="50" rx="4" fill="#fff" stroke="#12263A" stroke-width="2"/>
+<text x="745.0" y="405.0" text-anchor="middle" font-size="11" fill="#12263A" font-weight="700">U16 driver</text>
+<path d="M790,400 L840,400" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="846" y="404" text-anchor="start" font-size="11" fill="#C22F2A" >→ Q_f8 gate (feeder-side fault, Sheet 1)</text>
+<path d="M360,520 L430,520" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="436" y="524" text-anchor="start" font-size="11" fill="#12263A" >FAULT_B</text>
+<rect x="520" y="495" width="130" height="50" rx="4" fill="#fff" stroke="#12263A" stroke-width="2"/>
+<text x="585.0" y="517.0" text-anchor="middle" font-size="11" fill="#12263A" font-weight="700">U15B 74HC123</text>
+<text x="585.0" y="533.0" text-anchor="middle" font-size="11" fill="#12263A" >one-shot, 5 ms</text>
+<path d="M495,520 L520,520" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M585,545 L585,548.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M585,592.0 L585,595" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="577" y="548.0" width="16" height="44" fill="#fff" stroke="#12263A" stroke-width="2"/>
+<path d="M585,595 L585,607" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="569" y1="607" x2="601" y2="607" stroke="#12263A" stroke-width="2.5"/>
+<line x1="575" y1="613" x2="595" y2="613" stroke="#12263A" stroke-width="2.5"/>
+<line x1="581" y1="619" x2="589" y2="619" stroke="#12263A" stroke-width="2.5"/>
+<path d="M650,520 L700,520" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="700" y="495" width="90" height="50" rx="4" fill="#fff" stroke="#12263A" stroke-width="2"/>
+<text x="745.0" y="525.0" text-anchor="middle" font-size="11" fill="#12263A" font-weight="700">U17 driver</text>
+<path d="M790,520 L840,520" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="846" y="524" text-anchor="start" font-size="11" fill="#C22F2A" >→ Q_f48 gate (rack-side fault, Sheet 1)</text>
+<text x="60" y="690" text-anchor="start" font-size="12" fill="#C22F2A" >The MCU can only START a fault pulse (rising edge on FAULT_x). The pulse length is set by R_t·C_t in the one-shot;</text>
+<text x="60" y="710" text-anchor="start" font-size="12" fill="#C22F2A" >no firmware state can hold the fault switch closed. The ARM key switch is in series with both one-shot outputs.</text>
+<rect x="1100" y="130" width="200" height="60" rx="4" fill="#fff" stroke="#12263A" stroke-width="2"/>
+<text x="1200.0" y="165.0" text-anchor="middle" font-size="11" fill="#12263A" font-weight="700">Feeder node TRIP (PF13)</text>
+<path d="M1300,160 L1360,160" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="1360" y="135" width="90" height="50" rx="4" fill="#fff" stroke="#12263A" stroke-width="2"/>
+<text x="1405.0" y="165.0" text-anchor="middle" font-size="11" fill="#12263A" font-weight="700">U18 driver</text>
+<path d="M1450,160 L1500,160" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="1506" y="164" text-anchor="start" font-size="11" fill="#C22F2A" >→ Q_fb gate (feeder breaker)  — inverted: TRIP high = gate low</text>
+<rect x="1100" y="220" width="200" height="60" rx="4" fill="#fff" stroke="#12263A" stroke-width="2"/>
+<text x="1200.0" y="255.0" text-anchor="middle" font-size="11" fill="#12263A" font-weight="700">Rack node TRIP (PF13)</text>
+<path d="M1300,250 L1360,250" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="1360" y="225" width="90" height="50" rx="4" fill="#fff" stroke="#12263A" stroke-width="2"/>
+<text x="1405.0" y="255.0" text-anchor="middle" font-size="11" fill="#12263A" font-weight="700">U19 driver</text>
+<path d="M1450,250 L1500,250" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="1506" y="254" text-anchor="start" font-size="11" fill="#C22F2A" >→ Q_brk gate (rack breaker)  — inverted: TRIP high = gate low</text>
+<text x="1100" y="300" text-anchor="start" font-size="11" fill="#7A8794" >Both breaker drivers have a 10 kΩ pull-down on their input so an unpowered node = breaker OPEN (fail-safe);</text>
+<text x="1100" y="318" text-anchor="start" font-size="11" fill="#7A8794" >an inverting driver (or TRIP active-low in firmware) gives breaker CLOSED at TRIP = 0.</text>
+<rect x="1100" y="380" width="200" height="60" rx="4" fill="#fff" stroke="#12263A" stroke-width="2"/>
+<text x="1200.0" y="415.0" text-anchor="middle" font-size="11" fill="#12263A" font-weight="700">UVLO emulation</text>
+<text x="1310" y="396" text-anchor="start" font-size="11" fill="#12263A" >ADC3 on v_out (1 MSa/s): < 9.6 V for 100 µs → all LOAD gates low;</text>
+<text x="1310" y="414" text-anchor="start" font-size="11" fill="#12263A" >re-enable above 10.1 V (the model's POL UVLO, V_uvlo48 / t_uvlo48 / V_hyst48 scaled)</text>
+<rect x="1100" y="460" width="200" height="60" rx="4" fill="#fff" stroke="#12263A" stroke-width="2"/>
+<text x="1200.0" y="495.0" text-anchor="middle" font-size="11" fill="#12263A" font-weight="700">SYNC out (BNC)</text>
+<text x="1310" y="476" text-anchor="start" font-size="11" fill="#12263A" >one pulse at each scheduled event → feeder node PF12, rack node PF12, scope ch1</text>
+<rect x="1100" y="540" width="200" height="60" rx="4" fill="#fff" stroke="#12263A" stroke-width="2"/>
+<text x="1200.0" y="575.0" text-anchor="middle" font-size="11" fill="#12263A" font-weight="700">DAC1 / DAC2 (PA4 / PA5)</text>
+<text x="1310" y="556" text-anchor="start" font-size="11" fill="#12263A" >12-bit, 1 MSa/s replay tables from tools/replay_waveforms.py → the node's SMA i / SMA v</text>
+<text x="1310" y="574" text-anchor="start" font-size="11" fill="#12263A" >(latency test, Sheet 2 JP1/JP2); 0–3.3 V, through 100 Ω</text>
+<rect x="1100" y="620" width="200" height="60" rx="4" fill="#fff" stroke="#12263A" stroke-width="2"/>
+<text x="1200.0" y="655.0" text-anchor="middle" font-size="11" fill="#12263A" font-weight="700">USB-serial CLI</text>
+<text x="1310" y="636" text-anchor="start" font-size="11" fill="#12263A" >tools/bench_run.py scripts the SCALING_SHEET §6 plan: 200 benign events, 80 faults, every run recorded</text>
+<text x="60" y="745" text-anchor="start" font-size="12" fill="#7A8794" >Driver supply: 12 V from the bench bus through a 1 A fuse (gate drive for the logic-level MOSFETs); logic 3.3 V from the Nucleo. Common ground with the bench star.</text>
+<text x="60" y="767" text-anchor="start" font-size="12" fill="#7A8794" >Scope: ch1 SYNC, ch2 rack shunt (differential probe ≥ 10 MHz, across R_sh2), ch3 ONSET (PF14), ch4 TRIP (PF13) → onset-to-trip latency and the raw fault front.</text></svg>

@@ -25,7 +25,7 @@
 
 Built on a Nucleo-H743ZI2 (or H723ZG) with a small front-end board on its headers.
 
-- **Current channel:** shunt Kelvin pair → INA240 (A1 = ×20 for the rack node, A3 = ×50 for the feeder node; REF pins to ground, unidirectional) → second-order Sallen-Key low-pass, f_c = 150 kHz, Q = 0.7 (OPA2350-class, 3.3 V rail-to-rail) → ADC1 input. Full scale 3.3 V = 13 × rated (rack) / 2 × rated (feeder). A 3.3 V clamp diode pair protects the ADC pin during a fault transient.
+- **Current channel:** shunt Kelvin pair → INA240 (A1 = ×20 for the rack node, A3 = ×50 for the feeder node; REF pins to ground, unidirectional) → **fourth-order** low-pass (two Sallen-Key stages, Butterworth, f_c = 100 kHz; OPA2350-class, 3.3 V rail-to-rail) → ADC1 input. Revised 2026-10-01 from 2nd order / 150 kHz: the feature band-pass tops out at 100 kHz anyway (`f_hi = min(100 kHz, 0.4 fs)`), and converter switching ripple must be ≥ 40 dB down before the ADC (§6, ripple note). Full scale 3.3 V = 13 × rated (rack) / 2 × rated (feeder). A 3.3 V clamp diode pair protects the ADC pin during a fault transient.
 - **Voltage channel:** divider (12 V: 20 k / 4.7 k; 48 V: 100 k / 4.99 k, 0.1 % metal film) → unity buffer → same 150 kHz filter → ADC2 input.
 - **Sampling:** ADC1 and ADC2 in dual simultaneous mode, 16-bit, 500 kSa/s, triggered by a timer, DMA into a ring buffer. This is the firmware's contract (FIRMWARE_SPEC.md).
 - **Outputs:** TRIP (push-pull, active high, to the breaker driver; also an LED); ONSET and TRIP-EDGE test pins for the scope; SYNC input from the bench control (timestamps t_event in the record).
@@ -96,9 +96,16 @@ Not on this list, expected from the lab: 48 V supply, scope ≥ 100 MHz, differe
 - The fault loop (bank → shunt → breaker → fault resistor → coil → MOSFET → ground) is kept physically small; the coil is *the* inductance of that loop by design, so its value dominates the wiring's.
 - Scope measurement of the raw fault front: differential probe across the rack shunt, ≥ 10 MHz, plus ch1 SYNC, ch3 ONSET, ch4 TRIP. This is what answers the judges' probe remark: the node's own front end is band-limited to 150 kHz for the 500 kSa/s ADC by design; the scope that checks the front is not.
 
+## 6a. Switching ripple: the one thing the simulator never showed the relay
+
+The core is an averaged converter: the training data contain **no switching ripple**. The bench converter will put ripple on i_rack and v_out at its switching frequency, and the relay's noise-based onset detector (σ of the quiet window), `didt_max` and `spec_i` would all see it. Three rules follow:
+1. **Converter switching frequency ≥ 400 kHz** (buy or build): with the 4th-order 100 kHz anti-alias that is ≥ 48 dB of attenuation, i.e. ripple below one LSB-equivalent of per-unit noise at the ADC. A 100–200 kHz module is rejected on this criterion.
+2. The **residual** ripple and front-end noise are measured on the real node (quiet bus, `status` σ) and added to the bench dataset as the noise model of `synth.synthesize`, so the trained relay has seen the noise floor it will meet. This is a parameter, not a model change.
+3. Scope checks of the raw front use the differential probe *before* the filter; the relay's own view is after it.
+
 ## 7. What the professor is asked to check
 
 1. The power path and the two breaker placements (feeder in the return, rack in the busbar).
 2. Fault injector currents, resistor pulse ratings and the one-shot limits (SCALING_SHEET §7).
-3. The sensing chain: full scales, the 150 kHz anti-alias for 500 kSa/s, no isolation on the bench.
+3. The sensing chain: full scales, the 4th-order 100 kHz anti-alias for 500 kSa/s and the ≥ 400 kHz switching-frequency rule (§6a), no isolation on the bench.
 4. Whether a 100 Hz voltage loop should be a hard requirement of the converter or a measured value.

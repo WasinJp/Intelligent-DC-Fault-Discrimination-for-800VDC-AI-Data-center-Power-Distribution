@@ -1,0 +1,360 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2520 900" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" fill="#12263A"><rect width="2520" height="900" fill="#fff"/>
+<text x="24" y="34" font-size="20" font-weight="700" fill="#12263A">Sheet 1 — Power bench, 120 W, 48 V → 12 V  (scaled from MODEL.md v0.4.4; every value is measured before the first fault run)</text>
+<circle cx="150" cy="220" r="22" fill="#fff" stroke="#12263A" stroke-width="2"/>
+<text x="150" y="214" text-anchor="middle" font-size="16" fill="#12263A" >+</text>
+<text x="150" y="236" text-anchor="middle" font-size="16" fill="#12263A" >−</text>
+<text x="120" y="210" text-anchor="end" font-size="13" fill="#12263A" >Lab supply</text>
+<text x="120" y="225" text-anchor="end" font-size="13" fill="#12263A" >48 V</text>
+<text x="120" y="240" text-anchor="end" font-size="13" fill="#12263A" >CC limit 4.4 A</text>
+<path d="M172,220 L210,220" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M210,220 L222,220" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M278,220 L290,220" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M222,220 L274,206" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="222" cy="220" r="4" fill="#12263A"/>
+<circle cx="278" cy="220" r="4" fill="#12263A"/>
+<text x="250" y="180" text-anchor="middle" font-size="12" fill="#12263A" >K1 E-stop</text>
+<text x="250" y="195" text-anchor="middle" font-size="12" fill="#12263A" >contactor</text>
+<path d="M290,220 L370,220" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="312.0" y="213" width="36" height="14" fill="#fff" stroke="#12263A" stroke-width="2"/>
+<text x="330" y="246" text-anchor="middle" font-size="12" fill="#12263A" >F1 5 A fast</text>
+<path d="M370,220 L401.0,220" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M449.0,220 L480,220" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M401.0,220 a6,6 0 0 1 12,0 a6,6 0 0 1 12,0 a6,6 0 0 1 12,0 a6,6 0 0 1 12,0" fill="none" stroke="#12263A" stroke-width="2"/>
+<text x="425.0" y="191" text-anchor="middle" font-size="13" fill="#12263A" >L_line 20 µH</text>
+<text x="425.0" y="206" text-anchor="middle" font-size="13" fill="#12263A" >air core, 5 A</text>
+<path d="M480,220 L508.0,220" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M552.0,220 L580,220" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="508.0" y="212" width="44" height="16" fill="#fff" stroke="#12263A" stroke-width="2"/>
+<text x="530.0" y="244" text-anchor="middle" font-size="13" fill="#12263A" >R_line 20 mΩ 3 W</text>
+<path d="M580,220 L623.0,220" fill="none" stroke="#1B5EA6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M667.0,220 L710,220" fill="none" stroke="#1B5EA6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="623.0" y="212" width="44" height="16" fill="#fff" stroke="#1B5EA6" stroke-width="2"/>
+<text x="645.0" y="191" text-anchor="middle" font-size="13" fill="#1B5EA6" >R_sh1  10 mΩ 4-terminal 3 W</text>
+<text x="645.0" y="206" text-anchor="middle" font-size="13" fill="#1B5EA6" >FEEDER SHUNT (i_L)</text>
+<path d="M710,220 L780,220" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="780" cy="220" r="4" fill="#12263A"/>
+<text x="780" y="250" text-anchor="start" font-size="12" fill="#1B5EA6" >"800 V bus" node (48 V)</text>
+<text x="780" y="265" text-anchor="start" font-size="12" fill="#1B5EA6" >feeder node reads v_bus here</text>
+<path d="M780,220 L780,290" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M780,290 L780,303.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M780,347.0 L780,360" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="772" y="303.0" width="16" height="44" fill="#fff" stroke="#12263A" stroke-width="2"/>
+<text x="766" y="329.0" text-anchor="end" font-size="13" fill="#12263A" >ESR ballast 22 mΩ</text>
+<text x="766" y="344.0" text-anchor="end" font-size="13" fill="#12263A" >(only if the cap is better)</text>
+<path d="M780,360 L780,389.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M780,401.0 L780,430" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="766" y1="389.0" x2="794" y2="389.0" stroke="#12263A" stroke-width="3"/>
+<line x1="766" y1="401.0" x2="794" y2="401.0" stroke="#12263A" stroke-width="3"/>
+<text x="758" y="387.0" text-anchor="middle" font-size="14" fill="#12263A" >+</text>
+<text x="762" y="399.0" text-anchor="end" font-size="13" fill="#12263A" >C_bus 150 µF 63 V</text>
+<path d="M780,430 L780,442" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="764" y1="442" x2="796" y2="442" stroke="#12263A" stroke-width="2.5"/>
+<line x1="770" y1="448" x2="790" y2="448" stroke="#12263A" stroke-width="2.5"/>
+<line x1="776" y1="454" x2="784" y2="454" stroke="#12263A" stroke-width="2.5"/>
+<path d="M780,220 L960,220" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="960" cy="220" r="4" fill="#12263A"/>
+<path d="M960,220 L960,260" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M960,260 L960,273.0" fill="none" stroke="#C22F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M960,317.0 L960,330" fill="none" stroke="#C22F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="952" y="273.0" width="16" height="44" fill="#fff" stroke="#C22F2A" stroke-width="2"/>
+<text x="974" y="299.0" text-anchor="start" font-size="13" fill="#C22F2A" >R_f  22 Ω 50 W (or 39 Ω)</text>
+<path d="M960,330 L960,341.0" fill="none" stroke="#C22F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M960,389.0 L960,400" fill="none" stroke="#C22F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M960,341.0 a6,6 0 0 1 0,12 a6,6 0 0 1 0,12 a6,6 0 0 1 0,12 a6,6 0 0 1 0,12" fill="none" stroke="#C22F2A" stroke-width="2"/>
+<text x="974" y="369.0" text-anchor="start" font-size="13" fill="#C22F2A" >L_f  8 µH air</text>
+<path d="M960,400 L960,422.0" fill="none" stroke="#C22F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M960,458.0 L960,480" fill="none" stroke="#C22F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="950" y1="424.0" x2="950" y2="456.0" stroke="#C22F2A" stroke-width="3"/>
+<line x1="942" y1="426.0" x2="942" y2="454.0" stroke="#C22F2A" stroke-width="2"/>
+<path d="M942,440.0 L920,440.0" fill="none" stroke="#C22F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M960,422.0 L950,422.0" fill="none" stroke="#C22F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M960,458.0 L950,458.0" fill="none" stroke="#C22F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M960,440.0 L950,440.0" fill="none" stroke="#C22F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<polygon points="950,440.0 956,435.0 956,445.0" fill="#C22F2A"/>
+<text x="916" y="444.0" text-anchor="end" font-size="11" fill="#C22F2A" >G</text>
+<text x="976" y="444.0" text-anchor="start" font-size="13" fill="#C22F2A" >Q_f8  IRLB8721</text>
+<text x="976" y="459.0" text-anchor="start" font-size="13" fill="#C22F2A" >feeder-side fault</text>
+<path d="M960,480 L960,492" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="944" y1="492" x2="976" y2="492" stroke="#12263A" stroke-width="2.5"/>
+<line x1="950" y1="498" x2="970" y2="498" stroke="#12263A" stroke-width="2.5"/>
+<line x1="956" y1="504" x2="964" y2="504" stroke="#12263A" stroke-width="2.5"/>
+<text x="914" y="444.0" text-anchor="end" font-size="11" fill="#7A8794" >from one-shot A</text>
+<text x="914" y="459.0" text-anchor="end" font-size="11" fill="#7A8794" >(10 ms limit)</text>
+<text x="960" y="550" text-anchor="middle" font-size="11" fill="#7A8794" >current capped by the supply</text>
+<text x="960" y="565" text-anchor="middle" font-size="11" fill="#7A8794" >CC limit, no heavy switch needed</text>
+<path d="M960,220 L1040,220" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1040,220 L1075.0,220" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1095.0,220 L1130,220" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<polygon points="1075.0,210 1075.0,230 1095.0,220" fill="#12263A"/>
+<line x1="1095.0" y1="210" x2="1095.0" y2="230" stroke="#12263A" stroke-width="3"/>
+<text x="1085.0" y="189" text-anchor="middle" font-size="13" fill="#12263A" >D_or  Schottky 60 V 10 A</text>
+<text x="1085.0" y="204" text-anchor="middle" font-size="13" fill="#12263A" >(ORing, shelf input)</text>
+<path d="M1130,220 L1161.0,220" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1209.0,220 L1240,220" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1161.0,220 a6,6 0 0 1 12,0 a6,6 0 0 1 12,0 a6,6 0 0 1 12,0 a6,6 0 0 1 12,0" fill="none" stroke="#12263A" stroke-width="2"/>
+<text x="1185" y="246" text-anchor="middle" font-size="12" fill="#12263A" >L_in 20 µH air</text>
+<path d="M1240,220 L1290,220" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="1290" cy="220" r="4" fill="#12263A"/>
+<path d="M1290,220 L1290,260" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1290,260 L1290,289.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1290,301.0 L1290,330" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="1276" y1="289.0" x2="1304" y2="289.0" stroke="#12263A" stroke-width="3"/>
+<line x1="1276" y1="301.0" x2="1304" y2="301.0" stroke="#12263A" stroke-width="3"/>
+<text x="1268" y="287.0" text-anchor="middle" font-size="14" fill="#12263A" >+</text>
+<text x="1308" y="299.0" text-anchor="start" font-size="13" fill="#12263A" >C_in 220 µF 63 V</text>
+<path d="M1290,330 L1290,342" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="1274" y1="342" x2="1306" y2="342" stroke="#12263A" stroke-width="2.5"/>
+<line x1="1280" y1="348" x2="1300" y2="348" stroke="#12263A" stroke-width="2.5"/>
+<line x1="1286" y1="354" x2="1294" y2="354" stroke="#12263A" stroke-width="2.5"/>
+<path d="M1290,220 L1360,220" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="1360" y="165" width="180" height="110" rx="4" fill="#fff" stroke="#12263A" stroke-width="2"/>
+<text x="1450.0" y="201.0" text-anchor="middle" font-size="12" fill="#12263A" font-weight="700">CONVERTER</text>
+<text x="1450.0" y="217.0" text-anchor="middle" font-size="12" fill="#12263A" >48 V → 12 V, 120 W</text>
+<text x="1450.0" y="233.0" text-anchor="middle" font-size="12" fill="#12263A" >I_lim 14 A, hold (no hiccup)</text>
+<text x="1450.0" y="249.0" text-anchor="middle" font-size="12" fill="#12263A" >f_sw ≥ 400 kHz</text>
+<path d="M1450,275 L1450,300" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1450,300 L1450,312" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="1434" y1="312" x2="1466" y2="312" stroke="#12263A" stroke-width="2.5"/>
+<line x1="1440" y1="318" x2="1460" y2="318" stroke="#12263A" stroke-width="2.5"/>
+<line x1="1446" y1="324" x2="1454" y2="324" stroke="#12263A" stroke-width="2.5"/>
+<text x="1450" y="152" text-anchor="middle" font-size="11" fill="#7A8794" >buy (module) or build (peak-current-mode controller): SCALING_SHEET §4</text>
+<path d="M1540,220 L1620,220" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="1620" cy="220" r="4" fill="#12263A"/>
+<path d="M1620,220 L1620,260" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1620,260 L1620,273.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1620,317.0 L1620,330" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="1612" y="273.0" width="16" height="44" fill="#fff" stroke="#12263A" stroke-width="2"/>
+<text x="1606" y="299.0" text-anchor="end" font-size="13" fill="#12263A" >ESR ballast</text>
+<text x="1606" y="314.0" text-anchor="end" font-size="13" fill="#12263A" >10–15 mΩ 5 W</text>
+<circle cx="1620" cy="330" r="4" fill="#12263A"/>
+<path d="M1620,330 L1800,330" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1620,330 L1620,359.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1620,371.0 L1620,400" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="1606" y1="359.0" x2="1634" y2="359.0" stroke="#12263A" stroke-width="3"/>
+<line x1="1606" y1="371.0" x2="1634" y2="371.0" stroke="#12263A" stroke-width="3"/>
+<text x="1598" y="357.0" text-anchor="middle" font-size="14" fill="#12263A" >+</text>
+<path d="M1620,400 L1620,412" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="1604" y1="412" x2="1636" y2="412" stroke="#12263A" stroke-width="2.5"/>
+<line x1="1610" y1="418" x2="1630" y2="418" stroke="#12263A" stroke-width="2.5"/>
+<line x1="1616" y1="424" x2="1624" y2="424" stroke="#12263A" stroke-width="2.5"/>
+<circle cx="1680" cy="330" r="4" fill="#12263A"/>
+<path d="M1680,330 L1680,359.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1680,371.0 L1680,400" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="1666" y1="359.0" x2="1694" y2="359.0" stroke="#12263A" stroke-width="3"/>
+<line x1="1666" y1="371.0" x2="1694" y2="371.0" stroke="#12263A" stroke-width="3"/>
+<text x="1658" y="357.0" text-anchor="middle" font-size="14" fill="#12263A" >+</text>
+<path d="M1680,400 L1680,412" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="1664" y1="412" x2="1696" y2="412" stroke="#12263A" stroke-width="2.5"/>
+<line x1="1670" y1="418" x2="1690" y2="418" stroke="#12263A" stroke-width="2.5"/>
+<line x1="1676" y1="424" x2="1684" y2="424" stroke="#12263A" stroke-width="2.5"/>
+<circle cx="1740" cy="330" r="4" fill="#12263A"/>
+<path d="M1740,330 L1740,359.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1740,371.0 L1740,400" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="1726" y1="359.0" x2="1754" y2="359.0" stroke="#12263A" stroke-width="3"/>
+<line x1="1726" y1="371.0" x2="1754" y2="371.0" stroke="#12263A" stroke-width="3"/>
+<text x="1718" y="357.0" text-anchor="middle" font-size="14" fill="#12263A" >+</text>
+<path d="M1740,400 L1740,412" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="1724" y1="412" x2="1756" y2="412" stroke="#12263A" stroke-width="2.5"/>
+<line x1="1730" y1="418" x2="1750" y2="418" stroke="#12263A" stroke-width="2.5"/>
+<line x1="1736" y1="424" x2="1744" y2="424" stroke="#12263A" stroke-width="2.5"/>
+<text x="1700" y="446" text-anchor="middle" font-size="11" fill="#12263A" >C1 · C2 · C3  22 mF 16 V low-ESR</text>
+<circle cx="1800" cy="330" r="4" fill="#12263A"/>
+<path d="M1800,330 L1800,355.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1800,375.0 L1800,400" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<polygon points="1790,375.0 1810,375.0 1800,355.0" fill="#12263A"/>
+<line x1="1790" y1="355.0" x2="1810" y2="355.0" stroke="#12263A" stroke-width="3"/>
+<text x="1816" y="369.0" text-anchor="start" font-size="13" fill="#12263A" >D_rp 40 V 20 A</text>
+<text x="1816" y="384.0" text-anchor="start" font-size="13" fill="#12263A" >reverse protection</text>
+<path d="M1800,400 L1800,412" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="1784" y1="412" x2="1816" y2="412" stroke="#12263A" stroke-width="2.5"/>
+<line x1="1790" y1="418" x2="1810" y2="418" stroke="#12263A" stroke-width="2.5"/>
+<line x1="1796" y1="424" x2="1804" y2="424" stroke="#12263A" stroke-width="2.5"/>
+<text x="1560" y="475" text-anchor="middle" font-size="12" fill="#12263A" font-weight="700">★ STAR GROUND — every return meets here</text>
+<text x="1560" y="495" text-anchor="middle" font-size="11" fill="#12263A" >STORAGE BANK  3 × 22 mF ∥ = 66 mF (sweep point 58 mF); measured ESR + ballast = 19 mΩ</text>
+<path d="M1620,220 L1673.0,220" fill="none" stroke="#C26F00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1717.0,220 L1770,220" fill="none" stroke="#C26F00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="1673.0" y="212" width="44" height="16" fill="#fff" stroke="#C26F00" stroke-width="2"/>
+<text x="1700" y="176" text-anchor="middle" font-size="12" fill="#C26F00" >R_sh2  1 mΩ 4-terminal 5 W</text>
+<text x="1700" y="191" text-anchor="middle" font-size="12" fill="#C26F00" >RACK SHUNT (i_rack)</text>
+<text x="1700" y="206" text-anchor="middle" font-size="12" fill="#C26F00" >after the storage</text>
+<path d="M1770,220 L1807.0,220" fill="none" stroke="#C22F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1843.0,220 L1880,220" fill="none" stroke="#C22F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="1809.0" y1="230" x2="1841.0" y2="230" stroke="#C22F2A" stroke-width="3"/>
+<line x1="1811.0" y1="238" x2="1839.0" y2="238" stroke="#C22F2A" stroke-width="2"/>
+<path d="M1825.0,238 L1825.0,260" fill="none" stroke="#C22F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1807.0,220 L1807.0,230" fill="none" stroke="#C22F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1843.0,220 L1843.0,230" fill="none" stroke="#C22F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1825.0,220 L1825.0,230" fill="none" stroke="#C22F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<polygon points="1825.0,230 1820.0,224 1830.0,224" fill="#C22F2A"/>
+<text x="1825.0" y="274" text-anchor="middle" font-size="11" fill="#C22F2A" >G</text>
+<text x="1840" y="292" text-anchor="middle" font-size="11" fill="#C22F2A" >Q_brk IRFP7430 (1.3 mΩ, 195 A)</text>
+<text x="1840" y="307" text-anchor="middle" font-size="11" fill="#C22F2A" >RACK BREAKER = SSCB emulation</text>
+<text x="1840" y="322" text-anchor="middle" font-size="11" fill="#C22F2A" >gate: rack node TRIP → driver</text>
+<text x="1840" y="337" text-anchor="middle" font-size="11" fill="#C22F2A" >(default ON)</text>
+<path d="M1880,220 L1960,220" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="1960" cy="220" r="4" fill="#12263A"/>
+<text x="2010" y="164" text-anchor="middle" font-size="12" fill="#C26F00" >"48 V bus" node (12 V)</text>
+<text x="2010" y="179" text-anchor="middle" font-size="12" fill="#C26F00" >rack node reads v_out here</text>
+<path d="M1960,220 L2330,220" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1960,220 L1960,250" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1960,250 L1960,263.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1960,307.0 L1960,320" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="1952" y="263.0" width="16" height="44" fill="#fff" stroke="#12263A" stroke-width="2"/>
+<text x="1960" y="336" text-anchor="middle" font-size="10" fill="#12263A" >2.2 Ω</text>
+<text x="1960" y="351" text-anchor="middle" font-size="10" fill="#12263A" >100 W</text>
+<path d="M1960,364 L1960,381.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1960,417.0 L1960,434" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="1950" y1="383.0" x2="1950" y2="415.0" stroke="#12263A" stroke-width="3"/>
+<line x1="1942" y1="385.0" x2="1942" y2="413.0" stroke="#12263A" stroke-width="2"/>
+<path d="M1942,399.0 L1920,399.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1960,381.0 L1950,381.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1960,417.0 L1950,417.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1960,399.0 L1950,399.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<polygon points="1950,399.0 1956,394.0 1956,404.0" fill="#12263A"/>
+<text x="1916" y="403.0" text-anchor="end" font-size="11" fill="#12263A" >G</text>
+<path d="M1960,434 L1960,446" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="1944" y1="446" x2="1976" y2="446" stroke="#12263A" stroke-width="2.5"/>
+<line x1="1950" y1="452" x2="1970" y2="452" stroke="#12263A" stroke-width="2.5"/>
+<line x1="1956" y1="458" x2="1964" y2="458" stroke="#12263A" stroke-width="2.5"/>
+<circle cx="2020" cy="220" r="4" fill="#12263A"/>
+<path d="M2020,220 L2020,250" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2020,250 L2020,263.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2020,307.0 L2020,320" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="2012" y="263.0" width="16" height="44" fill="#fff" stroke="#12263A" stroke-width="2"/>
+<text x="2020" y="336" text-anchor="middle" font-size="10" fill="#12263A" >4.7 Ω</text>
+<text x="2020" y="351" text-anchor="middle" font-size="10" fill="#12263A" >50 W</text>
+<path d="M2020,364 L2020,381.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2020,417.0 L2020,434" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="2010" y1="383.0" x2="2010" y2="415.0" stroke="#12263A" stroke-width="3"/>
+<line x1="2002" y1="385.0" x2="2002" y2="413.0" stroke="#12263A" stroke-width="2"/>
+<path d="M2002,399.0 L1980,399.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2020,381.0 L2010,381.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2020,417.0 L2010,417.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2020,399.0 L2010,399.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<polygon points="2010,399.0 2016,394.0 2016,404.0" fill="#12263A"/>
+<text x="1976" y="403.0" text-anchor="end" font-size="11" fill="#12263A" >G</text>
+<path d="M2020,434 L2020,446" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="2004" y1="446" x2="2036" y2="446" stroke="#12263A" stroke-width="2.5"/>
+<line x1="2010" y1="452" x2="2030" y2="452" stroke="#12263A" stroke-width="2.5"/>
+<line x1="2016" y1="458" x2="2024" y2="458" stroke="#12263A" stroke-width="2.5"/>
+<circle cx="2080" cy="220" r="4" fill="#12263A"/>
+<path d="M2080,220 L2080,250" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2080,250 L2080,263.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2080,307.0 L2080,320" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="2072" y="263.0" width="16" height="44" fill="#fff" stroke="#12263A" stroke-width="2"/>
+<text x="2080" y="336" text-anchor="middle" font-size="10" fill="#12263A" >10 Ω</text>
+<text x="2080" y="351" text-anchor="middle" font-size="10" fill="#12263A" >25 W</text>
+<path d="M2080,364 L2080,381.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2080,417.0 L2080,434" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="2070" y1="383.0" x2="2070" y2="415.0" stroke="#12263A" stroke-width="3"/>
+<line x1="2062" y1="385.0" x2="2062" y2="413.0" stroke="#12263A" stroke-width="2"/>
+<path d="M2062,399.0 L2040,399.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2080,381.0 L2070,381.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2080,417.0 L2070,417.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2080,399.0 L2070,399.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<polygon points="2070,399.0 2076,394.0 2076,404.0" fill="#12263A"/>
+<text x="2036" y="403.0" text-anchor="end" font-size="11" fill="#12263A" >G</text>
+<path d="M2080,434 L2080,446" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="2064" y1="446" x2="2096" y2="446" stroke="#12263A" stroke-width="2.5"/>
+<line x1="2070" y1="452" x2="2090" y2="452" stroke="#12263A" stroke-width="2.5"/>
+<line x1="2076" y1="458" x2="2084" y2="458" stroke="#12263A" stroke-width="2.5"/>
+<circle cx="2140" cy="220" r="4" fill="#12263A"/>
+<path d="M2140,220 L2140,250" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2140,250 L2140,263.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2140,307.0 L2140,320" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="2132" y="263.0" width="16" height="44" fill="#fff" stroke="#12263A" stroke-width="2"/>
+<text x="2140" y="336" text-anchor="middle" font-size="10" fill="#12263A" >22 Ω</text>
+<text x="2140" y="351" text-anchor="middle" font-size="10" fill="#12263A" >25 W</text>
+<path d="M2140,364 L2140,381.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2140,417.0 L2140,434" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="2130" y1="383.0" x2="2130" y2="415.0" stroke="#12263A" stroke-width="3"/>
+<line x1="2122" y1="385.0" x2="2122" y2="413.0" stroke="#12263A" stroke-width="2"/>
+<path d="M2122,399.0 L2100,399.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2140,381.0 L2130,381.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2140,417.0 L2130,417.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2140,399.0 L2130,399.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<polygon points="2130,399.0 2136,394.0 2136,404.0" fill="#12263A"/>
+<text x="2096" y="403.0" text-anchor="end" font-size="11" fill="#12263A" >G</text>
+<path d="M2140,434 L2140,446" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="2124" y1="446" x2="2156" y2="446" stroke="#12263A" stroke-width="2.5"/>
+<line x1="2130" y1="452" x2="2150" y2="452" stroke="#12263A" stroke-width="2.5"/>
+<line x1="2136" y1="458" x2="2144" y2="458" stroke="#12263A" stroke-width="2.5"/>
+<circle cx="2200" cy="220" r="4" fill="#12263A"/>
+<path d="M2200,220 L2200,250" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2200,250 L2200,263.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2200,307.0 L2200,320" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="2192" y="263.0" width="16" height="44" fill="#fff" stroke="#12263A" stroke-width="2"/>
+<text x="2200" y="336" text-anchor="middle" font-size="10" fill="#12263A" >47 Ω</text>
+<text x="2200" y="351" text-anchor="middle" font-size="10" fill="#12263A" >10 W</text>
+<path d="M2200,364 L2200,381.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2200,417.0 L2200,434" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="2190" y1="383.0" x2="2190" y2="415.0" stroke="#12263A" stroke-width="3"/>
+<line x1="2182" y1="385.0" x2="2182" y2="413.0" stroke="#12263A" stroke-width="2"/>
+<path d="M2182,399.0 L2160,399.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2200,381.0 L2190,381.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2200,417.0 L2190,417.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2200,399.0 L2190,399.0" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<polygon points="2190,399.0 2196,394.0 2196,404.0" fill="#12263A"/>
+<text x="2156" y="403.0" text-anchor="end" font-size="11" fill="#12263A" >G</text>
+<path d="M2200,434 L2200,446" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="2184" y1="446" x2="2216" y2="446" stroke="#12263A" stroke-width="2.5"/>
+<line x1="2190" y1="452" x2="2210" y2="452" stroke="#12263A" stroke-width="2.5"/>
+<line x1="2196" y1="458" x2="2204" y2="458" stroke="#12263A" stroke-width="2.5"/>
+<text x="2080" y="500" text-anchor="middle" font-size="11" fill="#12263A" >LOAD BANK  Q_L1..Q_L5 logic-level MOSFETs, gates from bench control</text>
+<text x="2080" y="516" text-anchor="middle" font-size="11" fill="#12263A" >(staircase ramps, two-tier cadence); all on = 10 A; fan-cooled heatsink,</text>
+<text x="2080" y="532" text-anchor="middle" font-size="11" fill="#12263A" >90 °C thermal switch in the gate enable</text>
+<circle cx="2330" cy="220" r="4" fill="#12263A"/>
+<path d="M2330,220 L2330,250" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2330,250 L2330,268.0" fill="none" stroke="#C22F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2330,312.0 L2330,330" fill="none" stroke="#C22F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="2322" y="268.0" width="16" height="44" fill="#fff" stroke="#C22F2A" stroke-width="2"/>
+<text x="2344" y="294.0" text-anchor="start" font-size="13" fill="#C22F2A" >R_f48 select</text>
+<text x="2344" y="309.0" text-anchor="start" font-size="13" fill="#C22F2A" >60 mΩ (2×0.12 Ω ∥)</text>
+<text x="2344" y="324.0" text-anchor="start" font-size="13" fill="#C22F2A" >0.33 / 1.2 Ω, 50 W</text>
+<path d="M2330,330 L2330,346.0" fill="none" stroke="#C22F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2330,394.0 L2330,410" fill="none" stroke="#C22F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2330,346.0 a6,6 0 0 1 0,12 a6,6 0 0 1 0,12 a6,6 0 0 1 0,12 a6,6 0 0 1 0,12" fill="none" stroke="#C22F2A" stroke-width="2"/>
+<text x="2344" y="374.0" text-anchor="start" font-size="13" fill="#C22F2A" >L_f48 select</text>
+<text x="2344" y="389.0" text-anchor="start" font-size="13" fill="#C22F2A" >10 / 30 / 100 µH air</text>
+<path d="M2330,410 L2330,432.0" fill="none" stroke="#C22F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2330,468.0 L2330,490" fill="none" stroke="#C22F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="2320" y1="434.0" x2="2320" y2="466.0" stroke="#C22F2A" stroke-width="3"/>
+<line x1="2312" y1="436.0" x2="2312" y2="464.0" stroke="#C22F2A" stroke-width="2"/>
+<path d="M2312,450.0 L2290,450.0" fill="none" stroke="#C22F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2330,432.0 L2320,432.0" fill="none" stroke="#C22F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2330,468.0 L2320,468.0" fill="none" stroke="#C22F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2330,450.0 L2320,450.0" fill="none" stroke="#C22F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<polygon points="2320,450.0 2326,445.0 2326,455.0" fill="#C22F2A"/>
+<text x="2286" y="454.0" text-anchor="end" font-size="11" fill="#C22F2A" >G</text>
+<text x="2346" y="454.0" text-anchor="start" font-size="13" fill="#C22F2A" >Q_f48  IRFP7430</text>
+<text x="2346" y="469.0" text-anchor="start" font-size="13" fill="#C22F2A" >rack-side fault</text>
+<text x="2346" y="484.0" text-anchor="start" font-size="13" fill="#C22F2A" >≤ 130 A for ≤ 5 ms</text>
+<path d="M2330,490 L2330,502" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="2314" y1="502" x2="2346" y2="502" stroke="#12263A" stroke-width="2.5"/>
+<line x1="2320" y1="508" x2="2340" y2="508" stroke="#12263A" stroke-width="2.5"/>
+<line x1="2326" y1="514" x2="2334" y2="514" stroke="#12263A" stroke-width="2.5"/>
+<text x="2284" y="454.0" text-anchor="end" font-size="11" fill="#7A8794" >from one-shot B</text>
+<text x="2284" y="469.0" text-anchor="end" font-size="11" fill="#7A8794" >(5 ms hardware limit)</text>
+<path d="M150,242 L150,640" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M150,640 L210,640" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M210,640 L247.0,640" fill="none" stroke="#C22F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M283.0,640 L320,640" fill="none" stroke="#C22F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="249.0" y1="650" x2="281.0" y2="650" stroke="#C22F2A" stroke-width="3"/>
+<line x1="251.0" y1="658" x2="279.0" y2="658" stroke="#C22F2A" stroke-width="2"/>
+<path d="M265.0,658 L265.0,680" fill="none" stroke="#C22F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M247.0,640 L247.0,650" fill="none" stroke="#C22F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M283.0,640 L283.0,650" fill="none" stroke="#C22F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M265.0,640 L265.0,650" fill="none" stroke="#C22F2A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<polygon points="265.0,650 260.0,644 270.0,644" fill="#C22F2A"/>
+<text x="265.0" y="694" text-anchor="middle" font-size="11" fill="#C22F2A" >G</text>
+<text x="265.0" y="609" text-anchor="middle" font-size="13" fill="#C22F2A" >Q_fb  IRLB3034</text>
+<text x="265.0" y="624" text-anchor="middle" font-size="13" fill="#C22F2A" >FEEDER BREAKER (in the 48 V return)</text>
+<text x="273.0" y="694" text-anchor="start" font-size="11" fill="#7A8794" >gate: feeder node TRIP → driver (default ON)</text>
+<path d="M320,640 L390,640" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M390,640 L390,652" fill="none" stroke="#12263A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="374" y1="652" x2="406" y2="652" stroke="#12263A" stroke-width="2.5"/>
+<line x1="380" y1="658" x2="400" y2="658" stroke="#12263A" stroke-width="2.5"/>
+<line x1="386" y1="664" x2="394" y2="664" stroke="#12263A" stroke-width="2.5"/>
+<text x="390" y="684" text-anchor="middle" font-size="11" fill="#12263A" >bench ground</text>
+<text x="24" y="850" text-anchor="start" font-size="12" fill="#7A8794" >Colours: blue = feeder node measurement, orange = rack node measurement, red = fault branches and breakers. Fault resistors and coils: one value drawn, the others on a terminal block.</text>
+<text x="24" y="872" text-anchor="start" font-size="12" fill="#7A8794" >Not built: bolted 800 V-side faults (Layer 1; abusive to the supply). The supply must hold constant current at 4.4 A, not shut down. No isolation (common ground); the product needs it.</text></svg>
