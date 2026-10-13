@@ -1,0 +1,241 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="860" viewBox="0 0 2400 860" font-family="Helvetica, Arial, sans-serif" fill="#1b2a41">
+<rect width="2400" height="860" fill="#ffffff"/>
+<text x="30" y="36" font-size="22" fill="#1b2a41" text-anchor="start" font-weight="bold">Sheet 1 rev 2 — Power bench, 120 W, 48 V → 12 V (scaled from MODEL.md v0.4.4; every value is measured before the first fault run)</text>
+<text x="30" y="58" font-size="13" fill="#555" text-anchor="start">rev 2, 2026-10-08: both breakers high-side with isolated drivers · freewheel diode D_fw · TVS on Q_brk · F2 moved to the converter output · 100 V parts on the 48 V side · supply (−) bonded to the star. Option-C-only parts dashed (scope option B = rack-side faults only).</text>
+<circle cx="90" cy="200" r="24" fill="#fff" stroke="#1b2a41" stroke-width="2.2"/>
+<text x="90" y="196" font-size="14" fill="#1b2a41" text-anchor="middle">+</text>
+<text x="90" y="214" font-size="14" fill="#1b2a41" text-anchor="middle">−</text>
+<text x="20" y="150" font-size="11" fill="#1b2a41" text-anchor="start">Lab supply 48 V</text>
+<text x="20" y="164" font-size="11" fill="#1b2a41" text-anchor="start">CC limit 4.4 A</text>
+<text x="20" y="178" font-size="11" fill="#1b2a41" text-anchor="start">output ON/OFF from</text>
+<text x="20" y="192" font-size="11" fill="#1b2a41" text-anchor="start">the front panel</text>
+<path d="M114,200 L176,200" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<path d="M90,224 L90,260" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<g stroke="#1b2a41" stroke-width="2.2"><line x1="90" y1="260" x2="90" y2="268"/><line x1="78" y1="268" x2="102" y2="268"/><line x1="83" y1="273" x2="97" y2="273"/><line x1="87" y1="278" x2="93" y2="278"/></g>
+<text x="104" y="252" font-size="10" fill="#6b7280" text-anchor="start">(−) bonded to the star</text>
+<text x="104" y="265" font-size="10" fill="#6b7280" text-anchor="start">ground: one earth point</text>
+<circle cx="176" cy="200" r="3" fill="#1b2a41"/><circle cx="204" cy="200" r="3" fill="#1b2a41"/><line x1="176" y1="200" x2="202" y2="186" stroke="#1b2a41" stroke-width="2.2"/>
+<text x="160" y="176" font-size="11" fill="#1b2a41" text-anchor="start">K1 E-stop contactor</text>
+<path d="M204,200 L252,200" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<rect x="252" y="193" width="36" height="14" fill="#fff" stroke="#1b2a41" stroke-width="2"/><line x1="252" y1="200" x2="288" y2="200" stroke="#1b2a41" stroke-width="1.5"/>
+<text x="270" y="224" font-size="11" fill="#1b2a41" text-anchor="middle">F1 5 A fast</text>
+<path d="M288,200 L330,200" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<rect x="330" y="178" width="96" height="44" rx="5" fill="#fff" stroke="#c0392b" stroke-width="2" stroke-dasharray="6,5"/>
+<text x="378" y="194" font-size="11" fill="#c0392b" text-anchor="middle">Q_fb  D ─ S</text>
+<text x="378" y="212" font-size="10" fill="#c0392b" text-anchor="middle">IRFB4110 (100 V)</text>
+<path d="M378,222 L378,248" fill="none" stroke="#c0392b" stroke-width="2.5" stroke-dasharray="6,5"/>
+<text x="300" y="262" font-size="10" fill="#c0392b" text-anchor="start">FEEDER BREAKER — option C only (option B: wire link)</text>
+<text x="300" y="275" font-size="10" fill="#c0392b" text-anchor="start">high side, gate from U18 isolated driver (Sheet 3)</text>
+<text x="300" y="288" font-size="10" fill="#c0392b" text-anchor="start">pull-up + inverting: unpowered node = OPEN</text>
+<path d="M426,200 L456,200" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<path d="M456,200 A6,6 0 0 1 468,200 A6,6 0 0 1 480,200 A6,6 0 0 1 492,200 A6,6 0 0 1 504,200" fill="none" stroke="#1b2a41" stroke-width="2.2"/>
+<text x="450" y="174" font-size="11" fill="#1b2a41" text-anchor="start">L_line 20 µH</text>
+<text x="450" y="188" font-size="11" fill="#1b2a41" text-anchor="start">air core, 5 A</text>
+<path d="M504,200 L538,200" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<rect x="538.0" y="192" width="44" height="16" fill="#fff" stroke="#1b2a41" stroke-width="2.2"/>
+<text x="560" y="226" font-size="11" fill="#1b2a41" text-anchor="middle">R_line 20 mΩ 3 W</text>
+<path d="M582,200 L638,200" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<rect x="638.0" y="192" width="44" height="16" fill="#fff" stroke="#1f5fa8" stroke-width="2.2"/>
+<text x="610" y="160" font-size="11" fill="#1f5fa8" text-anchor="start">R_sh1 10 mΩ 4-terminal 3 W</text>
+<text x="610" y="174" font-size="11" fill="#1f5fa8" text-anchor="start">FEEDER SHUNT (i_L, Kelvin)</text>
+<path d="M682,200 L976,200" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<circle cx="740" cy="200" r="4" fill="#1b2a41"/>
+<text x="752" y="226" font-size="11" fill="#1f5fa8" text-anchor="start">"800 V bus" (48 V) node</text>
+<text x="752" y="240" font-size="11" fill="#1f5fa8" text-anchor="start">v_bus → feeder node</text>
+<path d="M740,200 L740,300" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<line x1="728" y1="306" x2="752" y2="306" stroke="#1b2a41" stroke-width="2.6"/>
+<line x1="728" y1="314" x2="752" y2="314" stroke="#1b2a41" stroke-width="2.6"/>
+<text x="720" y="304" font-size="11" fill="#1b2a41" text-anchor="start">+</text>
+<path d="M740,318 L740,338" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<rect x="732" y="338.0" width="16" height="44" fill="#fff" stroke="#1b2a41" stroke-width="2.2"/>
+<path d="M740,382 L740,400" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<g stroke="#1b2a41" stroke-width="2.2"><line x1="740" y1="400" x2="740" y2="408"/><line x1="728" y1="408" x2="752" y2="408"/><line x1="733" y1="413" x2="747" y2="413"/><line x1="737" y1="418" x2="743" y2="418"/></g>
+<text x="756" y="306" font-size="11" fill="#1b2a41" text-anchor="start">C_bus 150 µF 63 V</text>
+<text x="756" y="356" font-size="10" fill="#1b2a41" text-anchor="start">ESR ballast 22 mΩ</text>
+<text x="756" y="369" font-size="10" fill="#1b2a41" text-anchor="start">(only if the cap is better)</text>
+<path d="M880,200 L880,250" fill="none" stroke="#c0392b" stroke-width="2.5" stroke-dasharray="6,5"/>
+<rect x="872" y="253.0" width="16" height="44" fill="#fff" stroke="#c0392b" stroke-width="2.2" stroke-dasharray="6,5"/>
+<path d="M880,297 L880,311" fill="none" stroke="#c0392b" stroke-width="2.5" stroke-dasharray="6,5"/>
+<path d="M880,311 A6,6 0 0 1 880,323 A6,6 0 0 1 880,335 A6,6 0 0 1 880,347 A6,6 0 0 1 880,359" fill="none" stroke="#c0392b" stroke-width="2.2"/>
+<path d="M880,359 L880,398" fill="none" stroke="#c0392b" stroke-width="2.5" stroke-dasharray="6,5"/>
+<g stroke="#c0392b" stroke-width="2.2" fill="none" stroke-dasharray="6,5"><line x1="856" y1="420" x2="870" y2="420"/><line x1="870" y1="408" x2="870" y2="432"/><line x1="875" y1="407" x2="875" y2="415"/><line x1="875" y1="416" x2="875" y2="424"/><line x1="875" y1="425" x2="875" y2="433"/><line x1="875" y1="411" x2="888" y2="411"/><line x1="888" y1="411" x2="888" y2="398"/><line x1="875" y1="429" x2="888" y2="429"/><line x1="888" y1="429" x2="888" y2="442"/><line x1="875" y1="420" x2="888" y2="420"/><line x1="888" y1="420" x2="888" y2="429"/></g><polygon points="881,417 881,423 876,420" fill="#c0392b"/>
+<text x="850" y="424" font-size="10" fill="#c0392b" text-anchor="end">G</text>
+<path d="M888,442 L888,470" fill="none" stroke="#c0392b" stroke-width="2.5" stroke-dasharray="6,5"/>
+<g stroke="#c0392b" stroke-width="2.2"><line x1="888" y1="470" x2="888" y2="478"/><line x1="876" y1="478" x2="900" y2="478"/><line x1="881" y1="483" x2="895" y2="483"/><line x1="885" y1="488" x2="891" y2="488"/></g>
+<path d="M880,250 L925,250 L925,302" fill="none" stroke="#c0392b" stroke-width="2.5" stroke-dasharray="6,5"/>
+<polygon points="915,322 935,322 925,302" fill="#c0392b"/>
+<line x1="915" y1="302" x2="935" y2="302" stroke="#c0392b" stroke-width="2.6"/>
+<path d="M925,322 L925,385 L880,385" fill="none" stroke="#c0392b" stroke-width="2.5" stroke-dasharray="6,5"/>
+<text x="800" y="520" font-size="10" fill="#c0392b" text-anchor="start">FEEDER-SIDE FAULT — option C only</text>
+<text x="800" y="533" font-size="10" fill="#c0392b" text-anchor="start">R_f 22 Ω 50 W (or 39 Ω) · L_f 8 µH air</text>
+<text x="800" y="546" font-size="10" fill="#c0392b" text-anchor="start">Q_f8 IRFB4110 (100 V) · D_fwA small Schottky across R+L</text>
+<text x="800" y="559" font-size="10" fill="#c0392b" text-anchor="start">gate ← one-shot A (10 ms) via U16</text>
+<text x="800" y="572" font-size="10" fill="#c0392b" text-anchor="start">current capped by the supply CC limit (4.4 A)</text>
+<text x="934" y="270" font-size="10" fill="#c0392b" text-anchor="start">R_f</text>
+<text x="934" y="338" font-size="10" fill="#c0392b" text-anchor="start">L_f</text>
+<text x="938" y="316" font-size="10" fill="#c0392b" text-anchor="start">D_fwA</text>
+<text x="900" y="426" font-size="10" fill="#c0392b" text-anchor="start">Q_f8</text>
+<polygon points="990,190 990,210 1010,200" fill="#1b2a41"/>
+<line x1="1010" y1="190" x2="1010" y2="210" stroke="#1b2a41" stroke-width="2.6"/>
+<text x="950" y="174" font-size="11" fill="#1b2a41" text-anchor="start">D_or STPS10H100 100 V 10 A — ORing</text>
+<path d="M1010,200 L1046,200" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<path d="M1046,200 A6,6 0 0 1 1058,200 A6,6 0 0 1 1070,200 A6,6 0 0 1 1082,200 A6,6 0 0 1 1094,200" fill="none" stroke="#1b2a41" stroke-width="2.2"/>
+<text x="1070" y="226" font-size="11" fill="#1b2a41" text-anchor="middle">L_in 20 µH air</text>
+<path d="M1094,200 L1170,200" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<circle cx="1130" cy="200" r="4" fill="#1b2a41"/>
+<path d="M1130,200 L1130,252" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<line x1="1118" y1="258" x2="1142" y2="258" stroke="#1b2a41" stroke-width="2.6"/>
+<line x1="1118" y1="266" x2="1142" y2="266" stroke="#1b2a41" stroke-width="2.6"/>
+<text x="1110" y="256" font-size="11" fill="#1b2a41" text-anchor="start">+</text>
+<path d="M1130,270 L1130,290" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<g stroke="#1b2a41" stroke-width="2.2"><line x1="1130" y1="290" x2="1130" y2="298"/><line x1="1118" y1="298" x2="1142" y2="298"/><line x1="1123" y1="303" x2="1137" y2="303"/><line x1="1127" y1="308" x2="1133" y2="308"/></g>
+<text x="1114" y="300" font-size="11" fill="#1b2a41" text-anchor="end">C_in 220 µF 63 V</text>
+<rect x="1170" y="160" width="165" height="80" rx="5" fill="#fff" stroke="#1b2a41" stroke-width="2.5"/>
+<text x="1252" y="180" font-size="11" fill="#1b2a41" text-anchor="middle" font-weight="bold">CONVERTER</text>
+<text x="1252" y="194" font-size="11" fill="#1b2a41" text-anchor="middle">48 V → 12 V, 120 W</text>
+<text x="1252" y="208" font-size="11" fill="#1b2a41" text-anchor="middle">I_lim 14 A, hold (no hiccup)</text>
+<text x="1252" y="222" font-size="11" fill="#1b2a41" text-anchor="middle">f_sw ≥ 400 kHz</text>
+<text x="1170" y="262" font-size="10" fill="#6b7280" text-anchor="start">buy (module) or build (peak-current-mode):</text>
+<text x="1170" y="275" font-size="10" fill="#6b7280" text-anchor="start">SCALING_SHEET §4. Pass criteria, measured</text>
+<text x="1170" y="288" font-size="10" fill="#6b7280" text-anchor="start">before any relay test: (a) holds 14 A ≥ 10 ms</text>
+<text x="1170" y="301" font-size="10" fill="#6b7280" text-anchor="start">(b) clean 50 % step (fit f_v, τ_i)  (c) efficiency</text>
+<text x="1170" y="314" font-size="10" fill="#6b7280" text-anchor="start">fits the loss model  (d) starts into 66 mF</text>
+<text x="1170" y="327" font-size="10" fill="#6b7280" text-anchor="start">(e) pre-bias safe: no reverse current when</text>
+<text x="1170" y="340" font-size="10" fill="#6b7280" text-anchor="start">the input collapses</text>
+<path d="M1335,200 L1347,200" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<rect x="1347" y="193" width="36" height="14" fill="#fff" stroke="#1b2a41" stroke-width="2"/><line x1="1347" y1="200" x2="1383" y2="200" stroke="#1b2a41" stroke-width="1.5"/>
+<text x="1348" y="174" font-size="11" fill="#1b2a41" text-anchor="start">F2 20 A</text>
+<text x="1348" y="226" font-size="10" fill="#c0392b" text-anchor="start">converter output,</text>
+<text x="1348" y="239" font-size="10" fill="#c0392b" text-anchor="start">outside the fault loop</text>
+<path d="M1383,200 L1578,200" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<circle cx="1480" cy="200" r="4" fill="#1b2a41"/>
+<path d="M1480,200 L1480,228" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<rect x="1472" y="228.0" width="16" height="44" fill="#fff" stroke="#1b2a41" stroke-width="2.2"/>
+<path d="M1480,272 L1480,300" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<path d="M1440,300 L1550,300" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<path d="M1440,360 L1550,360" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<path d="M1440,300 L1440,322" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<line x1="1428" y1="326" x2="1452" y2="326" stroke="#1b2a41" stroke-width="2.6"/>
+<line x1="1428" y1="334" x2="1452" y2="334" stroke="#1b2a41" stroke-width="2.6"/>
+<text x="1420" y="324" font-size="11" fill="#1b2a41" text-anchor="start">+</text>
+<path d="M1440,338 L1440,360" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<path d="M1480,300 L1480,322" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<line x1="1468" y1="326" x2="1492" y2="326" stroke="#1b2a41" stroke-width="2.6"/>
+<line x1="1468" y1="334" x2="1492" y2="334" stroke="#1b2a41" stroke-width="2.6"/>
+<text x="1460" y="324" font-size="11" fill="#1b2a41" text-anchor="start">+</text>
+<path d="M1480,338 L1480,360" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<path d="M1520,300 L1520,322" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<line x1="1508" y1="326" x2="1532" y2="326" stroke="#1b2a41" stroke-width="2.6"/>
+<line x1="1508" y1="334" x2="1532" y2="334" stroke="#1b2a41" stroke-width="2.6"/>
+<text x="1500" y="324" font-size="11" fill="#1b2a41" text-anchor="start">+</text>
+<path d="M1520,338 L1520,360" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<path d="M1550,300 L1550,310" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<polygon points="1540,330 1560,330 1550,310" fill="#1b2a41"/>
+<line x1="1540" y1="310" x2="1560" y2="310" stroke="#1b2a41" stroke-width="2.6"/>
+<path d="M1550,330 L1550,360" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<path d="M1480,360 L1480,376" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<g stroke="#1b2a41" stroke-width="2.2"><line x1="1480" y1="376" x2="1480" y2="384"/><line x1="1468" y1="384" x2="1492" y2="384"/><line x1="1473" y1="389" x2="1487" y2="389"/><line x1="1477" y1="394" x2="1483" y2="394"/></g>
+<text x="1480" y="410" font-size="11" fill="#1b2a41" text-anchor="middle" font-weight="bold">★ STAR GROUND — every return, both node grounds, supply (−) and the scope clips meet here</text>
+<text x="1495" y="246" font-size="10" fill="#1b2a41" text-anchor="start">ESR ballast 10–15 mΩ</text>
+<text x="1495" y="259" font-size="10" fill="#1b2a41" text-anchor="start">pulse-rated wirewound</text>
+<text x="1480" y="428" font-size="10" fill="#6b7280" text-anchor="middle">STORAGE BANK C1·C2·C3 22 mF 16 V low-ESR = 66 mF (sweep point 58 mF)</text>
+<text x="1480" y="441" font-size="10" fill="#6b7280" text-anchor="middle">bank ESR + ballast = 19 mΩ measured · D_rp 40 V 20 A reverse protection</text>
+<rect x="1578.0" y="192" width="44" height="16" fill="#fff" stroke="#d97b0a" stroke-width="2.2"/>
+<text x="1525" y="160" font-size="11" fill="#d97b0a" text-anchor="start">R_sh2 1 mΩ 4-terminal 5 W, 130 A pulse</text>
+<text x="1525" y="174" font-size="11" fill="#d97b0a" text-anchor="start">RACK SHUNT (i_rack) after the storage</text>
+<path d="M1622,200 L1650,200" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<rect x="1650" y="178" width="90" height="44" rx="5" fill="#fff" stroke="#c0392b" stroke-width="2.5"/>
+<text x="1695" y="194" font-size="11" fill="#c0392b" text-anchor="middle">Q_brk  D ─ S</text>
+<text x="1695" y="212" font-size="10" fill="#c0392b" text-anchor="middle">IRFP7430 1.3 mΩ</text>
+<path d="M1665,222 L1665,262" fill="none" stroke="#c0392b" stroke-width="2.5"/>
+<path d="M1725,222 L1725,262" fill="none" stroke="#c0392b" stroke-width="2.5"/>
+<polygon points="1685,272 1705,272 1695,252" fill="#c0392b"/>
+<line x1="1685" y1="252" x2="1705" y2="252" stroke="#c0392b" stroke-width="2.6"/>
+<line x1="1685" y1="252" x2="1681" y2="248" stroke="#c0392b" stroke-width="2"/>
+<line x1="1705" y1="252" x2="1709" y2="256" stroke="#c0392b" stroke-width="2"/>
+<path d="M1665,262 L1685,262" fill="none" stroke="#c0392b" stroke-width="2.5"/>
+<path d="M1705,262 L1725,262" fill="none" stroke="#c0392b" stroke-width="2.5"/>
+<text x="1640" y="292" font-size="10" fill="#c0392b" text-anchor="start">RACK BREAKER = SSCB emulation, high side ①</text>
+<text x="1640" y="305" font-size="10" fill="#c0392b" text-anchor="start">TVS SMCJ18A across D–S ③</text>
+<text x="1640" y="318" font-size="10" fill="#c0392b" text-anchor="start">gate ← U19 isolated driver + iso DC-DC</text>
+<text x="1640" y="331" font-size="10" fill="#c0392b" text-anchor="start">referenced to S (Sheet 3); pull-up +</text>
+<text x="1640" y="344" font-size="10" fill="#c0392b" text-anchor="start">inverting ⇒ unpowered node = OPEN</text>
+<text x="1640" y="357" font-size="10" fill="#c0392b" text-anchor="start">default closed while the node runs (TRIP = 0)</text>
+<path d="M1740,200 L2170,200" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<circle cx="1780" cy="200" r="4" fill="#1b2a41"/>
+<text x="1790" y="160" font-size="11" fill="#d97b0a" text-anchor="start">"48 V bus" node (12 V)</text>
+<text x="1790" y="174" font-size="11" fill="#d97b0a" text-anchor="start">rack node reads v_out here</text>
+<path d="M1900,200 L1900,478" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<rect x="1892" y="478.0" width="16" height="44" fill="#fff" stroke="#1b2a41" stroke-width="2.2"/>
+<path d="M1900,522 L1900,553" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<g stroke="#1b2a41" stroke-width="2.2" fill="none"><line x1="1876" y1="575" x2="1890" y2="575"/><line x1="1890" y1="563" x2="1890" y2="587"/><line x1="1895" y1="562" x2="1895" y2="570"/><line x1="1895" y1="571" x2="1895" y2="579"/><line x1="1895" y1="580" x2="1895" y2="588"/><line x1="1895" y1="566" x2="1908" y2="566"/><line x1="1908" y1="566" x2="1908" y2="553"/><line x1="1895" y1="584" x2="1908" y2="584"/><line x1="1908" y1="584" x2="1908" y2="597"/><line x1="1895" y1="575" x2="1908" y2="575"/><line x1="1908" y1="575" x2="1908" y2="584"/></g><polygon points="1901,572 1901,578 1896,575" fill="#1b2a41"/>
+<text x="1870" y="579" font-size="10" fill="#1b2a41" text-anchor="end">G</text>
+<path d="M1908,597 L1908,620" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<g stroke="#1b2a41" stroke-width="2.2"><line x1="1908" y1="620" x2="1908" y2="628"/><line x1="1896" y1="628" x2="1920" y2="628"/><line x1="1901" y1="633" x2="1915" y2="633"/><line x1="1905" y1="638" x2="1911" y2="638"/></g>
+<text x="1900" y="466" font-size="9.5" fill="#1b2a41" text-anchor="middle">2.2 Ω</text>
+<text x="1900" y="542" font-size="9" fill="#6b7280" text-anchor="middle">100 W</text>
+<path d="M1942,200 L1942,478" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<rect x="1934" y="478.0" width="16" height="44" fill="#fff" stroke="#1b2a41" stroke-width="2.2"/>
+<path d="M1942,522 L1942,553" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<g stroke="#1b2a41" stroke-width="2.2" fill="none"><line x1="1918" y1="575" x2="1932" y2="575"/><line x1="1932" y1="563" x2="1932" y2="587"/><line x1="1937" y1="562" x2="1937" y2="570"/><line x1="1937" y1="571" x2="1937" y2="579"/><line x1="1937" y1="580" x2="1937" y2="588"/><line x1="1937" y1="566" x2="1950" y2="566"/><line x1="1950" y1="566" x2="1950" y2="553"/><line x1="1937" y1="584" x2="1950" y2="584"/><line x1="1950" y1="584" x2="1950" y2="597"/><line x1="1937" y1="575" x2="1950" y2="575"/><line x1="1950" y1="575" x2="1950" y2="584"/></g><polygon points="1943,572 1943,578 1938,575" fill="#1b2a41"/>
+<text x="1912" y="579" font-size="10" fill="#1b2a41" text-anchor="end">G</text>
+<path d="M1950,597 L1950,620" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<g stroke="#1b2a41" stroke-width="2.2"><line x1="1950" y1="620" x2="1950" y2="628"/><line x1="1938" y1="628" x2="1962" y2="628"/><line x1="1943" y1="633" x2="1957" y2="633"/><line x1="1947" y1="638" x2="1953" y2="638"/></g>
+<text x="1942" y="466" font-size="9.5" fill="#1b2a41" text-anchor="middle">4.7 Ω</text>
+<text x="1942" y="542" font-size="9" fill="#6b7280" text-anchor="middle">50 W</text>
+<path d="M1984,200 L1984,478" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<rect x="1976" y="478.0" width="16" height="44" fill="#fff" stroke="#1b2a41" stroke-width="2.2"/>
+<path d="M1984,522 L1984,553" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<g stroke="#1b2a41" stroke-width="2.2" fill="none"><line x1="1960" y1="575" x2="1974" y2="575"/><line x1="1974" y1="563" x2="1974" y2="587"/><line x1="1979" y1="562" x2="1979" y2="570"/><line x1="1979" y1="571" x2="1979" y2="579"/><line x1="1979" y1="580" x2="1979" y2="588"/><line x1="1979" y1="566" x2="1992" y2="566"/><line x1="1992" y1="566" x2="1992" y2="553"/><line x1="1979" y1="584" x2="1992" y2="584"/><line x1="1992" y1="584" x2="1992" y2="597"/><line x1="1979" y1="575" x2="1992" y2="575"/><line x1="1992" y1="575" x2="1992" y2="584"/></g><polygon points="1985,572 1985,578 1980,575" fill="#1b2a41"/>
+<text x="1954" y="579" font-size="10" fill="#1b2a41" text-anchor="end">G</text>
+<path d="M1992,597 L1992,620" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<g stroke="#1b2a41" stroke-width="2.2"><line x1="1992" y1="620" x2="1992" y2="628"/><line x1="1980" y1="628" x2="2004" y2="628"/><line x1="1985" y1="633" x2="1999" y2="633"/><line x1="1989" y1="638" x2="1995" y2="638"/></g>
+<text x="1984" y="466" font-size="9.5" fill="#1b2a41" text-anchor="middle">10 Ω</text>
+<text x="1984" y="542" font-size="9" fill="#6b7280" text-anchor="middle">25 W</text>
+<path d="M2026,200 L2026,478" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<rect x="2018" y="478.0" width="16" height="44" fill="#fff" stroke="#1b2a41" stroke-width="2.2"/>
+<path d="M2026,522 L2026,553" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<g stroke="#1b2a41" stroke-width="2.2" fill="none"><line x1="2002" y1="575" x2="2016" y2="575"/><line x1="2016" y1="563" x2="2016" y2="587"/><line x1="2021" y1="562" x2="2021" y2="570"/><line x1="2021" y1="571" x2="2021" y2="579"/><line x1="2021" y1="580" x2="2021" y2="588"/><line x1="2021" y1="566" x2="2034" y2="566"/><line x1="2034" y1="566" x2="2034" y2="553"/><line x1="2021" y1="584" x2="2034" y2="584"/><line x1="2034" y1="584" x2="2034" y2="597"/><line x1="2021" y1="575" x2="2034" y2="575"/><line x1="2034" y1="575" x2="2034" y2="584"/></g><polygon points="2027,572 2027,578 2022,575" fill="#1b2a41"/>
+<text x="1996" y="579" font-size="10" fill="#1b2a41" text-anchor="end">G</text>
+<path d="M2034,597 L2034,620" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<g stroke="#1b2a41" stroke-width="2.2"><line x1="2034" y1="620" x2="2034" y2="628"/><line x1="2022" y1="628" x2="2046" y2="628"/><line x1="2027" y1="633" x2="2041" y2="633"/><line x1="2031" y1="638" x2="2037" y2="638"/></g>
+<text x="2026" y="466" font-size="9.5" fill="#1b2a41" text-anchor="middle">22 Ω</text>
+<text x="2026" y="542" font-size="9" fill="#6b7280" text-anchor="middle">25 W</text>
+<path d="M2068,200 L2068,478" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<rect x="2060" y="478.0" width="16" height="44" fill="#fff" stroke="#1b2a41" stroke-width="2.2"/>
+<path d="M2068,522 L2068,553" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<g stroke="#1b2a41" stroke-width="2.2" fill="none"><line x1="2044" y1="575" x2="2058" y2="575"/><line x1="2058" y1="563" x2="2058" y2="587"/><line x1="2063" y1="562" x2="2063" y2="570"/><line x1="2063" y1="571" x2="2063" y2="579"/><line x1="2063" y1="580" x2="2063" y2="588"/><line x1="2063" y1="566" x2="2076" y2="566"/><line x1="2076" y1="566" x2="2076" y2="553"/><line x1="2063" y1="584" x2="2076" y2="584"/><line x1="2076" y1="584" x2="2076" y2="597"/><line x1="2063" y1="575" x2="2076" y2="575"/><line x1="2076" y1="575" x2="2076" y2="584"/></g><polygon points="2069,572 2069,578 2064,575" fill="#1b2a41"/>
+<text x="2038" y="579" font-size="10" fill="#1b2a41" text-anchor="end">G</text>
+<path d="M2076,597 L2076,620" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<g stroke="#1b2a41" stroke-width="2.2"><line x1="2076" y1="620" x2="2076" y2="628"/><line x1="2064" y1="628" x2="2088" y2="628"/><line x1="2069" y1="633" x2="2083" y2="633"/><line x1="2073" y1="638" x2="2079" y2="638"/></g>
+<text x="2068" y="466" font-size="9.5" fill="#1b2a41" text-anchor="middle">47 Ω</text>
+<text x="2068" y="542" font-size="9" fill="#6b7280" text-anchor="middle">10 W</text>
+<text x="2390" y="660" font-size="10" fill="#6b7280" text-anchor="end">LOAD BANK Q_L1..Q_L5 — 40 V ≤ 10 mΩ N-FETs (12 V gate drive from U10–U14; no logic-level needed)</text>
+<text x="2390" y="673" font-size="10" fill="#6b7280" text-anchor="end">staircase ramps and two-tier cadence from the bench control; all on = 10 A; fan-cooled heatsink, 90 °C thermal switch in the driver enable</text>
+<path d="M2170,200 L2170,243" fill="none" stroke="#c0392b" stroke-width="2.5"/>
+<rect x="2162" y="243.0" width="16" height="44" fill="#fff" stroke="#c0392b" stroke-width="2.2"/>
+<path d="M2170,287 L2170,306" fill="none" stroke="#c0392b" stroke-width="2.5"/>
+<path d="M2170,306 A6,6 0 0 1 2170,318 A6,6 0 0 1 2170,330 A6,6 0 0 1 2170,342 A6,6 0 0 1 2170,354" fill="none" stroke="#c0392b" stroke-width="2.2"/>
+<path d="M2170,354 L2170,388" fill="none" stroke="#c0392b" stroke-width="2.5"/>
+<g stroke="#c0392b" stroke-width="2.2" fill="none"><line x1="2146" y1="410" x2="2160" y2="410"/><line x1="2160" y1="398" x2="2160" y2="422"/><line x1="2165" y1="397" x2="2165" y2="405"/><line x1="2165" y1="406" x2="2165" y2="414"/><line x1="2165" y1="415" x2="2165" y2="423"/><line x1="2165" y1="401" x2="2178" y2="401"/><line x1="2178" y1="401" x2="2178" y2="388"/><line x1="2165" y1="419" x2="2178" y2="419"/><line x1="2178" y1="419" x2="2178" y2="432"/><line x1="2165" y1="410" x2="2178" y2="410"/><line x1="2178" y1="410" x2="2178" y2="419"/></g><polygon points="2171,407 2171,413 2166,410" fill="#c0392b"/>
+<text x="2140" y="414" font-size="10" fill="#c0392b" text-anchor="end">G</text>
+<path d="M2178,432 L2178,460" fill="none" stroke="#c0392b" stroke-width="2.5"/>
+<g stroke="#c0392b" stroke-width="2.2"><line x1="2178" y1="460" x2="2178" y2="468"/><line x1="2166" y1="468" x2="2190" y2="468"/><line x1="2171" y1="473" x2="2185" y2="473"/><line x1="2175" y1="478" x2="2181" y2="478"/></g>
+<path d="M2170,236 L2220,236 L2220,302" fill="none" stroke="#c0392b" stroke-width="2.5"/>
+<polygon points="2210,322 2230,322 2220,302" fill="#c0392b"/>
+<line x1="2210" y1="302" x2="2230" y2="302" stroke="#c0392b" stroke-width="2.6"/>
+<path d="M2220,322 L2220,380 L2170,380" fill="none" stroke="#c0392b" stroke-width="2.5"/>
+<circle cx="2170" cy="236" r="4" fill="#c0392b"/>
+<circle cx="2170" cy="380" r="4" fill="#c0392b"/>
+<text x="2390" y="700" font-size="10" fill="#c0392b" text-anchor="end">RACK-SIDE FAULT INJECTOR: R_f48 select = (63 mΩ − coil DCR) / 0.33 Ω / 1.2 Ω, 50 W pulse-rated · L_f48 select 10 / 30 / 100 µH air (130 A, no saturation)</text>
+<text x="2390" y="713" font-size="10" fill="#c0392b" text-anchor="end">Q_f48 IRFP7430 low side, gate ← one-shot B (5 ms hardware limit) via U17 · D_fw Schottky ≥ 30 A / few-hundred-A surge across R_f48 + L_f48: anode at Q_f48 drain,</text>
+<text x="2390" y="726" font-size="10" fill="#c0392b" text-anchor="end">cathode at the 12 V node — carries the coil current when Q_f48 turns off AND when Q_brk opens; reverse-biased during the fault, so the relay sees nothing of it ②</text>
+<text x="2240" y="268" font-size="10" fill="#c0392b" text-anchor="start">R_f48 select</text>
+<text x="2240" y="334" font-size="10" fill="#c0392b" text-anchor="start">L_f48 select</text>
+<text x="2200" y="414" font-size="10" fill="#c0392b" text-anchor="start">Q_f48 IRFP7430</text>
+<text x="2240" y="316" font-size="10" fill="#c0392b" text-anchor="start">D_fw</text>
+<text x="30" y="760" font-size="10.5" fill="#6b7280" text-anchor="start">Colours: blue = feeder node measurement, orange = rack node measurement, red = fault branches and breakers, dashed = option C only. Fault resistors and coils: one value wired, the others on a terminal block; every element (C, ESR, L, DCR, shunts, wiring) measured and entered into PARAMS_BENCH.</text>
+<text x="30" y="776" font-size="10.5" fill="#6b7280" text-anchor="start">Power-up order ⑦: 1 nodes + bench control on USB (TRIP = 0 → breakers close) → 2 driver adapter on → 3 K1 closed with the supply OUTPUT OFF → 4 supply output on (its ramp precharges C_bus / C_in; no 200 A inrush, C_in stays far below 63 V) → 5 arm key only for a fault run. Reflash with the output off.</text>
+<text x="30" y="792" font-size="10.5" fill="#6b7280" text-anchor="start">Not built: bolted 800 V-side faults (Layer 1; abusive to the supply). The supply must hold constant current at 4.4 A during a feeder-side fault, not shut down. No isolation (common ground); the product needs it. Scope ground clips only on the star; feeder-side quantities by differential probe.</text>
+<text x="30" y="808" font-size="10.5" fill="#6b7280" text-anchor="start">Hazards: 4.2 J in the bank + 0.15 J on the bus (burn / spatter at the fault switch, not a shock hazard); ≤ 130 A for ≤ 5 ms by the hardware one-shot; fault runs with a second person present and the professor's sign-off.</text>
+</svg>

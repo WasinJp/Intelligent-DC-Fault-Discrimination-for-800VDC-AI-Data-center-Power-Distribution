@@ -1,0 +1,96 @@
+* A_rack_fault_loop.cir -- rack-side fault loop of the 120 W bench (Sheet 1, right half)
+*
+* What it answers: what happens to Q_brk and Q_f48 when the fault coil's current is
+* interrupted, (a) when the relay opens the rack breaker at TBRK after onset, and
+* (b) when the relay misses and the 74HC221 one-shot turns Q_f48 off at 5 ms.
+* Also shows the high-side drive problem of Q_brk (DRV=0).
+*
+* Switches:   FIX = 0  as drawn on Sheet 1 (driver referenced to ground, no freewheel, no TVS)
+*             FIX = 1  with the fixes (isolated driver on Q_brk, freewheel diode D_fw, TVS on Q_brk)
+*             Each fix can also be set on its own: edit DRV / FWD / TVS below.
+*             TBRK = 250u  relay trips   |   TBRK = 1  relay misses (one-shot ends the fault)
+* Fault cases: edit RF (63m / 0.33 / 1.2) and LF (10u / 30u / 100u). RL is the coil's own
+*             DC resistance -- measure it and put it here; it adds to RF.
+*
+* MOSFET models are GENERIC VDMOS approximations (Rds, Vth, capacitances, BV) written for this
+* file. Before signing off, replace QBIG with Infineon's IRFP7430 model and compare the
+* measured peak Vds and switch energy against the datasheet's single-pulse avalanche rating.
+*
+* Results: View > SPICE Error Log (Ctrl+L) after the run. Plot V(bus12), I(Lf), V(dbrk,bus12), V(fd).
+
+.param FIX=1
+.param DRV={FIX} FWD={FIX} TVS={FIX}
+.param TBRK=250u
+.param RF=63m LF=30u RL=27m
+.param TF=1m TPULSE=5m
+
+* ---------- storage bank 3 x 22 mF, ESR + ballast 19 mohm, converter in current limit ----------
+Cbank bank_c 0 66m
+Resr bank_c bank 19m
+* converter: 12 V output, current-limited at 14 A, cannot sink
+Bconv 0 bank I=min(max((12-V(bank))*200,0),14)
+
+* ---------- busbar: wiring, stray L, rack shunt, rack breaker ----------
+Lbus bank b1 300n
+Rbus b1 b2 5m
+Rsh2 b2 dbrk_s 1m
+Vsbrk dbrk_s dbrk 0
+Mbrk dbrk gbrk bus12 QBIG
+* gate drive: DRV=1 isolated driver, 10 V above Q_brk's source;
+*             DRV=0 driver referenced to bench ground, 12 V supply (as drawn)
+Vgbrk gdrv gref PULSE({12-2*DRV} 0 {TF+TBRK} 20n 20n 1 2)
+Rref_iso gref bus12 {1m+(1-DRV)*1G}
+Rref_gnd gref 0 {1m+DRV*1G}
+Rgbrk gdrv gbrk 4.7
+* TVS across Q_brk (SMCJ18A-class), anode at the source
+Rtvs dbrk tvs_k {1m+(1-TVS)*1G}
+Dtvs bus12 tvs_k DTVS
+
+* ---------- load bank, all branches on: 10 A ----------
+Rload bus12 0 1.2
+
+* ---------- rack fault injector ----------
+Rf bus12 f1 {RF}
+Rcoil f1 f2 {RL}
+Lf f2 fd {LF}
+Lst fd fd2 50n
+Vsf fd2 fdd 0
+Mf48 fdd gf48 0 QBIG
+Vgf48 gf48r 0 PULSE(0 10 {TF} 20n 20n {TPULSE} 1)
+Rgf48 gf48r gf48 4.7
+* freewheel diode across (Rf + coil): anode at the switch drain, cathode at the 12 V node
+Rfw fd fw_a {1m+(1-FWD)*1G}
+Dfw fw_a bus12 DFW
+
+* ---------- derived quantities ----------
+Bpbrk pbrk 0 V=V(dbrk,bus12)*I(Vsbrk)
+Bpf48 pf48 0 V=V(fdd)*I(Vsf)
+Bptvs ptvs 0 V=V(dbrk,bus12)*I(Rtvs)
+Bvds vds_brk 0 V=V(dbrk,bus12)
+
+* ---------- models (generic approximations, see header) ----------
+.model QBIG VDMOS(Vto=3 Kp=200 Rd=0.6m Rs=0.4m Rg=1 Cgdmax=3n Cgdmin=0.3n Cgs=10n Cjo=3n Is=1e-9 Rb=1m BV=42 Ibv=1m)
+.model DFW D(Is=1e-4 Rs=4m N=1.1 Cjo=2n BV=60 Ibv=1m)
+.model DTVS D(Is=1e-12 Rs=50m N=1 Cjo=1n BV=20 Ibv=1m)
+
+* start from the charged, running bench (helps the DC operating point find the right solution)
+.ic V(bank_c)=11.95 V(bank)=11.95 V(bus12)=11.9
+.tran 50n 8m 0 50n
+
+* before the fault: does Q_brk conduct properly?
+.meas TRAN V12_before FIND V(bus12) AT=0.9m
+.meas TRAN P_brk_before FIND V(pbrk) AT=0.9m
+* the fault
+.meas TRAN I_fault_pk MAX I(Lf) FROM=1m TO=8m
+* stress on the switches over the whole fault and its end
+.meas TRAN Vds_brk_max MAX V(vds_brk) FROM=1m TO=8m
+.meas TRAN Vds_f48_max MAX V(fdd) FROM=1m TO=8m
+.meas TRAN E_brk INTEG V(pbrk) FROM=1m TO=8m
+.meas TRAN E_f48_after_off INTEG V(pf48) FROM=5.999m TO=8m
+.meas TRAN E_tvs INTEG V(ptvs) FROM=1m TO=8m
+.meas TRAN V12_min MIN V(bus12) FROM=1m TO=8m
+
+* to compare before/after and both endings in one run, un-comment:
+*.step param FIX list 0 1
+*.step param TBRK list 250u 1
+.end

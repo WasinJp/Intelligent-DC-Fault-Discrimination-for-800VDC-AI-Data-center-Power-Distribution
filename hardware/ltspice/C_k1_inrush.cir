@@ -1,0 +1,67 @@
+* C_k1_inrush.cir -- closing K1 onto the feeder side (Sheet 1, left half)
+*
+* What it answers: peak current through K1 and F1, the fuse's I^2t, and the peak voltage
+* the 63 V electrolytics see when the bench is energised.
+*
+* Switches:   FIX = 0  supply already at 48 V, K1 closes at 1 ms (hot plug)
+*             FIX = 1  K1 closed first, supply output enabled at 1 ms (its CC limit charges
+*                      the caps), the procedure fix
+*             PRE = 1  10 ohm precharge resistor across K1 (the hardware alternative); K1 then
+*                      closes at 60 ms, after the precharge. Use it with FIX = 0.
+*
+* Converter is held off (input UVLO not yet released), so nothing discharges C_in through the
+* ORing diode: the peak on C_in stays there. CSUP and RSUP are the supply's output capacitor
+* and its ESR -- check your supply's datasheet, they set the hot-plug peak.
+*
+* Results: View > SPICE Error Log (Ctrl+L). Plot I(Lline), V(bus48), V(cin).
+
+.param FIX=0 PRE=0
+.param CSUP=1000u RSUP=50m
+.param TK1={1m+PRE*59m}
+
+* ---------- lab supply: 48 V, CC 4.375 A, output capacitor ----------
+Ven en 0 PULSE({1-FIX} 1 1m 1u 1u 1 2)
+Bsup 0 sp I=V(en)*min(max((48-V(sp))*20,0),4.375)
+Csup spc 0 {CSUP}
+Rsupesr sp spc {RSUP}
+
+* ---------- K1 (with optional precharge resistor) and F1 ----------
+Vk kc 0 PULSE({FIX} 1 {TK1} 1u 1u 1 2)
+SK1 sp k2 kc 0 SWK
+Rpre sp k2 {10+(1-PRE)*1G}
+Vsk k2 k3 0
+Rf1 k3 a1 20m
+
+* ---------- feeder emulation, shunt, bus cap ----------
+Lline a1 a2 20.5u
+Rline a2 a3 20m
+Rsh1 a3 bus48 10m
+Rcesr bus48 cb 32m
+Cbus cb 0 150u
+Rbleed bus48 0 1Meg
+
+* ---------- ORing diode, rack input filter, converter off ----------
+Dor bus48 or1 DOR
+Lin or1 or2 20u
+Rin or2 cinn 12m
+Rciesr cinn cin 40m
+Cin cin 0 220u
+Rbleed2 cinn 0 1Meg
+
+* fuse I^2t integrator input
+Bi2 i2 0 V=I(Vsk)*I(Vsk)
+
+.model SWK SW(Ron=5m Roff=1G Vt=0.5 Vh=0)
+.model DOR D(Is=1e-5 Rs=10m N=1.05 Cjo=500p BV=100 Ibv=1m)
+
+.tran 100n 80m 0 1u
+
+.meas TRAN I_k1_pk MAX I(Vsk)
+.meas TRAN I2t_fuse INTEG V(i2) FROM=0 TO=80m
+.meas TRAN Vbus_pk MAX V(bus48)
+.meas TRAN Vcin_pk MAX V(cinn)
+.meas TRAN Vcin_end FIND V(cinn) AT=79m
+
+* to compare in one run, un-comment:
+*.step param FIX list 0 1
+.end

@@ -1,0 +1,180 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1140" viewBox="0 0 2400 1140" font-family="Helvetica, Arial, sans-serif" fill="#1b2a41">
+<rect width="2400" height="1140" fill="#ffffff"/>
+<text x="30" y="36" font-size="22" fill="#1b2a41" text-anchor="start" font-weight="bold">Sheet 3 rev 2 — Bench control, gate drivers and the hardware fault limit (one driver board + NUCLEO-H743ZI2 #3)</text>
+<text x="30" y="58" font-size="13" fill="#555" text-anchor="start">rev 2, 2026-10-08: 74HC221 non-retriggerable one-shots with the arm key on CLR · isolated breaker drivers with their own isolated DC-DC, pull-UP + inverting (unpowered node = breaker OPEN) · all drivers from a separate 12 V adapter · demo-controller output to the HIL · option-C-only parts dashed</text>
+<rect x="40" y="110" width="300" height="700" rx="10" fill="#fff" stroke="#1b2a41" stroke-width="2.5"/>
+<text x="190" y="140" font-size="11" fill="#1b2a41" text-anchor="middle" font-weight="bold">NUCLEO-H743ZI2 #3</text>
+<text x="190" y="154" font-size="11" fill="#1b2a41" text-anchor="middle">BENCH CONTROL</text>
+<text x="190" y="168" font-size="11" fill="#1b2a41" text-anchor="middle"></text>
+<text x="190" y="182" font-size="11" fill="#1b2a41" text-anchor="middle">workload profile (two-tier cadence,</text>
+<text x="190" y="196" font-size="11" fill="#1b2a41" text-anchor="middle">staircase ramps over 5 gates)</text>
+<text x="190" y="210" font-size="11" fill="#1b2a41" text-anchor="middle">fault scheduling (next edge / at / now)</text>
+<text x="190" y="224" font-size="11" fill="#1b2a41" text-anchor="middle">POL-UVLO emulation (ADC3, 1 MSa/s)</text>
+<text x="190" y="238" font-size="11" fill="#1b2a41" text-anchor="middle">SYNC · DAC replay · console CLI</text>
+<text x="190" y="252" font-size="11" fill="#1b2a41" text-anchor="middle"></text>
+<text x="190" y="266" font-size="11" fill="#1b2a41" text-anchor="middle">firmware/bench_control (M7)</text>
+<text x="190" y="280" font-size="11" fill="#1b2a41" text-anchor="middle">pins: board_bc.h (candidates)</text>
+<path d="M340,360 L400,360" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<text x="346" y="354" font-size="10" fill="#1b2a41" text-anchor="start">LOAD1</text>
+<path d="M340,392 L400,392" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<text x="346" y="386" font-size="10" fill="#1b2a41" text-anchor="start">LOAD2</text>
+<path d="M340,424 L400,424" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<text x="346" y="418" font-size="10" fill="#1b2a41" text-anchor="start">LOAD3</text>
+<path d="M340,456 L400,456" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<text x="346" y="450" font-size="10" fill="#1b2a41" text-anchor="start">LOAD4</text>
+<path d="M340,488 L400,488" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<text x="346" y="482" font-size="10" fill="#1b2a41" text-anchor="start">LOAD5</text>
+<path d="M340,610 L400,610" fill="none" stroke="#c0392b" stroke-width="2.5"/>
+<text x="346" y="604" font-size="10" fill="#c0392b" text-anchor="start">FAULT_B</text>
+<path d="M340,700 L400,700" fill="none" stroke="#c0392b" stroke-width="2.5" stroke-dasharray="6,5"/>
+<text x="346" y="694" font-size="10" fill="#c0392b" text-anchor="start">FAULT_A</text>
+<path d="M340,785 L400,785" fill="none" stroke="#c0392b" stroke-width="2.5"/>
+<text x="346" y="779" font-size="10" fill="#c0392b" text-anchor="start">DEMO_FAULT</text>
+<rect x="400" y="340" width="150" height="170" rx="5" fill="#fff" stroke="#1b2a41" stroke-width="2"/>
+<text x="475" y="362.0" font-size="10.5" fill="#1b2a41" text-anchor="middle" font-weight="bold">U10..U14</text>
+<text x="475" y="375.5" font-size="10.5" fill="#1b2a41" text-anchor="middle">gate drivers</text>
+<text x="475" y="389.0" font-size="10.5" fill="#1b2a41" text-anchor="middle">TC4420 / UCC27517</text>
+<text x="475" y="402.5" font-size="10.5" fill="#1b2a41" text-anchor="middle">(12 V from the adapter)</text>
+<path d="M550,360 L640,360" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<polygon points="640,360 631.710451053974,363.5047650807779 631.710451053974,356.4952349192221" fill="#1b2a41"/>
+<text x="648" y="364" font-size="10.5" fill="#1b2a41" text-anchor="start">→ Q_L1 gate (Sheet 1 load bank)</text>
+<path d="M550,392 L640,392" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<polygon points="640,392 631.710451053974,395.5047650807779 631.710451053974,388.4952349192221" fill="#1b2a41"/>
+<text x="648" y="396" font-size="10.5" fill="#1b2a41" text-anchor="start">→ Q_L2 gate (Sheet 1 load bank)</text>
+<path d="M550,424 L640,424" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<polygon points="640,424 631.710451053974,427.5047650807779 631.710451053974,420.4952349192221" fill="#1b2a41"/>
+<text x="648" y="428" font-size="10.5" fill="#1b2a41" text-anchor="start">→ Q_L3 gate (Sheet 1 load bank)</text>
+<path d="M550,456 L640,456" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<polygon points="640,456 631.710451053974,459.5047650807779 631.710451053974,452.4952349192221" fill="#1b2a41"/>
+<text x="648" y="460" font-size="10.5" fill="#1b2a41" text-anchor="start">→ Q_L4 gate (Sheet 1 load bank)</text>
+<path d="M550,488 L640,488" fill="none" stroke="#1b2a41" stroke-width="2.5"/>
+<polygon points="640,488 631.710451053974,491.5047650807779 631.710451053974,484.4952349192221" fill="#1b2a41"/>
+<text x="648" y="492" font-size="10.5" fill="#1b2a41" text-anchor="start">→ Q_L5 gate (Sheet 1 load bank)</text>
+<rect x="400" y="525" width="240" height="30" rx="5" fill="#fff" stroke="#6b7280" stroke-width="1.5"/>
+<text x="520" y="545" font-size="10" fill="#1b2a41" text-anchor="middle">enable = thermal switch 90 °C (NC) AND arm key</text>
+<path d="M475,525 L475,510" fill="none" stroke="#6b7280" stroke-width="1.5"/>
+<text x="648" y="545" font-size="10" fill="#6b7280" text-anchor="start">enable for all five load drivers</text>
+<rect x="400" y="585" width="150" height="50" rx="5" fill="#fff" stroke="#c0392b" stroke-width="2"/>
+<text x="475" y="603.0" font-size="10.5" fill="#c0392b" text-anchor="middle" font-weight="bold">U15B 74HC221</text>
+<text x="475" y="616.5" font-size="10.5" fill="#c0392b" text-anchor="middle">one-shot 5 ms</text>
+<path d="M550,610 L590,610" fill="none" stroke="#c0392b" stroke-width="2.5"/>
+<rect x="590" y="590" width="90" height="40" rx="5" fill="#fff" stroke="#c0392b" stroke-width="2"/>
+<text x="635" y="614" font-size="10.5" fill="#c0392b" text-anchor="middle">U17 driver</text>
+<path d="M680,610 L760,610" fill="none" stroke="#c0392b" stroke-width="2.5"/>
+<polygon points="760,610 751.710451053974,613.5047650807778 751.710451053974,606.4952349192222" fill="#c0392b"/>
+<text x="768" y="614" font-size="10.5" fill="#c0392b" text-anchor="start">→ Q_f48 gate (rack-side fault, Sheet 1)</text>
+<path d="M520,620 L520,650" fill="none" stroke="#c0392b" stroke-width="2.5"/>
+<rect x="512" y="650.0" width="16" height="44" fill="#fff" stroke="#c0392b" stroke-width="2.2"/>
+<path d="M520,694 L520,712" fill="none" stroke="#c0392b" stroke-width="2.5"/>
+<line x1="508" y1="716" x2="532" y2="716" stroke="#c0392b" stroke-width="2.6"/>
+<line x1="508" y1="724" x2="532" y2="724" stroke="#c0392b" stroke-width="2.6"/>
+<path d="M520,728 L520,742" fill="none" stroke="#c0392b" stroke-width="2.5"/>
+<g stroke="#c0392b" stroke-width="2.2"><line x1="520" y1="742" x2="520" y2="750"/><line x1="508" y1="750" x2="532" y2="750"/><line x1="513" y1="755" x2="527" y2="755"/><line x1="517" y1="760" x2="523" y2="760"/></g>
+<text x="400" y="676" font-size="10" fill="#c0392b" text-anchor="start">R_t 71 kΩ</text>
+<text x="400" y="689" font-size="10" fill="#c0392b" text-anchor="start">C_t 100 nF</text>
+<text x="400" y="702" font-size="10" fill="#c0392b" text-anchor="start">t_w ≈ 0.7·R·C</text>
+<text x="400" y="715" font-size="10" fill="#c0392b" text-anchor="start">= 5 ms</text>
+<rect x="400" y="815" width="150" height="50" rx="5" fill="#fff" stroke="#c0392b" stroke-width="2" stroke-dasharray="6,5"/>
+<text x="475" y="833.0" font-size="10.5" fill="#c0392b" text-anchor="middle" font-weight="bold">U15A 74HC221</text>
+<text x="475" y="846.5" font-size="10.5" fill="#c0392b" text-anchor="middle">one-shot 10 ms</text>
+<path d="M340,700 L380,700 L380,840 L400,840" fill="none" stroke="#c0392b" stroke-width="2.5" stroke-dasharray="6,5"/>
+<path d="M550,840 L590,840" fill="none" stroke="#c0392b" stroke-width="2.5" stroke-dasharray="6,5"/>
+<rect x="590" y="820" width="90" height="40" rx="5" fill="#fff" stroke="#c0392b" stroke-width="2" stroke-dasharray="6,5"/>
+<text x="635" y="844" font-size="10.5" fill="#c0392b" text-anchor="middle">U16 driver</text>
+<path d="M680,840 L760,840" fill="none" stroke="#c0392b" stroke-width="2.5" stroke-dasharray="6,5"/>
+<polygon points="760,840 751.710451053974,843.5047650807778 751.710451053974,836.4952349192222" fill="#c0392b"/>
+<text x="768" y="844" font-size="10.5" fill="#c0392b" text-anchor="start">→ Q_f8 gate (feeder-side fault, Sheet 1) — option C only</text>
+<text x="400" y="886" font-size="10" fill="#c0392b" text-anchor="start">R_t 143 kΩ · C_t 100 nF → 10 ms</text>
+<rect x="700" y="680" width="250" height="56" rx="5" fill="#fff" stroke="#c0392b" stroke-width="1.5"/>
+<text x="825" y="700" font-size="10" fill="#c0392b" text-anchor="middle">ARM key switch → CLR of U15A and U15B</text>
+<text x="825" y="713" font-size="10" fill="#c0392b" text-anchor="middle">(CLR low = output forced low; the '221 does not</text>
+<text x="825" y="726" font-size="10" fill="#c0392b" text-anchor="middle">trigger on the CLR rising edge, unlike the '123)</text>
+<path d="M700,708 L575,708 L575,635" fill="none" stroke="#c0392b" stroke-width="1.5"/>
+<path d="M575,708 L575,815" fill="none" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="6,5"/>
+<text x="700" y="756" font-size="10" fill="#c0392b" text-anchor="start">also: arm-key sense input to the MCU (firmware refuses a fault when the key is off) and the key in series with the</text>
+<text x="700" y="770" font-size="10" fill="#c0392b" text-anchor="start">U16 / U17 enable. Three independent cuts: key on CLR, key in the enable, 5 ms by R·C. No firmware state can hold a short.</text>
+<path d="M400,785 L640,785" fill="none" stroke="#c0392b" stroke-width="2.5"/>
+<polygon points="640,785 631.710451053974,788.5047650807778 631.710451053974,781.4952349192222" fill="#c0392b"/>
+<text x="648" y="789" font-size="10.5" fill="#c0392b" text-anchor="start">→ HIL digital input (fault scenario trigger) + SYNC — demo controller (F8)</text>
+<text x="1230" y="110" font-size="14" fill="#c0392b" text-anchor="start" font-weight="bold">BREAKER DRIVERS — isolated, fail-safe</text>
+<rect x="1230" y="205" width="200" height="50" rx="5" fill="#fff" stroke="#c0392b" stroke-width="2"/>
+<text x="1330" y="234" font-size="11" fill="#c0392b" text-anchor="middle">Rack node TRIP (PF13)</text>
+<path d="M1430,230 L1530,230" fill="none" stroke="#c0392b" stroke-width="2.5"/>
+<circle cx="1480" cy="230" r="4" fill="#c0392b"/>
+<path d="M1480,230 L1480,200" fill="none" stroke="#c0392b" stroke-width="2.5"/>
+<rect x="1472" y="156.0" width="16" height="44" fill="#fff" stroke="#c0392b" stroke-width="2.2"/>
+<path d="M1480,156 L1480,144" fill="none" stroke="#c0392b" stroke-width="2.5"/>
+<text x="1480" y="138" font-size="10" fill="#c0392b" text-anchor="middle">3.3 V</text>
+<text x="1494" y="182" font-size="10" fill="#c0392b" text-anchor="start">10 kΩ pull-UP</text>
+<rect x="1530" y="194" width="190" height="72" rx="5" fill="#fff" stroke="#c0392b" stroke-width="2"/>
+<text x="1625" y="212" font-size="10" fill="#c0392b" text-anchor="middle" font-weight="bold">U19 isolated driver</text>
+<text x="1625" y="225" font-size="10" fill="#c0392b" text-anchor="middle">UCC5350 / ADuM4120</text>
+<text x="1625" y="238" font-size="10" fill="#c0392b" text-anchor="middle">IN− used ⇒ inverting</text>
+<text x="1625" y="251" font-size="10" fill="#c0392b" text-anchor="middle">VDD2 from the iso DC-DC</text>
+<path d="M1720,230 L1790,230" fill="none" stroke="#c0392b" stroke-width="2.5"/>
+<polygon points="1790,230 1781.710451053974,233.50476508077784 1781.710451053974,226.49523491922216" fill="#c0392b"/>
+<text x="1796" y="226" font-size="10.5" fill="#c0392b" text-anchor="start">→ gate of Q_brk</text>
+<text x="1796" y="242" font-size="10" fill="#c0392b" text-anchor="start">high side, source at the 12 V node</text>
+<rect x="1530" y="280" width="190" height="44" rx="5" fill="#fff" stroke="#c0392b" stroke-width="2"/>
+<text x="1625" y="298" font-size="10" fill="#c0392b" text-anchor="middle">U21 isolated DC-DC 12 → 15 V, 1 W</text>
+<text x="1625" y="311" font-size="10" fill="#c0392b" text-anchor="middle">output (−) tied to the FET's source</text>
+<path d="M1625,280 L1625,266" fill="none" stroke="#c0392b" stroke-width="2.5"/>
+<text x="1730" y="302" font-size="10" fill="#6b7280" text-anchor="start">← 12 V adapter</text>
+<rect x="1230" y="375" width="200" height="50" rx="5" fill="#fff" stroke="#c0392b" stroke-width="2" stroke-dasharray="6,5"/>
+<text x="1330" y="404" font-size="11" fill="#c0392b" text-anchor="middle">Feeder node TRIP (PF13)</text>
+<path d="M1430,400 L1530,400" fill="none" stroke="#c0392b" stroke-width="2.5" stroke-dasharray="6,5"/>
+<circle cx="1480" cy="400" r="4" fill="#c0392b"/>
+<path d="M1480,400 L1480,370" fill="none" stroke="#c0392b" stroke-width="2.5" stroke-dasharray="6,5"/>
+<rect x="1472" y="326.0" width="16" height="44" fill="#fff" stroke="#c0392b" stroke-width="2.2" stroke-dasharray="6,5"/>
+<path d="M1480,326 L1480,314" fill="none" stroke="#c0392b" stroke-width="2.5" stroke-dasharray="6,5"/>
+<text x="1480" y="308" font-size="10" fill="#c0392b" text-anchor="middle">3.3 V</text>
+<text x="1494" y="352" font-size="10" fill="#c0392b" text-anchor="start">10 kΩ pull-UP</text>
+<rect x="1530" y="364" width="190" height="72" rx="5" fill="#fff" stroke="#c0392b" stroke-width="2" stroke-dasharray="6,5"/>
+<text x="1625" y="382" font-size="10" fill="#c0392b" text-anchor="middle" font-weight="bold">U18 isolated driver</text>
+<text x="1625" y="395" font-size="10" fill="#c0392b" text-anchor="middle">UCC5350 / ADuM4120</text>
+<text x="1625" y="408" font-size="10" fill="#c0392b" text-anchor="middle">IN− used ⇒ inverting</text>
+<text x="1625" y="421" font-size="10" fill="#c0392b" text-anchor="middle">VDD2 from the iso DC-DC</text>
+<path d="M1720,400 L1790,400" fill="none" stroke="#c0392b" stroke-width="2.5" stroke-dasharray="6,5"/>
+<polygon points="1790,400 1781.710451053974,403.5047650807779 1781.710451053974,396.4952349192221" fill="#c0392b"/>
+<text x="1796" y="396" font-size="10.5" fill="#c0392b" text-anchor="start">→ gate of Q_fb</text>
+<text x="1796" y="412" font-size="10" fill="#c0392b" text-anchor="start">high side, source at the 48 V line · option C only</text>
+<rect x="1530" y="450" width="190" height="44" rx="5" fill="#fff" stroke="#c0392b" stroke-width="2" stroke-dasharray="6,5"/>
+<text x="1625" y="468" font-size="10" fill="#c0392b" text-anchor="middle">U20 isolated DC-DC 12 → 15 V, 1 W</text>
+<text x="1625" y="481" font-size="10" fill="#c0392b" text-anchor="middle">output (−) tied to the FET's source</text>
+<path d="M1625,450 L1625,436" fill="none" stroke="#c0392b" stroke-width="2.5" stroke-dasharray="6,5"/>
+<text x="1730" y="472" font-size="10" fill="#6b7280" text-anchor="start">← 12 V adapter</text>
+<text x="1230" y="520.0" font-size="10.5" fill="#c0392b" text-anchor="start">Truth table (both breakers): node pin floating (unpowered, reset, cable off) → pull-up → IN− high → gate LOW → breaker OPEN (fail-safe).</text>
+<text x="1230" y="533.5" font-size="10.5" fill="#c0392b" text-anchor="start">TRIP = 0 (node running, no fault) → gate HIGH (15 V above the source) → breaker CLOSED.   TRIP = 1 → gate LOW → breaker OPEN.</text>
+<text x="1230" y="547.0" font-size="10.5" fill="#c0392b" text-anchor="start">Firmware stays TRIP-active-high as built (board.h PF13). rev 1 wrote 'pull-down + inverting'; that would close the breaker on a dead node.</text>
+<text x="1230" y="580.0" font-size="10.5" fill="#6b7280" text-anchor="start">Why isolated: Q_brk's source sits at 12 V (high side); a ground-referenced 12 V driver gives Vgs ≈ 0 and the FET works as a 35 W source follower,</text>
+<text x="1230" y="593.5" font-size="10.5" fill="#6b7280" text-anchor="start">then fails in linear mode at 100 A. The isolated driver's secondary rides on the source. Same part for Q_fb (option C), whose source rides on 48 V.</text>
+<text x="1230" y="607.0" font-size="10.5" fill="#6b7280" text-anchor="start">Alternative rejected: P-channel high side (≥ 9 mΩ at 40 V class, +10 % in the bolted-fault loop, hot).</text>
+<rect x="1230" y="660" width="200" height="46" rx="5" fill="#fff" stroke="#1b2a41" stroke-width="1.5"/>
+<text x="1330" y="688" font-size="11" fill="#1b2a41" text-anchor="middle" font-weight="bold">UVLO emulation</text>
+<text x="1442" y="680" font-size="10.5" fill="#1b2a41" text-anchor="start">ADC3 on v_out (1 MSa/s): &lt; 9.6 V for 100 µs → all LOAD gates low; re-enable above 10.1 V (the model's POL UVLO, V_uvlo48</text>
+<text x="1442" y="696" font-size="10.5" fill="#1b2a41" text-anchor="start"> / t_uvlo48 / V_hyst48 scaled)</text>
+<rect x="1230" y="720" width="200" height="46" rx="5" fill="#fff" stroke="#1b2a41" stroke-width="1.5"/>
+<text x="1330" y="748" font-size="11" fill="#1b2a41" text-anchor="middle" font-weight="bold">SYNC out (BNC)</text>
+<text x="1442" y="740" font-size="10.5" fill="#1b2a41" text-anchor="start">one pulse at each scheduled event, manual step and fault trigger → feeder node PF12, rack node PF12, scope ch1; from the</text>
+<text x="1442" y="756" font-size="10.5" fill="#1b2a41" text-anchor="start"> HIL instead in HIL mode</text>
+<rect x="1230" y="780" width="200" height="46" rx="5" fill="#fff" stroke="#1b2a41" stroke-width="1.5"/>
+<text x="1330" y="808" font-size="11" fill="#1b2a41" text-anchor="middle" font-weight="bold">DAC1 / DAC2 (PA4 / PA5)</text>
+<text x="1442" y="800" font-size="10.5" fill="#1b2a41" text-anchor="start">12-bit, 1 MSa/s replay tables from tools/replay_waveforms.py → the node's SMA i / SMA v (latency test, Sheet 2 JP1 / JP2</text>
+<text x="1442" y="816" font-size="10.5" fill="#1b2a41" text-anchor="start">); 0–3.3 V through 100 Ω</text>
+<rect x="1230" y="840" width="200" height="46" rx="5" fill="#fff" stroke="#1b2a41" stroke-width="1.5"/>
+<text x="1330" y="868" font-size="11" fill="#1b2a41" text-anchor="middle" font-weight="bold">DEMO_FAULT → HIL</text>
+<text x="1442" y="860" font-size="10.5" fill="#1b2a41" text-anchor="start">dashboard fault command → one GPIO → HIL digital input (fault scenario trigger in the model) + SYNC; makes the 'trigger </text>
+<text x="1442" y="876" font-size="10.5" fill="#1b2a41" text-anchor="start">a fault' button work without a PC link to the HIL</text>
+<rect x="1230" y="900" width="200" height="46" rx="5" fill="#fff" stroke="#1b2a41" stroke-width="1.5"/>
+<text x="1330" y="928" font-size="11" fill="#1b2a41" text-anchor="middle" font-weight="bold">USB-serial CLI</text>
+<text x="1442" y="920" font-size="10.5" fill="#1b2a41" text-anchor="start">tools/bench_run.py scripts the SCALING_SHEET §6 plan: 200 benign events, 60 rack faults (+ 20 feeder faults under option</text>
+<text x="1442" y="936" font-size="10.5" fill="#1b2a41" text-anchor="start"> C); every run recorded by both nodes and the scope</text>
+<rect x="40" y="930" width="1100" height="70" rx="5" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.5"/>
+<text x="60" y="952.0" font-size="10.5" fill="#374151" text-anchor="start">DRIVER SUPPLY ⑤: separate 12 V / 2 A adapter through a 1 A fuse → U10–U14, U16, U17 and the two isolated DC-DCs (U20, U21). NOT the bench bus:</text>
+<text x="60" y="965.5" font-size="10.5" fill="#374151" text-anchor="start">a bolted fault pulls the 12 V bus to ≈ 5 V in 5 ms (linear-mode gates), and opening Q_brk removes it. Logic 3.3 V from the Nucleo. Common ground with the bench star.</text>
+<text x="60" y="979.0" font-size="10.5" fill="#374151" text-anchor="start">Adapter off ⇒ both breakers open (fail-safe holds through the supply path too).</text>
+<text x="40" y="1030.0" font-size="10.5" fill="#6b7280" text-anchor="start">Scope: ch1 SYNC · ch2 rack shunt (differential probe ≥ 10 MHz across R_sh2, before the node's filter) · ch3 ONSET (PF14) · ch4 TRIP (PF13) → onset-to-trip latency and the raw fault front.</text>
+<text x="40" y="1043.5" font-size="10.5" fill="#6b7280" text-anchor="start">Scope ground clips on the star only. HIL mode: SYNC comes from a HIL digital output into PF12 (level-shift if the HIL output is 5 V / 24 V); both TRIPs go to HIL digital inputs (buffer per the input threshold).</text>
+<text x="40" y="1080.0" font-size="10.5" fill="#6b7280" text-anchor="start">Parts on this sheet (rev 2): 7 × TC4420 / UCC27517 · 2 × UCC5350 (or ADuM4120) · 2 × isolated DC-DC 12 → 15 V 1 W · 1 × 74HC221 · key switch · 12 V 2 A adapter + 1 A fuse · thermal switch 90 °C NC · R/C for the one-shots (1 % / C0G or film).</text>
+<text x="40" y="1093.5" font-size="10.5" fill="#6b7280" text-anchor="start">Option B drops U16, U18, U20, U15A and their R/C. The MCU can only START a fault pulse; its length is set by R_t·C_t in the one-shot, the arm key sits on CLR and in the enable.</text>
+</svg>

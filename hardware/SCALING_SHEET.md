@@ -1,6 +1,6 @@
 # SCALING_SHEET.md — from MODEL.md to a low-voltage testbed
 
-**Written:** 2026-10-01, for Prof. Supachai's pre-build review. Numbers: `python hardware/bench_scaling.py 120 48 12` (edit the three arguments to re-scale; the sheet quotes the 120 W / 48 V / 12 V point).
+**Written:** 2026-10-01, for Prof. Supachai's pre-build review. **Rev 2 (2026-10-08):** converter criteria (d)–(e), acceptance (3) corrected to the FIRMWARE_SPEC §7.4 wording, scope option B, questions §9 updated; the circuit changes are in SCHEMATIC_DESIGN.md rev 2 §0. Numbers: `python hardware/bench_scaling.py 120 48 12` (edit the three arguments to re-scale; the sheet quotes the 120 W / 48 V / 12 V point).
 **Purpose of the bench:** answer the judges' third doubt (simulation vs real system) with a specific, testable claim — *we put the bench's own measured parameters into the simulator, trained the relay on simulated bench events, then ran it on the real bench with real sensors, and the decisions matched.* The first two doubts (algorithm speed, processing hardware) are answered separately by the firmware latency test with waveform replay; that test needs no bench.
 
 ## 1. The scaling rule
@@ -53,7 +53,7 @@ Bolted 800 V-side faults are **not** done on the bench: they are Layer-1 territo
 
 Both routes end in a converter whose control is *measured* and put into the simulator; the difference is risk and schedule.
 
-- **Buy:** a 48 → 12 V, ≥ 150 W synchronous buck module **with switching frequency ≥ 400 kHz** (two ordered now, < US$25 each). Pass criteria on the bench, measured before any relay test: (a) into a 14 A overload it holds a current limit for ≥ 10 ms without hiccup or shutdown; (b) a 50 % load step gives a clean step response from which f_v and τ_i can be fitted (the simulator's check (f) then must reproduce the measured trace within 5 %); (c) efficiency at 20 / 50 / 100 % load fits the two-term loss model.
+- **Buy:** a 48 → 12 V, ≥ 150 W synchronous buck module **with switching frequency ≥ 400 kHz** (two ordered now, < US$25 each). Pass criteria on the bench, measured before any relay test: (a) into a 14 A overload it holds a current limit for ≥ 10 ms without hiccup or shutdown; (b) a 50 % load step gives a clean step response from which f_v and τ_i can be fitted (the simulator's check (f) then must reproduce the measured trace within 5 %); (c) efficiency at 20 / 50 / 100 % load fits the two-term loss model; **(d) it starts into the 66 mF bank without hiccupping (57 ms at 14 A); (e) it is pre-bias safe: no reverse current or backward boost into C_in when the input collapses while the bank holds the output up** (the ORing assumption of MODEL.md §4.6 at the converter level).
 - **Build (if the module fails (a) or (b)):** a synchronous buck around an analog peak-current-mode controller IC with external compensation and a cycle-by-cycle current limit that does not hiccup. Peak-current-mode *is* the model's cascade (outer voltage error amplifier, inner current loop, clamp), so it maps directly and its compensation sets f_v where we want it. A digitally controlled STM32 buck is the better portfolio project but is a second firmware effort competing with the relay firmware; it is deferred to after November.
 
 ## 5. Pre-build verification (what the professor reviews before parts are soldered)
@@ -67,17 +67,18 @@ Both routes end in a converter whose control is *measured* and put into the simu
 
 Automated by the load-control MCU; every run recorded by both nodes (raw 500 kSa/s streams to the PC over USB) and by the scope.
 - **Benign:** 200 workload events — steps of 10–80 % of rating, staircase ramps 0.5–20 ms, idle drops, two-tier cadence with periods 0.3–3 s.
-- **Faults:** 60 rack-side (20 each at 63 mΩ, 0.3 Ω, 1.3 Ω; L 10 / 30 / 100 µH), 20 feeder-side high-Z (20 Ω and 40 Ω), pulse-limited to 5 ms by hardware.
-- **Acceptance:** (1) for every feature in `features.py`, the bench value lies inside the 2.5–97.5 % range of the simulated bench dataset for the same event class in ≥ 90 % of events; (2) the relay trained on the simulated bench set gives 0 false trips in 200 benign events and ≤ 3 misses in 80 faults, decisions at 0.25 ms; (3) onset-to-trip latency on the H7, measured on the scope, ≤ 250 µs in every fault run.
+- **Faults:** 60 rack-side (20 each at ≈ 63 mΩ, 0.3 Ω, 1.3 Ω total including the measured coil DCR; L 10 / 30 / 100 µH), pulse-limited to 5 ms by hardware. Option C adds 20 feeder-side high-Z (20 Ω and 40 Ω, 10 ms limit).
+- **Acceptance:** (1) for every feature in `features.py`, the bench value lies inside the 2.5–97.5 % range of the simulated bench dataset for the same event class in ≥ 90 % of events; (2) the relay trained on the simulated bench set gives 0 false trips in 200 benign events and ≤ 3 misses in 80 faults, decisions at 0.25 ms; (3) latency on the H7, measured on the scope in every fault run: the decision window closes 250 µs after onset and the TRIP pin follows within ≤ 80 µs (p99), so onset-to-trip ≤ 250 + 16 + 80 = 346 µs worst case (FIRMWARE_SPEC §7.4; "≤ 250 µs onset-to-trip" was impossible by construction and is retired).
 - If (1) fails on a feature, the feature and the reason are reported; if (2) fails, the relay is retrained on recorded bench events and both results are reported. Nothing is tuned after the fact without saying so.
 
 ## 7. Safety
 
 - Stored energy: 4.2 J in the storage bank, 0.15 J on the bus cap. Not a shock hazard; a burn and spatter hazard at the fault switch.
-- Fault pulse: ≤ 130 A for ≤ 5 ms, limited by a **hardware one-shot** (555 or timer IC) between the MCU and the fault-MOSFET gate driver, so no firmware fault can hold the switch closed; the fault resistor is rated for the 5 J pulse with margin (parallel wirewounds on a heatsink).
+- Fault pulse: ≤ 130 A for ≤ 5 ms, limited by a **hardware one-shot** (74HC221, non-retriggerable; arm key on CLR and in the driver enable) between the MCU and the fault-MOSFET gate driver, so no firmware fault can hold the switch closed; the fault resistor is rated for the 5 J pulse with margin (parallel wirewounds on a heatsink); the coil energy at switch-off (up to ≈ 0.3 J) goes into the freewheel diode D_fw, not into a MOSFET avalanche.
 - Fusing: fast fuse on the 48 V input (5 A); the supply's own current limit at 4.4 A; an emergency-stop contactor in the 48 V feed.
 - Continuous dissipation: 108 W in the load bank on a fan-cooled heatsink; thermal switch on the heatsink cuts the load if > 90 °C.
 - Electrolytics: 16 V rated on a 12 V bus, reverse-polarity protected; the ORing diode prevents back-feed.
+- Breakers fail open: an unpowered or resetting node opens its breaker (pull-up + inverting isolated driver); the driver adapter off opens both. Power-up order in SCHEMATIC_DESIGN §8 (K1 closed with the supply output off, then output on).
 - Fault tests only with a second person present and the professor's sign-off on this sheet.
 
 ## 8. Schedule (final on 14 Nov)
@@ -95,6 +96,8 @@ Fallback: if the bench slips, the replay latency test plus the bench-scale simul
 ## 9. Questions for the professor
 
 1. `load_model = "resistive"` in the core for the bench dataset: agreed?
-2. Lab equipment: 48 V supply (≥ 5 A, constant-current mode), scope bandwidth, differential or current probe ≥ 10 MHz, LCR/ESR meter, electronic load with dynamic mode (would replace the resistor bank).
+2. Lab equipment: 48 V supply (≥ 5 A, constant-current mode, output on/off switch), scope bandwidth, differential or current probe ≥ 10 MHz, LCR/ESR meter, electronic load with dynamic mode (would replace the resistor bank); NUCLEO-H743ZI2 / H723ZG boards available now?
 3. Supervision and space for fault-injection tests; who signs off §7.
-4. Buy-vs-build rule in §4: acceptable, or does he prefer the built converter regardless?
+4. Buy-vs-build rule in §4 (now five criteria): acceptable, or does he prefer the built converter regardless?
+5. Scope option A / B / C of HIL_TESTBED_PLAN §2.2 — the sheets are drawn for B (rack-side faults only) with the option-C parts dashed.
+6. The circuit changes of SCHEMATIC_DESIGN rev 2 §0, in particular both breakers high-side with isolated drivers and the fail-safe wiring.

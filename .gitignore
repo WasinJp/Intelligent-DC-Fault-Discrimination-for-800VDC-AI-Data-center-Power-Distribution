@@ -33,3 +33,5 @@ hardware/bench_block_diagram.svg
 data/nodes_v1xl6k/
 
 firmware/host/tests/fixtures/*.bin
+
+hardware/ltspice/*.raw

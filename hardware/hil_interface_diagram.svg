@@ -1,0 +1,205 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2300" height="1000" viewBox="0 0 2300 1000" font-family="Helvetica, Arial, sans-serif" fill="#1b2a41">
+<rect width="2300" height="1000" fill="#ffffff"/>
+<text x="30" y="36" font-size="22" fill="#1b2a41" text-anchor="start" font-weight="bold">HIL interface — what the HIL simulates, what crosses the boundary, what is real (IDCFC, Delta Cup 2026 final)</text>
+<text x="30" y="58" font-size="13" fill="#555" text-anchor="start">Plant = MODEL.md v0.4.4, one 800 VDC distribution segment at full scale (132 kW); two real STM32H743 sensing nodes decide on the HIL's analog outputs and open the model's breakers. Thai summary in the brief.</text>
+<rect x="30" y="90" width="1310" height="640" rx="12" fill="#f7f8fa" stroke="#374151" stroke-width="2.5"/>
+<text x="50" y="118" font-size="15" fill="#374151" text-anchor="start" font-weight="bold">INSIDE THE HIL — simulated in real time (fixed step, explicit integration; 11 states)</text>
+<rect x="50" y="210" width="140" height="80" rx="5" fill="#fff" stroke="#1b2a41" stroke-width="2"/>
+<text x="120.0" y="228" font-size="11.5" fill="#1b2a41" text-anchor="middle" font-weight="bold">Source 800 V</text>
+<text x="120.0" y="244" font-size="9.5" fill="#374151" text-anchor="middle">droop 0.2–5 %</text>
+<text x="120.0" y="256" font-size="9.5" fill="#374151" text-anchor="middle">lag τ_c 16–320 µs</text>
+<text x="120.0" y="268" font-size="9.5" fill="#374151" text-anchor="middle">I_lim 1.5–2 × rated</text>
+<text x="120.0" y="280" font-size="9.5" fill="#374151" text-anchor="middle">unidirectional</text>
+<path d="M190,250 L226,250" fill="none" stroke="#1b2a41" stroke-width="3"/>
+<polygon points="226,250 217.71045105397403,253.50476508077784 217.71045105397403,246.49523491922216" fill="#1b2a41"/>
+<rect x="226" y="210" width="140" height="80" rx="5" fill="#fff" stroke="#1b2a41" stroke-width="2"/>
+<text x="296.0" y="228" font-size="11.5" fill="#1b2a41" text-anchor="middle" font-weight="bold">Feeder R–L</text>
+<text x="296.0" y="244" font-size="9.5" fill="#374151" text-anchor="middle">L_line 1–50 µH</text>
+<text x="296.0" y="256" font-size="9.5" fill="#374151" text-anchor="middle">R_line 1–20 mΩ</text>
+<text x="296.0" y="268" font-size="9.5" fill="#374151" text-anchor="middle">[+ series arc V_arc]</text>
+<path d="M366,250 L420,250" fill="none" stroke="#1b2a41" stroke-width="3"/>
+<polygon points="420,250 411.71045105397405,253.50476508077784 411.71045105397405,246.49523491922216" fill="#1b2a41"/>
+<rect x="420" y="210" width="140" height="80" rx="5" fill="#fff" stroke="#1b2a41" stroke-width="2"/>
+<text x="490.0" y="228" font-size="11.5" fill="#1b2a41" text-anchor="middle" font-weight="bold">800 V bus</text>
+<text x="490.0" y="244" font-size="9.5" fill="#374151" text-anchor="middle">C_bus 0.1–2 mF, ESR</text>
+<text x="490.0" y="256" font-size="9.5" fill="#374151" text-anchor="middle">+ C_store 1–50 mF (p = ½)</text>
+<text x="490.0" y="268" font-size="9.5" fill="#374151" text-anchor="middle">v ≥ 0 (freewheel)</text>
+<path d="M560,250 L596,250" fill="none" stroke="#1b2a41" stroke-width="3"/>
+<polygon points="596,250 587.710451053974,253.50476508077784 587.710451053974,246.49523491922216" fill="#1b2a41"/>
+<rect x="596" y="210" width="140" height="80" rx="5" fill="#fff" stroke="#1b2a41" stroke-width="2"/>
+<text x="666.0" y="228" font-size="11.5" fill="#1b2a41" text-anchor="middle" font-weight="bold">ORing + input filter</text>
+<text x="666.0" y="244" font-size="9.5" fill="#374151" text-anchor="middle">i_Lin ≥ 0</text>
+<text x="666.0" y="256" font-size="9.5" fill="#374151" text-anchor="middle">L_in 1–20 µH</text>
+<text x="666.0" y="268" font-size="9.5" fill="#374151" text-anchor="middle">C_in 0.1–5 mF, ESR</text>
+<path d="M736,250 L772,250" fill="none" stroke="#1b2a41" stroke-width="3"/>
+<polygon points="772,250 763.710451053974,253.50476508077784 763.710451053974,246.49523491922216" fill="#1b2a41"/>
+<rect x="772" y="210" width="190" height="96" rx="5" fill="#fff" stroke="#1b2a41" stroke-width="2"/>
+<text x="867.0" y="228" font-size="11.5" fill="#1b2a41" text-anchor="middle" font-weight="bold">Averaged DC-DC 800 → 48 V</text>
+<text x="867.0" y="244" font-size="9.5" fill="#374151" text-anchor="middle">ramp limiter (smooth_on)</text>
+<text x="867.0" y="256" font-size="9.5" fill="#374151" text-anchor="middle">PI voltage loop f_v 20 Hz–2 kHz</text>
+<text x="867.0" y="268" font-size="9.5" fill="#374151" text-anchor="middle">inner lag τ_i 10–50 µs</text>
+<text x="867.0" y="280" font-size="9.5" fill="#374151" text-anchor="middle">I_lim,out 1.2–1.6 ×; η(P); UVLO</text>
+<path d="M962,250 L998,250" fill="none" stroke="#1b2a41" stroke-width="3"/>
+<polygon points="998,250 989.710451053974,253.50476508077784 989.710451053974,246.49523491922216" fill="#1b2a41"/>
+<rect x="998" y="210" width="140" height="80" rx="5" fill="#fff" stroke="#1b2a41" stroke-width="2"/>
+<text x="1068.0" y="228" font-size="11.5" fill="#1b2a41" text-anchor="middle" font-weight="bold">48 V bus + storage</text>
+<text x="1068.0" y="244" font-size="9.5" fill="#374151" text-anchor="middle">C_out 0.2–5 F (65 J/GPU)</text>
+<text x="1068.0" y="256" font-size="9.5" fill="#374151" text-anchor="middle">ESR 0.2–2 mΩ</text>
+<text x="1068.0" y="268" font-size="9.5" fill="#374151" text-anchor="middle">v ≥ 0</text>
+<path d="M1138,250 L1222,250" fill="none" stroke="#1b2a41" stroke-width="3"/>
+<polygon points="1222,250 1213.710451053974,253.50476508077784 1213.710451053974,246.49523491922216" fill="#1b2a41"/>
+<rect x="1222" y="210" width="112" height="80" rx="5" fill="#fff" stroke="#1b2a41" stroke-width="2"/>
+<text x="1278.0" y="228" font-size="11.5" fill="#1b2a41" text-anchor="middle" font-weight="bold">GPU load (POL)</text>
+<text x="1278.0" y="244" font-size="9.5" fill="#374151" text-anchor="middle">constant power</text>
+<text x="1278.0" y="256" font-size="9.5" fill="#374151" text-anchor="middle">P_gpu(t) from the</text>
+<text x="1278.0" y="268" font-size="9.5" fill="#374151" text-anchor="middle">workload generator</text>
+<text x="1278.0" y="280" font-size="9.5" fill="#374151" text-anchor="middle">UVLO 48 V</text>
+<path d="M490,290 L490,330" fill="none" stroke="#c0392b" stroke-width="2.5"/>
+<rect x="435" y="330" width="110" height="56" rx="5" fill="#fff" stroke="#c0392b" stroke-width="2"/>
+<text x="490" y="348" font-size="9.5" fill="#c0392b" text-anchor="middle">800 V fault branch</text>
+<text x="490" y="360" font-size="9.5" fill="#c0392b" text-anchor="middle">R_f 1 mΩ–10 Ω</text>
+<text x="490" y="372" font-size="9.5" fill="#c0392b" text-anchor="middle">L_f 0.5–10 µH, switch</text>
+<path d="M1200,250 L1200,330" fill="none" stroke="#c0392b" stroke-width="2.5"/>
+<circle cx="1200" cy="250" r="4" fill="#c0392b"/>
+<rect x="1176" y="330" width="126" height="56" rx="5" fill="#fff" stroke="#c0392b" stroke-width="2"/>
+<text x="1239" y="348" font-size="9.5" fill="#c0392b" text-anchor="middle">48 V fault branch</text>
+<text x="1239" y="360" font-size="9.5" fill="#c0392b" text-anchor="middle">downstream of SSCB_r</text>
+<text x="1239" y="372" font-size="9.5" fill="#c0392b" text-anchor="middle">R_f48 0.5–100 mΩ, L_f48 0.1–2 µH</text>
+<rect x="379" y="236" width="28" height="28" rx="5" fill="#fff" stroke="#c0392b" stroke-width="2"/>
+<text x="393" y="254" font-size="14" fill="#c0392b" text-anchor="middle">⊗</text>
+<text x="393" y="230" font-size="9.5" fill="#c0392b" text-anchor="middle">SSCB_f</text>
+<rect x="1151" y="236" width="28" height="28" rx="5" fill="#fff" stroke="#c0392b" stroke-width="2"/>
+<text x="1165" y="254" font-size="14" fill="#c0392b" text-anchor="middle">⊗</text>
+<text x="1165" y="230" font-size="9.5" fill="#c0392b" text-anchor="middle">SSCB_r</text>
+<circle cx="372" cy="250" r="6" fill="#1f5fa8"/>
+<text x="340" y="310" font-size="10" fill="#1f5fa8" text-anchor="middle" font-weight="bold">FEEDER NODE POINT</text>
+<text x="340" y="323" font-size="10" fill="#1f5fa8" text-anchor="middle">i_L (before SSCB_f), v_bus</text>
+<circle cx="1145" cy="250" r="6" fill="#d97b0a"/>
+<text x="1068" y="310" font-size="10" fill="#d97b0a" text-anchor="middle" font-weight="bold">RACK NODE POINT</text>
+<text x="1068" y="323" font-size="10" fill="#d97b0a" text-anchor="middle">shunt before SSCB_r; v_out tap after it</text>
+<text x="1068" y="336" font-size="10" fill="#d97b0a" text-anchor="middle">i_rack = i_pol + i_f48</text>
+<rect x="50" y="430" width="290" height="120" rx="5" fill="#fff" stroke="#6b7280" stroke-width="1.8"/>
+<text x="195" y="452" font-size="10" fill="#1b2a41" text-anchor="middle" font-weight="bold">Workload generator (§5.1)</text>
+<text x="195" y="466" font-size="10" fill="#1b2a41" text-anchor="middle">two-tier cadence: iteration T₁ 0.3–3 s,</text>
+<text x="195" y="480" font-size="10" fill="#1b2a41" text-anchor="middle">EDP bursts T₂ 20–200 ms, ramps 0.5–10 ms,</text>
+<text x="195" y="494" font-size="10" fill="#1b2a41" text-anchor="middle">jitter ≤ 2 %; runs continuously so the</text>
+<text x="195" y="508" font-size="10" fill="#1b2a41" text-anchor="middle">nodes can learn the cadence (≈ 2.5 periods)</text>
+<rect x="360" y="430" width="290" height="120" rx="5" fill="#fff" stroke="#c0392b" stroke-width="1.8"/>
+<text x="505" y="452" font-size="10" fill="#c0392b" text-anchor="middle" font-weight="bold">Fault scenario block</text>
+<text x="505" y="466" font-size="10" fill="#c0392b" text-anchor="middle">location (800 V / 48 V / arc), R_f, L_f,</text>
+<text x="505" y="480" font-size="10" fill="#c0392b" text-anchor="middle">inception time (scheduled on a workload</text>
+<text x="505" y="494" font-size="10" fill="#c0392b" text-anchor="middle">edge or unscheduled), 5 ms window or held;</text>
+<text x="505" y="508" font-size="10" fill="#c0392b" text-anchor="middle">armed by the FAULT_CMD input or the PC</text>
+<rect x="670" y="430" width="290" height="120" rx="5" fill="#fff" stroke="#c0392b" stroke-width="1.8"/>
+<text x="815" y="452" font-size="10" fill="#c0392b" text-anchor="middle" font-weight="bold">Breaker element (SSCB) ×2</text>
+<text x="815" y="466" font-size="10" fill="#c0392b" text-anchor="middle">opens on the TRIP input of its node</text>
+<text x="815" y="480" font-size="10" fill="#c0392b" text-anchor="middle">(optional opening delay); records</text>
+<text x="815" y="494" font-size="10" fill="#c0392b" text-anchor="middle">inception → TRIP time with the HIL clock;</text>
+<text x="815" y="508" font-size="10" fill="#c0392b" text-anchor="middle">the dashboard reads the state</text>
+<rect x="980" y="430" width="320" height="120" rx="5" fill="#fff" stroke="#6b7280" stroke-width="1.8"/>
+<text x="1140" y="452" font-size="10" fill="#1b2a41" text-anchor="middle" font-weight="bold">Output scaling + saturation</text>
+<text x="1140" y="466" font-size="10" fill="#1b2a41" text-anchor="middle">per-unit → 0–10 V, saturated to the DAC</text>
+<text x="1140" y="480" font-size="10" fill="#1b2a41" text-anchor="middle">range (first line of protection); optional</text>
+<text x="1140" y="494" font-size="10" fill="#1b2a41" text-anchor="middle">added noise if the HIL floor is below the</text>
+<text x="1140" y="508" font-size="10" fill="#1b2a41" text-anchor="middle">training range (0.05–0.5 % of full scale)</text>
+<text x="50" y="585" font-size="10" fill="#374151" text-anchor="start">Numerics the box must support: explicit fixed-step integration (RK4 or Euler) of 11 states — implicit solvers break the controller's anti-windup rule (MODEL.md §4.8);</text>
+<text x="50" y="600" font-size="10" fill="#374151" text-anchor="start">healthy-network time constants ≥ 10 µs and 5 kHz resonance; the fault branch (τ_f down to 0.05 µs) is integrated quasi-statically when the step exceeds 0.5·τ_f (MODEL.md 0.4.4 rule, validated);</text>
+<text x="50" y="615" font-size="10" fill="#374151" text-anchor="start">every discontinuity (load step, fault on/off, UVLO, breaker) lands on a step boundary. Step ≤ 1 µs is comfortable; ≤ 10 µs is being evaluated by our front-end sweep. Reference: Python core + Simscape check (i), 8/8 cases ≤ 1 %.</text>
+<text x="50" y="650" font-size="10" fill="#374151" text-anchor="start">Model forms we can supply: (a) Simscape Electrical .slx (simscape/dcsim_shelf.slx, the validated cross-check model; variable-step network + discrete controller);</text>
+<text x="50" y="665" font-size="10" fill="#374151" text-anchor="start">(b) pure Simulink fixed-step explicit ODE model (MATLAB Function RK4 of the 11 states — being prepared, validated against the same 8 cases); (c) the equations (MODEL.md) and the Python reference, if the box has its own solver / FPGA netlist.</text>
+<path d="M1360,90 L1360,730" fill="none" stroke="#374151" stroke-width="3" stroke-dasharray="10,6"/>
+<text x="1360" y="760" font-size="12" fill="#374151" text-anchor="middle" font-weight="bold">HIL I/O boundary</text>
+<path d="M1330,180 L1500,180" fill="none" stroke="#1f5fa8" stroke-width="2.5"/>
+<polygon points="1500,180 1491.710451053974,183.50476508077784 1491.710451053974,176.49523491922216" fill="#1f5fa8"/>
+<text x="1368" y="174" font-size="10" fill="#1f5fa8" text-anchor="start">AO1  i_L  → 0–10 V</text>
+<path d="M1330,215 L1500,215" fill="none" stroke="#1f5fa8" stroke-width="2.5"/>
+<polygon points="1500,215 1491.710451053974,218.50476508077784 1491.710451053974,211.49523491922216" fill="#1f5fa8"/>
+<text x="1368" y="209" font-size="10" fill="#1f5fa8" text-anchor="start">AO2  v_bus → 0–10 V</text>
+<path d="M1330,300 L1500,300" fill="none" stroke="#d97b0a" stroke-width="2.5"/>
+<polygon points="1500,300 1491.710451053974,303.5047650807779 1491.710451053974,296.4952349192221" fill="#d97b0a"/>
+<text x="1368" y="294" font-size="10" fill="#d97b0a" text-anchor="start">AO3  i_rack → 0–10 V</text>
+<path d="M1330,335 L1500,335" fill="none" stroke="#d97b0a" stroke-width="2.5"/>
+<polygon points="1500,335 1491.710451053974,338.5047650807779 1491.710451053974,331.4952349192221" fill="#d97b0a"/>
+<text x="1368" y="329" font-size="10" fill="#d97b0a" text-anchor="start">AO4  v_out → 0–10 V</text>
+<path d="M1500,440 L1330,440" fill="none" stroke="#c0392b" stroke-width="2.5"/>
+<polygon points="1330,440 1338.289548946026,436.4952349192221 1338.289548946026,443.5047650807779" fill="#c0392b"/>
+<text x="1368" y="434" font-size="10" fill="#c0392b" text-anchor="start">DI1  TRIP_feeder (panel pull-up)</text>
+<path d="M1500,475 L1330,475" fill="none" stroke="#c0392b" stroke-width="2.5"/>
+<polygon points="1330,475 1338.289548946026,471.4952349192221 1338.289548946026,478.5047650807779" fill="#c0392b"/>
+<text x="1368" y="469" font-size="10" fill="#c0392b" text-anchor="start">DI2  TRIP_rack (panel pull-up)</text>
+<path d="M1500,560 L1330,560" fill="none" stroke="#c0392b" stroke-width="2.5"/>
+<polygon points="1330,560 1338.289548946026,556.4952349192222 1338.289548946026,563.5047650807778" fill="#c0392b"/>
+<text x="1368" y="554" font-size="10" fill="#c0392b" text-anchor="start">DI3  FAULT_CMD (demo button)</text>
+<path d="M1330,640 L1500,640" fill="none" stroke="#6b7280" stroke-width="2.5"/>
+<polygon points="1500,640 1491.710451053974,643.5047650807778 1491.710451053974,636.4952349192222" fill="#6b7280"/>
+<text x="1368" y="634" font-size="10" fill="#6b7280" text-anchor="start">DO1  SYNC (the only SYNC source in HIL mode)</text>
+<text x="1368" y="778" font-size="10" fill="#374151" text-anchor="start">16-bit DAC at 5 MS/s is ample (the nodes sample at 500 kSa/s behind a 100 kHz filter)</text>
+<text x="1368" y="794" font-size="10" fill="#374151" text-anchor="start">Open: solver step, model import path, DI/DO levels (level shift on the adapter panel), DI sampling rate, PC link. Layer 1 off by default (on only for a bolted-fault demo).</text>
+<rect x="1500" y="150" width="330" height="130" rx="8" fill="#eef4fb" stroke="#1f5fa8" stroke-width="2.5"/>
+<text x="1665" y="175" font-size="10" fill="#1f5fa8" text-anchor="middle" font-weight="bold">Feeder node — NUCLEO-H743 #1 (real)</text>
+<text x="1665" y="189" font-size="10" fill="#1f5fa8" text-anchor="middle">3:1 pad → 1 kΩ + clamp + buffer → 100 kHz AA →</text>
+<text x="1665" y="203" font-size="10" fill="#1f5fa8" text-anchor="middle">16-bit ADC 500 kSa/s · onset · 0.25 ms window ·</text>
+<text x="1665" y="217" font-size="10" fill="#1f5fa8" text-anchor="middle">15 features · GBT · TRIP ≤ 80 µs after the window</text>
+<text x="1665" y="231" font-size="10" fill="#1f5fa8" text-anchor="middle">TRIP → DI1 + LED · ONSET/TRIP pins → scope</text>
+<rect x="1500" y="270" width="330" height="130" rx="8" fill="#fdf3e6" stroke="#d97b0a" stroke-width="2.5"/>
+<text x="1665" y="295" font-size="10" fill="#d97b0a" text-anchor="middle" font-weight="bold">Rack node — NUCLEO-H743 #2 (real)</text>
+<text x="1665" y="309" font-size="10" fill="#d97b0a" text-anchor="middle">same front end, same firmware, settings differ</text>
+<text x="1665" y="323" font-size="10" fill="#d97b0a" text-anchor="middle">TRIP → DI2 (opens SSCB_r in the model)</text>
+<text x="1665" y="337" font-size="10" fill="#d97b0a" text-anchor="middle">CAN-FD summary to the feeder node</text>
+<text x="1665" y="351" font-size="10" fill="#d97b0a" text-anchor="middle">event records → PC over USB</text>
+<rect x="1500" y="420" width="330" height="110" rx="8" fill="#f3f4f6" stroke="#6b7280" stroke-width="2"/>
+<text x="1665" y="445" font-size="10" fill="#1b2a41" text-anchor="middle" font-weight="bold">Bench control — NUCLEO-H743 #3 (real)</text>
+<text x="1665" y="459" font-size="10" fill="#1b2a41" text-anchor="middle">demo controller: dashboard fault button →</text>
+<text x="1665" y="473" font-size="10" fill="#1b2a41" text-anchor="middle">FAULT_CMD (DI3) + SYNC; DAC replay fallback</text>
+<text x="1665" y="487" font-size="10" fill="#1b2a41" text-anchor="middle">if the HIL is unavailable</text>
+<rect x="1500" y="550" width="330" height="80" rx="8" fill="#fff" stroke="#6b7280" stroke-width="2"/>
+<text x="1665" y="575" font-size="10" fill="#1b2a41" text-anchor="middle" font-weight="bold">Scope ≥ 100 MHz (real)</text>
+<text x="1665" y="589" font-size="10" fill="#1b2a41" text-anchor="middle">ch1 SYNC · ch2 AO3 (or shunt) · ch3 ONSET · ch4 TRIP</text>
+<text x="1665" y="603" font-size="10" fill="#1b2a41" text-anchor="middle">→ inception → onset → TRIP latency in µs</text>
+<rect x="1500" y="650" width="330" height="80" rx="8" fill="#fff" stroke="#6b7280" stroke-width="2"/>
+<text x="1665" y="675" font-size="10" fill="#1b2a41" text-anchor="middle" font-weight="bold">PC dashboard</text>
+<text x="1665" y="689" font-size="10" fill="#1b2a41" text-anchor="middle">single-line diagram, event view (both nodes on SYNC),</text>
+<text x="1665" y="703" font-size="10" fill="#1b2a41" text-anchor="middle">latency; model internals from the HIL host if it streams</text>
+<text x="1860" y="118" font-size="13" fill="#1b2a41" text-anchor="start" font-weight="bold">Analog output scaling (0–10 V)</text>
+<text x="1860" y="145" font-size="9.5" fill="#1b2a41" text-anchor="start" font-weight="bold">signal</text>
+<text x="1915" y="145" font-size="9.5" fill="#1b2a41" text-anchor="start" font-weight="bold">per-unit base</text>
+<text x="2040" y="145" font-size="9.5" fill="#1b2a41" text-anchor="start" font-weight="bold">10 V =</text>
+<text x="2180" y="145" font-size="9.5" fill="#1b2a41" text-anchor="start" font-weight="bold">V per unit</text>
+<text x="1860" y="167" font-size="9.5" fill="#1f5fa8" text-anchor="start">i_L</text>
+<text x="1915" y="167" font-size="9.5" fill="#1f5fa8" text-anchor="start">165 A (132 kW / 800 V)</text>
+<text x="2040" y="167" font-size="9.5" fill="#1f5fa8" text-anchor="start">2.64 p.u. = 436 A</text>
+<text x="2180" y="167" font-size="9.5" fill="#1f5fa8" text-anchor="start">22.9 mV/A</text>
+<text x="1860" y="189" font-size="9.5" fill="#1f5fa8" text-anchor="start">v_bus</text>
+<text x="1915" y="189" font-size="9.5" fill="#1f5fa8" text-anchor="start">800 V</text>
+<text x="2040" y="189" font-size="9.5" fill="#1f5fa8" text-anchor="start">1.45 p.u. = 1 160 V</text>
+<text x="2180" y="189" font-size="9.5" fill="#1f5fa8" text-anchor="start">8.62 mV/V</text>
+<text x="1860" y="211" font-size="9.5" fill="#d97b0a" text-anchor="start">i_rack</text>
+<text x="1915" y="211" font-size="9.5" fill="#d97b0a" text-anchor="start">2 640 A (132 kW / 50 V)</text>
+<text x="2040" y="211" font-size="9.5" fill="#d97b0a" text-anchor="start">16.5 p.u. = 43 560 A</text>
+<text x="2180" y="211" font-size="9.5" fill="#d97b0a" text-anchor="start">0.230 mV/A</text>
+<text x="1860" y="233" font-size="9.5" fill="#d97b0a" text-anchor="start">v_out</text>
+<text x="1915" y="233" font-size="9.5" fill="#d97b0a" text-anchor="start">50 V</text>
+<text x="2040" y="233" font-size="9.5" fill="#d97b0a" text-anchor="start">1.45 p.u. = 72.5 V</text>
+<text x="2180" y="233" font-size="9.5" fill="#d97b0a" text-anchor="start">138 mV/V</text>
+<text x="1860" y="270" font-size="10" fill="#374151" text-anchor="start">Same per-unit full scales as the bench node</text>
+<text x="1860" y="284" font-size="10" fill="#374151" text-anchor="start">(rack 16.5 ×, feeder 2.64 × rated at 3.3 V after</text>
+<text x="1860" y="298" font-size="10" fill="#374151" text-anchor="start">the 3:1 pad), so HIL mode and bench mode differ</text>
+<text x="1860" y="312" font-size="10" fill="#374151" text-anchor="start">only in the node's gain/offset settings.</text>
+<text x="1860" y="326" font-size="10" fill="#374151" text-anchor="start"></text>
+<text x="1860" y="340" font-size="10" fill="#374151" text-anchor="start">All four observables are ≥ 0 in the model</text>
+<text x="1860" y="354" font-size="10" fill="#374151" text-anchor="start">(unidirectional source, ORing, v ≥ 0), so a</text>
+<text x="1860" y="368" font-size="10" fill="#374151" text-anchor="start">unipolar 0–10 V output is correct.</text>
+<text x="1860" y="382" font-size="10" fill="#374151" text-anchor="start"></text>
+<text x="1860" y="396" font-size="10" fill="#374151" text-anchor="start">Resolution at 16 bit over 0–10 V: 0.15 mV step =</text>
+<text x="1860" y="410" font-size="10" fill="#374151" text-anchor="start">≈ 3 970 steps per p.u. on i_rack (= the node</text>
+<text x="1860" y="424" font-size="10" fill="#374151" text-anchor="start">ADC's own ≈ 4 000); ±10 V range gives ≈ 2 000.</text>
+<text x="1860" y="438" font-size="10" fill="#374151" text-anchor="start"></text>
+<text x="1860" y="452" font-size="10" fill="#374151" text-anchor="start">Timing claim measured here: inception (HIL</text>
+<text x="1860" y="466" font-size="10" fill="#374151" text-anchor="start">clock / SYNC) → onset pin → TRIP pin.</text>
+<text x="1860" y="480" font-size="10" fill="#374151" text-anchor="start">Pre-registered: ≈ 0.35 ms median for bolted</text>
+<text x="1860" y="494" font-size="10" fill="#374151" text-anchor="start">and 48 V faults, ≈ 0.36–0.47 ms for high-Z 800 V</text>
+<text x="1860" y="508" font-size="10" fill="#374151" text-anchor="start">(0.25 ms window + 16 µs block + ≤ 80 µs).</text>
+<text x="30" y="800" font-size="10.5" fill="#6b7280" text-anchor="start">Meeting demo (≈ 15 min): 1 the HTML explainer (what the relay does, 3 min) · 2 open dcsim_shelf.slx, run one case live (step, ~1 min) and show the Python-vs-Simscape overlay for all eight cases (Figure 5) ·</text>
+<text x="30" y="816" font-size="10.5" fill="#6b7280" text-anchor="start">3 this diagram: what the box simulates, the four outputs, the three inputs, scaling · 4 the fixed-step explicit version running at the step the box supports, scored by the same check (i) · 5 questions: solver step, import path, DI/DO levels, PC link, venue.</text>
+<text x="30" y="832" font-size="10.5" fill="#6b7280" text-anchor="start">What the HIL proves to the judges: the relay protecting the full-scale 800 V design in closed loop with trip time measured by lab equipment; the 120 W bench proves the same firmware on real sensors and real faults.</text>
+</svg>

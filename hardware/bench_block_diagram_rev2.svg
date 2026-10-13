@@ -1,0 +1,226 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2000" height="1130" viewBox="0 0 2000 1130" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#1b2a41">
+<defs>
+  <marker id="ar" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#1b2a41"/></marker>
+  <marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#c0392b"/></marker>
+  <marker id="aro" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#d97b0a"/></marker>
+  <marker id="arb" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#1f5fa8"/></marker>
+  <marker id="arg" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#6b7280"/></marker>
+</defs>
+<rect width="2000" height="1130" fill="#ffffff"/>
+
+<text x="30" y="40" font-size="24" font-weight="bold">Testbed block diagram rev 2 — 120 W, 48 V → 12 V (after the 2026-10-08 circuit review; scope option B as built, option-C parts dashed)</text>
+<text x="30" y="64" font-size="13" fill="#555">blue = feeder node, orange = rack node, red = fault paths and breakers, grey = control, safety and the HIL plug-in. Power wiring in black. One star ground at the storage-bank negative; the lab supply (−) is bonded to it (feeder breaker is high-side, so the return is never opened).</text>
+<text x="30" y="82" font-size="13" fill="#c0392b">Changed vs rev 1 (SCHEMATIC_DESIGN rev 2 change log): ① both breakers high-side, isolated drivers, fail-safe = pull-UP + inverting · ② freewheel diode D_fw across R_f48 + L_f48 · ③ TVS across Q_brk · ④ 74HC221 one-shot, arm key on CLR · ⑤ all gate drivers from a separate 12 V adapter · ⑥ F2 moved to the converter output</text>
+<text x="30" y="100" font-size="13" fill="#c0392b">⑦ power-up order / precharge · ⑧ 100 V parts everywhere on the 48 V side · ⑨ anti-alias filter corrected to Butterworth, −3 dB 100.6 kHz, −48 dB at 400 kHz · ⑩ INA240A2 for ×50 · ⑪ fault resistor = target − measured coil DCR</text>
+<text x="30" y="118" font-size="13" fill="#c0392b">⑫ two more converter buy criteria (start-up into 66 mF, no reverse boost) · ⑬ supply (−) bonded to the star, scope ground clips on the star only, diff probe on the feeder side</text>
+
+<!-- ===== POWER ROW (y 230..290) ===== -->
+<g stroke="#1b2a41" stroke-width="3" fill="none">
+  <line x1="170" y1="260" x2="190" y2="260"/>
+  <line x1="270" y1="260" x2="290" y2="260"/>
+  <line x1="340" y1="260" x2="360" y2="260"/>
+  <line x1="470" y1="260" x2="490" y2="260"/>
+  <line x1="610" y1="260" x2="630" y2="260"/>
+  <line x1="690" y1="260" x2="900" y2="260"/>
+  <line x1="940" y1="260" x2="960" y2="260"/>
+  <line x1="1070" y1="260" x2="1100" y2="260"/>
+  <line x1="1260" y1="260" x2="1285" y2="260"/>
+  <line x1="1335" y1="260" x2="1380" y2="260"/>
+  <line x1="1440" y1="260" x2="1455" y2="260"/>
+  <line x1="1587" y1="260" x2="1960" y2="260"/>
+  <!-- bus bars -->
+  <line x1="720" y1="215" x2="720" y2="300" stroke-width="7"/>
+  <line x1="1610" y1="215" x2="1610" y2="300" stroke-width="7"/>
+  <!-- drops to C_bus, bank, loads, fault -->
+  <line x1="720" y1="300" x2="720" y2="340"/>
+  <line x1="1360" y1="260" x2="1360" y2="340"/>
+  <line x1="1700" y1="260" x2="1700" y2="340"/>
+  <line x1="1880" y1="260" x2="1880" y2="340"/>
+</g>
+<!-- option-C feeder fault drop (dashed) -->
+<line x1="862" y1="260" x2="862" y2="340" stroke="#c0392b" stroke-width="2" stroke-dasharray="6,5"/>
+
+<!-- Lab supply -->
+<rect x="30" y="225" width="140" height="70" rx="6" fill="#fff" stroke="#1b2a41" stroke-width="2"/>
+<text x="100" y="248" text-anchor="middle" font-weight="bold">Lab supply</text>
+<text x="100" y="266" text-anchor="middle">48 V, CC 4.4 A</text>
+<text x="100" y="282" text-anchor="middle" font-size="11">floating; (−) → star</text>
+<!-- K1 -->
+<rect x="190" y="235" width="80" height="50" rx="4" fill="#fff" stroke="#6b7280" stroke-width="2"/>
+<text x="230" y="255" text-anchor="middle" font-size="12">K1 E-stop</text>
+<text x="230" y="272" text-anchor="middle" font-size="12">contactor</text>
+<!-- F1 -->
+<rect x="290" y="240" width="50" height="40" rx="4" fill="#fff" stroke="#6b7280" stroke-width="2"/>
+<text x="315" y="265" text-anchor="middle" font-size="12">F1 5 A</text>
+<!-- Q_fb option C -->
+<rect x="352" y="225" width="128" height="70" rx="6" fill="#fff" stroke="#c0392b" stroke-width="2" stroke-dasharray="6,5"/>
+<text x="416" y="246" text-anchor="middle" font-size="11.5" fill="#c0392b" font-weight="bold">feeder breaker Q_fb</text>
+<text x="416" y="262" text-anchor="middle" font-size="10.5" fill="#c0392b">option C only · high side</text>
+<text x="416" y="276" text-anchor="middle" font-size="10" fill="#c0392b">100 V FET + isolated driver</text>
+<text x="416" y="290" text-anchor="middle" font-size="10.5" fill="#c0392b">(option B: a wire link)</text>
+<!-- L_line -->
+<rect x="490" y="235" width="120" height="50" rx="4" fill="#fff" stroke="#1b2a41" stroke-width="2"/>
+<text x="550" y="255" text-anchor="middle" font-size="12">L_line 20 µH air</text>
+<text x="550" y="272" text-anchor="middle" font-size="12">R_line 20 mΩ</text>
+<!-- feeder shunt -->
+<rect x="630" y="243" width="60" height="34" rx="4" fill="#eef4fb" stroke="#1f5fa8" stroke-width="2"/>
+<text x="660" y="265" text-anchor="middle" font-size="12" fill="#1f5fa8" font-weight="bold">10 mΩ</text>
+<text x="720" y="205" text-anchor="middle" font-size="13" fill="#555">"800 V bus" (48 V)</text>
+<!-- C_bus -->
+<rect x="655" y="340" width="130" height="50" rx="4" fill="#fff" stroke="#1b2a41" stroke-width="2"/>
+<text x="720" y="360" text-anchor="middle" font-size="12">C_bus 150 µF 63 V</text>
+<text x="720" y="377" text-anchor="middle" font-size="12">+ ESR ballast 22 mΩ</text>
+<!-- feeder fault injector option C -->
+<rect x="792" y="340" width="140" height="82" rx="4" fill="#fff" stroke="#c0392b" stroke-width="2" stroke-dasharray="6,5"/>
+<text x="862" y="358" text-anchor="middle" font-size="12" fill="#c0392b" font-weight="bold">feeder-side fault</text>
+<text x="862" y="374" text-anchor="middle" font-size="11" fill="#c0392b">option C only</text>
+<text x="862" y="389" text-anchor="middle" font-size="10.5" fill="#c0392b">22 / 39 Ω + 8 µH, 100 V FET</text>
+<text x="862" y="404" text-anchor="middle" font-size="10.5" fill="#c0392b">+ D_fw, one-shot A 10 ms</text>
+<text x="862" y="418" text-anchor="middle" font-size="10.5" fill="#c0392b">≤ 4.4 A (supply CC)</text>
+<!-- ORing -->
+<polygon points="900,248 900,272 924,260" fill="#1b2a41"/>
+<line x1="924" y1="248" x2="924" y2="272" stroke="#1b2a41" stroke-width="3"/>
+<text x="912" y="292" text-anchor="middle" font-size="11">ORing 100 V 10 A</text>
+<!-- L_in C_in -->
+<rect x="960" y="235" width="110" height="50" rx="4" fill="#fff" stroke="#1b2a41" stroke-width="2"/>
+<text x="1015" y="255" text-anchor="middle" font-size="12">L_in 20 µH, R_in</text>
+<text x="1015" y="272" text-anchor="middle" font-size="12">C_in 220 µF 63 V</text>
+<!-- Converter -->
+<rect x="1100" y="222" width="160" height="76" rx="6" fill="#fff" stroke="#1b2a41" stroke-width="2.5"/>
+<text x="1180" y="242" text-anchor="middle" font-weight="bold">Converter</text>
+<text x="1180" y="258" text-anchor="middle" font-size="12">48 V → 12 V, 120 W</text>
+<text x="1180" y="273" text-anchor="middle" font-size="12">I_lim 14 A hold, f_sw ≥ 400 kHz</text>
+<text x="1180" y="289" text-anchor="middle" font-size="9.5" fill="#c0392b">+ start-up into 66 mF, no reverse boost ⑫</text>
+<!-- F2 moved -->
+<rect x="1285" y="240" width="50" height="40" rx="4" fill="#fff" stroke="#c0392b" stroke-width="2"/>
+<text x="1310" y="258" text-anchor="middle" font-size="11" fill="#c0392b">F2 20 A</text>
+<text x="1310" y="272" text-anchor="middle" font-size="10" fill="#c0392b">moved ⑥</text>
+<!-- storage bank -->
+<rect x="1272" y="340" width="176" height="70" rx="4" fill="#fff" stroke="#1b2a41" stroke-width="2"/>
+<text x="1360" y="358" text-anchor="middle" font-weight="bold" font-size="12">Storage bank</text>
+<text x="1360" y="374" text-anchor="middle" font-size="12">3 × 22 mF 16 V + ESR ballast</text>
+<text x="1360" y="389" text-anchor="middle" font-size="11">→ 19 mΩ (pulse-rated wirewound)</text>
+<text x="1360" y="404" text-anchor="middle" font-size="11">★ star ground here · D_rp reverse</text>
+<!-- rack shunt -->
+<rect x="1380" y="243" width="60" height="34" rx="4" fill="#fdf3e6" stroke="#d97b0a" stroke-width="2"/>
+<text x="1410" y="265" text-anchor="middle" font-size="12" fill="#d97b0a" font-weight="bold">1 mΩ</text>
+<!-- Q_brk -->
+<rect x="1455" y="222" width="132" height="76" rx="6" fill="#fff" stroke="#c0392b" stroke-width="2.5"/>
+<text x="1521" y="242" text-anchor="middle" font-size="11.5" fill="#c0392b" font-weight="bold">rack breaker Q_brk</text>
+<text x="1521" y="257" text-anchor="middle" font-size="10.5" fill="#c0392b">IRFP7430, high side ①</text>
+<text x="1521" y="271" text-anchor="middle" font-size="10" fill="#c0392b">isolated driver + iso DC-DC</text>
+<text x="1521" y="285" text-anchor="middle" font-size="10" fill="#c0392b">TVS SMCJ18A across D–S ③</text>
+<text x="1610" y="205" text-anchor="middle" font-size="13" fill="#555">"48 V bus" (12 V)</text>
+<!-- load bank -->
+<rect x="1632" y="340" width="136" height="80" rx="4" fill="#fff" stroke="#1b2a41" stroke-width="2"/>
+<text x="1700" y="358" text-anchor="middle" font-weight="bold" font-size="12">Load bank</text>
+<text x="1700" y="374" text-anchor="middle" font-size="11">5 switched branches</text>
+<text x="1700" y="389" text-anchor="middle" font-size="11">2.2 … 47 Ω, 10 A total</text>
+<text x="1700" y="404" text-anchor="middle" font-size="11">heatsink + fan + 90 °C switch</text>
+<text x="1700" y="416" text-anchor="middle" font-size="9.5" fill="#555">standard FETs OK (12 V drive)</text>
+<!-- rack fault injector -->
+<rect x="1782" y="340" width="200" height="112" rx="4" fill="#fff" stroke="#c0392b" stroke-width="2.5"/>
+<text x="1880" y="358" text-anchor="middle" font-size="12" fill="#c0392b" font-weight="bold">48 V-side fault (rack)</text>
+<text x="1882" y="374" text-anchor="middle" font-size="10.5" fill="#c0392b">R_f48: (63 mΩ − DCR) / 0.33 / 1.2 Ω ⑪</text>
+<text x="1882" y="389" text-anchor="middle" font-size="10.5" fill="#c0392b">L_f48: 10 / 30 / 100 µH air coil</text>
+<text x="1882" y="404" text-anchor="middle" font-size="10.5" fill="#c0392b">Q_f48 IRFP7430, low side</text>
+<text x="1882" y="419" text-anchor="middle" font-size="10.5" fill="#c0392b" font-weight="bold">D_fw Schottky 30 A across R + L ②</text>
+<text x="1882" y="434" text-anchor="middle" font-size="10.5" fill="#c0392b">≤ 130 A, ≤ 5 ms by 74HC221</text>
+<text x="1882" y="447" text-anchor="middle" font-size="9.5" fill="#555">(D_fw also takes the coil current when Q_brk opens)</text>
+
+<!-- ===== NODES ===== -->
+<rect x="420" y="560" width="330" height="140" rx="8" fill="#eef4fb" stroke="#1f5fa8" stroke-width="2.5"/>
+<text x="585" y="583" text-anchor="middle" font-weight="bold" font-size="15" fill="#1f5fa8">Feeder node (Nucleo-H743 #1)</text>
+<text x="585" y="604" text-anchor="middle" font-size="12">shunt → INA240A2 ×50 → AA 100 kHz ⑨ → ADC1</text>
+<text x="585" y="621" text-anchor="middle" font-size="12">v_bus ÷21 → buffer → AA → ADC2 · 500 kSa/s DMA</text>
+<text x="585" y="638" text-anchor="middle" font-size="12">features · GBT · Layer-1 thresholds · cadence</text>
+<text x="585" y="655" text-anchor="middle" font-size="12">TRIP → LED + HIL input (option C: + Q_fb driver)</text>
+<text x="585" y="672" text-anchor="middle" font-size="12">ONSET / TRIP test pins · SYNC in · USB record · CAN-FD</text>
+<text x="585" y="690" text-anchor="middle" font-size="11" fill="#555">JP1/JP2: replay inputs (DAC or HIL) in place of the sensors</text>
+
+<rect x="1250" y="560" width="330" height="140" rx="8" fill="#fdf3e6" stroke="#d97b0a" stroke-width="2.5"/>
+<text x="1415" y="583" text-anchor="middle" font-weight="bold" font-size="15" fill="#d97b0a">Rack node (Nucleo-H743 #2)</text>
+<text x="1415" y="604" text-anchor="middle" font-size="12">shunt → INA240A1 ×20 → AA 100 kHz ⑨ → ADC1</text>
+<text x="1415" y="621" text-anchor="middle" font-size="12">v_out ÷5.3 → buffer → AA → ADC2 · 500 kSa/s DMA</text>
+<text x="1415" y="638" text-anchor="middle" font-size="12">features · GBT · Layer-1 thresholds · cadence</text>
+<text x="1415" y="655" text-anchor="middle" font-size="12">TRIP (active high) → Q_brk iso driver + HIL input</text>
+<text x="1415" y="672" text-anchor="middle" font-size="12">ONSET / TRIP test pins · SYNC in · USB record · CAN-FD</text>
+<text x="1415" y="690" text-anchor="middle" font-size="11" fill="#555">JP1/JP2: replay inputs (DAC or HIL) in place of the sensors</text>
+
+<!-- node sense lines -->
+<g stroke="#1f5fa8" stroke-width="1.8" stroke-dasharray="5,4" fill="none">
+  <path d="M660,277 L660,470 L520,470 L520,560"/>
+  <path d="M720,390 L720,500 L600,500 L600,560"/>
+</g>
+<g stroke="#d97b0a" stroke-width="1.8" stroke-dasharray="5,4" fill="none">
+  <path d="M1410,277 L1410,320 L1250,320 L1250,500 L1350,500 L1350,560"/>
+  <path d="M1610,300 L1610,470 L1480,470 L1480,560"/>
+</g>
+<!-- TRIP lines -->
+<path d="M1500,560 L1500,520 L1520,520 L1520,298" stroke="#c0392b" stroke-width="2" stroke-dasharray="5,4" fill="none" marker-end="url(#arr)"/>
+<text x="1545" y="515" font-size="11" fill="#c0392b">TRIP</text>
+<path d="M470,560 L470,520 L415,520 L415,295" stroke="#c0392b" stroke-width="2" stroke-dasharray="3,5" fill="none" marker-end="url(#arr)"/>
+<text x="425" y="515" font-size="11" fill="#c0392b">TRIP (C only)</text>
+<!-- CAN -->
+<line x1="750" y1="630" x2="1250" y2="630" stroke="#6b7280" stroke-width="2.5"/>
+<text x="1000" y="622" text-anchor="middle" font-size="12" fill="#555">CAN-FD: summary 16 B within 20 µs, features after (DEVIATIONS #13)</text>
+
+<!-- ===== BENCH CONTROL ===== -->
+<rect x="790" y="740" width="420" height="150" rx="8" fill="#f3f4f6" stroke="#6b7280" stroke-width="2.5"/>
+<text x="1000" y="763" text-anchor="middle" font-weight="bold" font-size="15" fill="#374151">Bench control (Nucleo-H743 #3)</text>
+<text x="1000" y="784" text-anchor="middle" font-size="12">workload profile → 5 load gates (staircase ramps, two-tier cadence)</text>
+<text x="1000" y="801" text-anchor="middle" font-size="12">FAULT_B → 74HC221 one-shot 5 ms (arm key on CLR) ④ → Q_f48 driver</text>
+<text x="1000" y="818" text-anchor="middle" font-size="12">POL-UVLO on v_out (9.6 V / 100 µs → loads off) · SYNC out (BNC)</text>
+<text x="1000" y="835" text-anchor="middle" font-size="12">DAC1/DAC2 1 MSa/s replay → JP1/JP2 of a node (latency test, M4)</text>
+<text x="1000" y="852" text-anchor="middle" font-size="12">demo controller: fault command → HIL digital input (F8) · USB CLI (bench_run.py)</text>
+<text x="1000" y="872" text-anchor="middle" font-size="11" fill="#555">option C adds FAULT_A → one-shot A 10 ms → Q_f8 driver</text>
+<!-- control lines -->
+<path d="M1210,800 L1700,800 L1700,420" stroke="#6b7280" stroke-width="1.8" stroke-dasharray="5,4" fill="none" marker-end="url(#arg)"/>
+<text x="1460" y="794" text-anchor="middle" font-size="11" fill="#555">5 load gates</text>
+<path d="M1210,815 L1880,815 L1880,450" stroke="#c0392b" stroke-width="1.8" stroke-dasharray="5,4" fill="none" marker-end="url(#arr)"/>
+<text x="1560" y="829" text-anchor="middle" font-size="11" fill="#c0392b">one-shot B → Q_f48 gate</text>
+<path d="M790,790 L600,790 L600,700" stroke="#6b7280" stroke-width="1.8" stroke-dasharray="5,4" fill="none" marker-end="url(#arg)"/>
+<path d="M1210,780 L1230,780 L1230,720 L1400,720 L1400,700" stroke="#6b7280" stroke-width="1.8" stroke-dasharray="5,4" fill="none" marker-end="url(#arg)"/>
+<text x="700" y="784" text-anchor="middle" font-size="11" fill="#555">SYNC / DAC replay</text>
+<text x="1320" y="714" text-anchor="middle" font-size="11" fill="#555">SYNC / DAC replay</text>
+
+<!-- ===== LEFT COLUMN: driver power, HIL, scope ===== -->
+<rect x="30" y="560" width="330" height="110" rx="8" fill="#f3f4f6" stroke="#6b7280" stroke-width="2"/>
+<text x="195" y="583" text-anchor="middle" font-weight="bold" font-size="14" fill="#374151">Gate-drive power ⑤</text>
+<text x="195" y="603" text-anchor="middle" font-size="12">separate 12 V adapter (not the bench bus)</text>
+<text x="195" y="620" text-anchor="middle" font-size="12">→ TC4420/UCC27517 for loads + Q_f48</text>
+<text x="195" y="637" text-anchor="middle" font-size="11">→ 2 × iso DC-DC (12→15 V, 1 W) → UCC5350 / ADuM4120</text>
+<text x="195" y="654" text-anchor="middle" font-size="11" fill="#c0392b">breaker drivers: pull-UP + inverting ⇒ unpowered node = OPEN</text>
+
+<rect x="30" y="690" width="330" height="120" rx="8" fill="#f3f4f6" stroke="#6b7280" stroke-width="2" stroke-dasharray="8,5"/>
+<text x="195" y="713" text-anchor="middle" font-weight="bold" font-size="14" fill="#374151">HIL plug-in (lab box, HIL_TESTBED_PLAN)</text>
+<text x="195" y="733" text-anchor="middle" font-size="11.5">4 analog outs → JP1/JP2 of both nodes (0–10 V, 3:1 pad)</text>
+<text x="195" y="750" text-anchor="middle" font-size="12">2 TRIPs + fault command → HIL digital inputs</text>
+<text x="195" y="767" text-anchor="middle" font-size="12">HIL digital out → SYNC · model breaker opens on TRIP</text>
+<text x="195" y="784" text-anchor="middle" font-size="12">same firmware, settings only (HIL mode)</text>
+<text x="195" y="801" text-anchor="middle" font-size="11" fill="#555">fallback: DAC replay + post-trip waveform switch</text>
+
+<rect x="30" y="830" width="330" height="100" rx="8" fill="#fff" stroke="#6b7280" stroke-width="2"/>
+<text x="195" y="853" text-anchor="middle" font-weight="bold" font-size="14" fill="#374151">Scope (≥ 100 MHz)</text>
+<text x="195" y="873" text-anchor="middle" font-size="11">ch1 SYNC · ch2 rack shunt (diff probe ≥ 10 MHz, before the filter)</text>
+<text x="195" y="890" text-anchor="middle" font-size="11">ch3 ONSET · ch4 TRIP → onset-to-trip latency, raw fault front</text>
+<text x="195" y="907" text-anchor="middle" font-size="11">ground clips only on the star; feeder side by diff probe ⑬</text>
+<text x="195" y="923" text-anchor="middle" font-size="11" fill="#555">PC via USB isolator on the node links</text>
+
+<!-- HIL to nodes -->
+<path d="M360,740 L400,740 L400,690 L520,690" stroke="#6b7280" stroke-width="1.5" stroke-dasharray="4,4" fill="none"/>
+<path d="M360,750 L1230,750 L1230,702" stroke="#6b7280" stroke-width="1.5" stroke-dasharray="4,4" fill="none"/>
+
+<!-- ===== SAFETY / SEQUENCE STRIP ===== -->
+<rect x="420" y="920" width="1550" height="90" rx="8" fill="#fff8e6" stroke="#d97b0a" stroke-width="2"/>
+<text x="440" y="943" font-weight="bold" font-size="14" fill="#9a5b00">Power-up order ⑦ and safety rules</text>
+<text x="440" y="963" font-size="12">1 nodes + bench control on USB (TRIP = 0 → breakers close) → 2 driver adapter on → 3 K1 closed with the supply OUTPUT OFF → 4 supply output on (its ramp precharges C_bus / C_in: no 200 A inrush, C_in never sees 58 V) → 5 arm key only for a fault run.</text>
+<text x="440" y="981" font-size="12">Every node reset opens its breaker (fail-safe) — expected, not a fault. Fault runs: second person present, professor's sign-off, E-stop within reach, ≤ 130 A ≤ 5 ms by hardware. Stored energy 4.2 J (bank) + 0.15 J (bus): burn/spatter hazard at the fault switch only.</text>
+<text x="440" y="999" font-size="12" fill="#555">Not built: bolted 800 V-side faults (Layer 1; abusive to the supply). Not on the bench node: isolation, external SAR ADC — product items, said so on the slide. Option C adds Q_fb, the feeder fault injector and one-shot A (dashed above).</text>
+
+<!-- legend box numbers -->
+<text x="30" y="1050" font-size="12" fill="#555">Sheets: 1 power (rev 2) · 2 node front end (rev 2: filter values, INA240A2, 1 kΩ + clamp input protection with R1 → 100 Ω) · 3 control and drivers (rev 2: HC221, isolated breaker drivers, adapter supply, pull-up).</text>
+<text x="30" y="1068" font-size="12" fill="#555">Values are design values; every element is measured before the first fault run and the bench dataset is regenerated from the measured values (SCALING_SHEET §5.4).</text>
+<text x="30" y="1090" font-size="12" fill="#555">What the bench proves: the same relay firmware, trained on simulated bench events from measured parameters, deciding on real sensors and real faults at 120 W (judges' doubt 3).</text>
+<text x="30" y="1108" font-size="12" fill="#555">The HIL plug-in proves the full-scale 800 V design in closed loop (doubts 1–2, and the live "trigger a fault" demo). Both use the same node firmware; only settings and a jumper differ.</text>
+</svg>

@@ -1,0 +1,65 @@
+* D_antialias_filter.cir -- 4th-order Sallen-Key anti-alias filter (Sheet 2, current channel)
+*
+* What it answers: is the filter really a 100 kHz Butterworth, and how far down is converter
+* switching ripple at 400 kHz?  The step response (.tran, see below) is the filter to put into the
+* bench dataset's synthesis layer instead of the 0.4*fs Butterworth of MODEL.md section 7.
+*
+* Switches:   FIX = 0  capacitors as drawn on Sheet 2 (C1 2.2n, C2 1n, C3 0.68n, C4 1.5n)
+*             FIX = 1  corrected Butterworth values, low-Q stage first:
+*                      stage 1 (Q 0.54): C1 1.5n feedback, C2 1.3n to ground
+*                      stage 2 (Q 1.31): C3 3.9n feedback, C4 560p to ground
+*             Analysis: the AC sweep runs by default. For the step response, comment out the
+*             .ac line and the AC .meas lines, and un-comment the .tran line and the TRAN .meas lines.
+*
+* Op-amp: a single-pole macromodel with OPA2350's 38 MHz GBW. For the final
+* check, replace XU2/XU3 with TI's OPA2350 model (TI publishes a PSpice model).
+* R1..R4 = 1.1 k, 1 %; capacitors C0G.
+*
+* Results: View > SPICE Error Log (Ctrl+L). Plot V(out) (AC: switch the plot to dB).
+
+.param FIX=1
+.param C1v={2.2n*(1-FIX)+1.5n*FIX} C2v={1n*(1-FIX)+1.3n*FIX}
+.param C3v={0.68n*(1-FIX)+3.9n*FIX} C4v={1.5n*(1-FIX)+560p*FIX}
+
+* input: INA240 output (low impedance), biased at 0.5 V so the op-amps sit inside their rails.
+* AC 1 for the sweep; the PULSE (0.5 V -> 2.15 V, a 1.65 V step) is used by .tran
+Vin in 0 PULSE(0.5 2.15 10u 10n 10n 1 2) AC 1
+
+* ---------- stage 1: R1, R2, C1 feedback, C2 to ground, U2A follower ----------
+R1 in n1 1.1k
+R2 n1 n2 1.1k
+C1 n1 s1 {C1v}
+C2 n2 0 {C2v}
+XU2 n2 s1 s1 OPAMP1
+* ---------- stage 2 ----------
+R3 s1 n3 1.1k
+R4 n3 n4 1.1k
+C3 n3 out {C3v}
+C4 n4 0 {C4v}
+XU3 n4 out out OPAMP1
+
+* single-pole op-amp: GBW 38 MHz, open-loop gain 1e5, linear output (rails not modelled;
+* the input bias of 0.5 V keeps the real part inside them)
+.subckt OPAMP1 inp inn out
+Gin 0 x inp inn 1m
+Rx x 0 100Meg
+Cx x 0 {1m/(2*3.14159265*38e6)}
+Eout out 0 x 0 1
+.ends
+
+.ac dec 200 1k 10Meg
+*.tran 10n 60u 0 10n
+
+.meas AC g10k FIND mag(V(out)) AT=10k
+.meas AC g50k FIND mag(V(out)) AT=50k
+.meas AC g100k FIND mag(V(out)) AT=100k
+.meas AC g400k FIND mag(V(out)) AT=400k
+.meas AC f3db WHEN mag(V(out))=0.7071 FALL=1
+* for the step: un-comment the .tran line above, comment out the .ac line, and use these
+*.meas TRAN t50 WHEN V(out)=1.325 RISE=1
+*.meas TRAN t90 WHEN V(out)=1.985 RISE=1
+*.meas TRAN vmax MAX V(out)
+* overshoot in % = (vmax - 2.15) / 1.65 * 100; t50 and t90 are measured from the step at 10 us
+
+*.step param FIX list 0 1
+.end

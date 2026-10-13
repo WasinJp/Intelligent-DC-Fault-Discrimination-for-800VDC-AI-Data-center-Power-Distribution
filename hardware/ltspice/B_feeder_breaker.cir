@@ -1,0 +1,96 @@
+* B_feeder_breaker.cir -- feeder breaker Q_fb in the 48 V return (Sheet 1, left half)
+*
+* What it answers: once Q_fb opens during a feeder-side fault, does it stay open, what
+* Vds does it see, and is the gate drive referenced correctly?
+* Q_fb is in the return, source at supply(-), drain at bench ground, so its body diode
+* blocks the normal return current when it is off.
+*
+* Switches:   DRV = 0  gate driver referenced to bench ground (as drawn)
+*             DRV = 1  isolated gate driver referenced to Q_fb's source (the fix)
+*             BVQ = 42  40 V part (IRLB3034, as drawn)  |  BVQ = 110  100 V part (IRFB4110-class)
+*             TVS = 1   58 V TVS across Q_fb (SMBJ58A-class) for the line-inductance spike at turn-off
+*
+* Sequence: fault on at 1 ms (22 ohm + 8 uH from the bus node to ground), relay trips at
+* 1.25 ms, run to 20 ms. If the breaker works, the supply current goes to zero and the bus
+* node decays to zero.
+*
+* The supply is modelled as 48 V in constant-current limit at 4.375 A with 1000 uF output
+* capacitance (CSUP; check your supply's datasheet). Its output is FLOATING -- if your
+* supply's (-) is earthed, Q_fb is bypassed through earth and can never open.
+* Generic VDMOS model, see A_rack_fault_loop.cir header.
+*
+* Results: View > SPICE Error Log (Ctrl+L). Plot V(sn), V(bus48), V(gfb,sn), I(Lline).
+
+.param DRV=1 BVQ=110 TVS=1
+.param CSUP=1000u
+.param TF=1m TTRIP=250u
+
+* ---------- lab supply: floating, 48 V, CC limit 4.375 A ----------
+Bsup sn sp I=min(max((48-V(sp,sn))*20,0),4.375)
+Csup sp sn {CSUP}
+Rsup_leak sn 0 10Meg
+
+* ---------- + feed: K1 (closed), F1, feeder emulation, feeder shunt ----------
+Rf1 sp a1 20m
+Lline a1 a2 20u
+Rline a2 a3 20m
+Rsh1 a3 bus48 10m
+
+* ---------- "800 V bus" node ----------
+Cbus cb 0 150u
+Rcesr bus48 cb 32m
+
+* ---------- rack side (simplified): ORing diode, input filter, converter as 2.5 A ----------
+Dor bus48 or1 DOR
+Lin or1 or2 20u
+Rin or2 cin 12m
+Cin cin 0 220u
+* converter input: 120 W / 0.95 constant power, off below 36 V (input UVLO)
+Bconv cin 0 I=(V(cin)>36)*126/max(V(cin),36)
+
+* ---------- feeder-side fault injector ----------
+Rf8 bus48 f1 22
+Lf8 f1 f2 8u
+Sf8 f2 0 ff 0 SWF
+Vff ff 0 PULSE(0 1 {TF} 20n 20n 30m 1)
+
+* ---------- feeder breaker Q_fb in the return: drain = bench ground, source = supply(-) ----------
+Vsfb 0 dfb 0
+Mfb dfb gfb sn QFB
+* driver output: 10 V on, 0 V off; DRV selects what "0 V" is referenced to
+Vgfb gdrv gref PULSE(10 0 {TF+TTRIP} 20n 20n 1 2)
+Rref_iso gref sn {1m+(1-DRV)*1G}
+Rref_gnd gref 0 {1m+DRV*1G}
+Rgfb gdrv gfb 4.7
+* TVS across Q_fb, cathode at the drain (bench ground side)
+Rtvs dfb tvs_k {1m+(1-TVS)*1G}
+Dtvs sn tvs_k DTVS
+
+* ---------- derived quantities ----------
+Bvds vds_fb 0 V=V(dfb,sn)
+Bvgs vgs_fb 0 V=V(gfb,sn)
+Bp pfb 0 V=V(dfb,sn)*I(Vsfb)
+Bptvs ptvs 0 V=V(dfb,sn)*I(Rtvs)
+
+.model QFB VDMOS(Vto=2 Kp=150 Rd=0.8m Rs=0.5m Rg=1 Cgdmax=2n Cgdmin=0.2n Cgs=8n Cjo=2n Is=1e-9 Rb=2m BV={BVQ} Ibv=1m)
+.model DOR D(Is=1e-5 Rs=10m N=1.05 Cjo=500p BV=100 Ibv=1m)
+.model DTVS D(Is=1e-12 Rs=0.3 N=1 Cjo=300p BV=64 Ibv=1m)
+.model SWF SW(Ron=5m Roff=100Meg Vt=0.5 Vh=0)
+
+.ic V(sn)=0 V(sp)=47.5 V(bus48)=47.5 V(cin)=47
+.tran 100n 20m 0 0.5u
+
+.meas TRAN I_sup_before FIND I(Lline) AT=1.2m
+.meas TRAN I_sup_end FIND I(Lline) AT=19.9m
+.meas TRAN Vbus_end FIND V(bus48) AT=19.9m
+.meas TRAN Vds_max MAX V(vds_fb) FROM=1.25m TO=20m
+.meas TRAN Vgs_max MAX V(vgs_fb) FROM=1.25m TO=20m
+.meas TRAN Vgs_end FIND V(vgs_fb) AT=19.9m
+.meas TRAN E_fb INTEG V(pfb) FROM=1.25m TO=20m
+.meas TRAN E_tvs INTEG V(ptvs) FROM=1.25m TO=20m
+.meas TRAN P_fb_end FIND V(pfb) AT=19.9m
+
+* to see all three variants in one run, un-comment:
+*.step param DRV list 0 1
+*.step param BVQ list 42 110
+.end
