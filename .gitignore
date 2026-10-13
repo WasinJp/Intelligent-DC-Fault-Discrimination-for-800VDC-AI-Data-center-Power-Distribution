@@ -35,3 +35,7 @@ data/nodes_v1xl6k/
 firmware/host/tests/fixtures/*.bin
 
 hardware/ltspice/*.raw
+hardware/ltspice/*.db
+
+hardware/ltspice/*.db
+data/hil_frontend*
