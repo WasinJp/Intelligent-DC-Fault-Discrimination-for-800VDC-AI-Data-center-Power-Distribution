@@ -43,3 +43,4 @@ data/hil_frontend*
 hardware/ltspice/*.db
 data/hil_frontend*
 data/deadline*/*.csv
+simscape/handover/
