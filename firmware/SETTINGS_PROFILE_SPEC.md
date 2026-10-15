@@ -47,6 +47,16 @@ If either check fails, Layer 1 stays off in the profile and the failure goes int
 - `status` / `settings show` text contains `profile hil role rack model ...` (string test in the unit test through the print callback).
 - Fixture check 1.3(2) passes with the numbers pasted into `MILESTONES.md` row **S1**.
 
+### 1.5 Layer 1 independent of the onset detector (fix in node/stream.c)
+Today (stream.c l. 90–92) Layer 1 runs only while g_det.armed && !g_pending. The detector disarms at every onset for the 5 ms holdoff + 150 µs quiet (fx_onset.c), and its threshold is far below 2 p.u. So on every fault the onset fires first and Layer 1 is off for the whole window. It can never trip before Layer 2, and it is blind for ≈ 5 ms after any benign onset.
+
+Evaluate Layer 1 on every sample once the baseline is valid, independent of armed, holdoff and g_pending.
+Baseline: while a window is pending or in holdoff, use the pre-onset baseline latched at the onset (g_det.last.i_pre, v_pre); otherwise the running baseline. The running baseline slides into the fault and would shrink |Δi|.
+On a Layer 1 trip during a pending window: TRIP immediately, keep the window for the record, record layer = 1 and its sample index. Record the choice in DEVIATIONS.
+Signal: 5 µs-smoothed, as FIRMWARE_SPEC §7.1 says (the code currently uses the raw sample). State the smoother in the code comment.
+Put the Layer 1 state and its per-sample push in common/fx_relay.[ch]. It is decision code, not feature code, so §5 still holds. Both stream.c and fx_cli stream --l1-* call it, so the host check exercises the node’s own path. fx_cli stream must keep pushing to the end of the record when --l1-* is set.
+Host tests: (a) a bolted_48 fixture through the stream path trips on Layer 1 before k_on + N_W; (b) a benign record followed by a bolted_48 record 1 ms later (inside the holdoff) still trips on Layer 1.
+
 ## 2. Node build: `FX_MCU` option
 `node/CMakeLists.txt` and `bench_control/CMakeLists.txt`: `option`/cache variable `FX_MCU` ∈ {`H743`, `H753`}, default `H753`; selects exactly one of `STM32H743xx` / `STM32H753xx` (the device header admits one); linker script unchanged (`STM32H743ZITX_FLASH.ld` fits both). `firmware/host/README.md` gets the two build lines. Wasin's board today is an H743 (`-DFX_MCU=H743`); note the silicon-revision check (rev Y = 400 MHz max → `clock.c` would need a 400 MHz tree; **do not change `clock.c` in this milestone**, only document the check in `M3_TEST_PROCEDURE.md` §1).
 
