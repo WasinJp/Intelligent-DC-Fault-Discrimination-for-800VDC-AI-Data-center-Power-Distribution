@@ -17,6 +17,15 @@ P = project_paths();
 outdir = fullfile(P.data, 'rt_hil', sprintf('dt_%gus', dt * 1e6));
 if ~exist(outdir, 'dir'), mkdir(outdir); end
 rows = cell(0, 5);
+if strcmp(mode, 'slx')
+    % load (or build) the model ONCE before the case loop: its PreLoadFcn loads dcsim_rt_hil_data.mat into the base
+    % workspace, which would overwrite the per-case parameters if it ran inside the loop (handover review H1)
+    mdl = 'dcsim_rt_hil';
+    if ~exist(fullfile(P.root, 'simscape', [mdl '.slx']), 'file')
+        [~, sh0] = load_case(names{1}, P.data); build_dcsim_rt_hil(mdl, dt, sh0);
+    end
+    if ~bdIsLoaded(mdl), load_system(mdl); end
+end
 for j = 1:numel(names)
     [c, shared, ~] = load_case(names{j}, P.data);
     pv = dcsim_rt_pv(shared, c);
@@ -31,9 +40,10 @@ for j = 1:numel(names)
     if strcmp(c.kind, 'step'), setp('step_dP', 0.4 * shared.P_rated); else, setp('step_dP', 0); end
     setp('step_ramp', 2e-3); setp('uvlo_tol', 0.0);                 % 0 = exactly the Python core, as rt_sweep's default
     setp('hil_dt', dt); setp('brk_delay', 0); setp('sync_width', 20e-6); setp('ao_fs_V', 10.0);
-    fp = getv({'fault_type','fault_Rf','fault_Lf','fault_Rf48','fault_Lf48','fault_Varc','fault_mode','fault_trigger','step_dP','step_ramp'});
+    setp('conv_smooth', c.smooth_on);                                % the case's regime ('_sm' = on), as pv(20) was
+    fp = getv({'fault_type','fault_Rf','fault_Lf','fault_Rf48','fault_Lf48','fault_Varc','fault_mode','fault_trigger','step_dP','step_ramp','fault_arc_m','fault_arc_ramp'});
     wp = getv({'wl_on','wl_P0','wl_dP1','wl_T1','wl_duty1','wl_ramp1','wl_jit1','wl_dP2','wl_T2','wl_duty2','wl_ramp2','wl_jit2','wl_seed'});
-    cp = getv({'hil_dt','qs_dt_min','brk_delay','uvlo_tol','sync_width','ao_fs_V','rearm_cmd','run_enable','ao_pu_1','ao_pu_2','ao_pu_3','ao_pu_4'});
+    cp = getv({'hil_dt','qs_dt_min','brk_delay','uvlo_tol','sync_width','ao_fs_V','rearm_cmd','run_enable','ao_pu_1','ao_pu_2','ao_pu_3','ao_pu_4','conv_smooth'});
     n = round(T_rec / dt); k_f = round(t0 / dt);
     switch mode
         case 'loop'
@@ -48,15 +58,15 @@ for j = 1:numel(names)
             end
             wall = toc;
         case 'slx'
-            mdl = 'dcsim_rt_hil';
-            if ~exist(fullfile(P.root, 'simscape', [mdl '.slx']), 'file'), build_dcsim_rt_hil(mdl, dt, shared); end
-            if ~bdIsLoaded(mdl), load_system(mdl); end
-            assignin('base', 'pv', pv); assignin('base', 'y0', y0);
+            assignin('base', 'pv', pv); assignin('base', 'y0', y0);     % model already loaded above
             t_in = (0:n-1)' * dt; u = zeros(n, 4); u(k_f+1:min(k_f+2, n), 3) = 1.0;      % FAULT_CMD edge at t_event
             assignin('base', 'ext_in', [t_in, u]);
-            set_param(mdl, 'StopTime', num2str(T_rec), 'LoadExternalInput', 'on', 'ExternalInput', 'ext_in', ...
-                      'SaveOutput', 'on', 'SaveTime', 'on', 'SaveFormat', 'Array');
-            tic; simOut = sim(mdl, 'ReturnWorkspaceOutputs', 'on'); wall = toc;
+            % run-time options go to sim(), not set_param: the loaded model stays clean (StopTime inf, no external
+            % input, no logging), so a later save_system / exportToVersion hands over the model as built (2026-10-16)
+            tic;
+            simOut = sim(mdl, 'StopTime', num2str(T_rec), 'LoadExternalInput', 'on', 'ExternalInput', 'ext_in', ...
+                         'SaveOutput', 'on', 'SaveTime', 'on', 'SaveFormat', 'Array', 'ReturnWorkspaceOutputs', 'on');
+            wall = toc;
             t_abs = simOut.get('tout'); yout = simOut.get('yout');     % columns: AO1..4, SYNC, BRK_F, BRK_R, SIG(1..28)
             obs = yout(:, 7 + (25:28));                                 % SIG 25..28 = i_L v_bus i_rack v_out, physical units
             sync = yout(:, 5);

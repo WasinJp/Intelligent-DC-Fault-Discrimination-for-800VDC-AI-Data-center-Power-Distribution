@@ -1,0 +1,9 @@
+case,dt_us,mode,worst_excluded_rms,pass
+step,5,slx,0.000239,1
+step_sm,5,slx,0.000267,1
+high_z,5,slx,0.000984,1
+high_z_sm,5,slx,0.000984,1
+high_z_48,5,slx,0.000171,1
+high_z_48_sm,5,slx,0.000171,1
+bolted_48,5,slx,0.000591,1
+bolted_48_sm,5,slx,9.53e-05,1

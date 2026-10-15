@@ -156,10 +156,15 @@ def rt_step(y, st, pv, dt, P_gpu, V_arc, f_on, f48_on, brk_f, brk_r, qs_dt_min, 
     v_out_rec = v_out_obs
     if brk_r < 0.5: i_rack = 0.0; v_out_rec = 0.0
     obs = np.array([y[0], y[1], v_bus_obs, y[3], i_in0, conv_on, y[4], y[5], y[8], v_out_rec, y[10], i_pol0, load_on48, P_in0, i_rack])
+    # breaker fix 2026-10-16 (review #2): open feeder SSCB -> di_L/dt = 0 in every RK4 stage (same lines as dcsim_rt_step.m)
     k1 = rt_derivs(y, pv, P_gpu, V_arc, f_on, f48_eff, conv_on, load_eff, q8, q4)
+    if brk_f < 0.5: k1[1] = 0.0
     k2_ = rt_derivs(y + 0.5 * dt * k1, pv, P_gpu, V_arc, f_on, f48_eff, conv_on, load_eff, q8, q4)
+    if brk_f < 0.5: k2_[1] = 0.0
     k3 = rt_derivs(y + 0.5 * dt * k2_, pv, P_gpu, V_arc, f_on, f48_eff, conv_on, load_eff, q8, q4)
+    if brk_f < 0.5: k3[1] = 0.0
     k4 = rt_derivs(y + dt * k3, pv, P_gpu, V_arc, f_on, f48_eff, conv_on, load_eff, q8, q4)
+    if brk_f < 0.5: k4[1] = 0.0
     y = y + (dt / 6.0) * (k1 + 2.0 * k2_ + 2.0 * k3 + k4)
     if f_on < 0.5: y[3] = 0.0
     if f48_eff < 0.5: y[10] = 0.0

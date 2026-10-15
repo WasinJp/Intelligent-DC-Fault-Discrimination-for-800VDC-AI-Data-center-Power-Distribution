@@ -94,10 +94,18 @@ if brk_r < 0.5, i_rack = 0.0; v_out_rec = 0.0; end     % downstream of an open r
 obs = [y(1); y(2); v_bus_obs; y(4); i_in0; conv_on; y(5); y(6); y(9); v_out_rec; y(11); i_pol0; load_on48; P_in0; i_rack];
 
 % ---- RK4
+% Breaker fix (2026-10-16, HIL model review #2): with the feeder SSCB open, di_L/dt is forced to zero in every stage.
+% Before, y(2) was zeroed only before and after the step, so the stage states carried a current (v_c - v_bus)/L_line * dt/2
+% into dv_bus/dt and the bus "leaked" charge through an open breaker (v_bus settled at 0.6-0.8 p.u. instead of decaying,
+% dt-dependent). With both breakers closed the four lines below do nothing: rt_sweep / rt_hil_check are bit-identical.
 k1 = dcsim_rt_derivs(y,                 pv, P_gpu, V_arc, f_on, f48_eff, conv_on, load_eff, q8, q4);
+if brk_f < 0.5, k1(2) = 0.0; end
 k2_ = dcsim_rt_derivs(y + 0.5 * dt * k1, pv, P_gpu, V_arc, f_on, f48_eff, conv_on, load_eff, q8, q4);
+if brk_f < 0.5, k2_(2) = 0.0; end
 k3 = dcsim_rt_derivs(y + 0.5 * dt * k2_, pv, P_gpu, V_arc, f_on, f48_eff, conv_on, load_eff, q8, q4);
+if brk_f < 0.5, k3(2) = 0.0; end
 k4 = dcsim_rt_derivs(y + dt * k3,       pv, P_gpu, V_arc, f_on, f48_eff, conv_on, load_eff, q8, q4);
+if brk_f < 0.5, k4(2) = 0.0; end
 y = y + (dt / 6.0) * (k1 + 2.0 * k2_ + 2.0 * k3 + k4);
 if f_on < 0.5, y(4) = 0.0; end
 if f48_eff < 0.5, y(11) = 0.0; end

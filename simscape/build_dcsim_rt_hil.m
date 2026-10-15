@@ -21,7 +21,7 @@ if exist(slx, 'file'), delete(slx); end
 new_system(mdl); open_system(mdl);
 set_param(mdl, 'SolverType', 'Fixed-step', 'Solver', 'FixedStepDiscrete', 'FixedStep', 'hil_dt', ...
           'StopTime', 'inf', 'SaveFormat', 'Array', 'SaveTime', 'off', 'SaveOutput', 'off', ...
-          'Description', 'dcsim_rt_hil build 2026-10-15 (MODEL.md 0.4.4 + breaker element, HIL wrapper)');
+          'Description', 'dcsim_rt_hil build 2026-10-16 (MODEL.md 0.4.4 + breaker element rev 2, HIL wrapper rev 2: review fixes #1-#13)');
 try, set_param(mdl, 'DefaultParameterBehavior', 'Inlined'); catch, end     % Simulink.Parameter ExportedGlobal stays tunable
 SL = 'simulink/';
 x = 40; y = 40; dy = 40;
@@ -76,7 +76,7 @@ blk([SL 'Sinks/Out1'], 'BRK_F', [x+640 y+150 x+690 y+166], 'Port', '6'); ln('pla
 blk([SL 'Sinks/Out1'], 'BRK_R', [x+640 y+180 x+690 y+196], 'Port', '7'); ln('plant', '4', 'BRK_R', '1', 'BRK_R');
 blk([SL 'Sinks/Out1'], 'SIG',   [x+640 y+210 x+690 y+226], 'Port', '8'); ln('plant', '5', 'SIG', '1', 'SIG');
 % named test points for ControlDesk / logging (SIG elements by name)
-sig_names = {'k','t','P_gpu','fault_active','fault_pending','t_inception','clear_f_us','clear_r_us','trip_f_steps', ...
+sig_names = {'k','t','P_gpu','event_active','fault_pending','t_inception','clear_f_us','clear_r_us','trip_f_steps', ...
              'trip_r_steps','wl_edge','wl_phase','conv_on','load_on48','i_f','i_f48','v_Cin','P_in','i_co','v_c', ...
              'fault_type_active','V_arc','rearm_count','n_faults','i_L','v_bus','i_rack','v_out'};
 blk([SL 'Signal Routing/Demux'], 'demux_sig', [x+560 y+260 x+565 y+260+numel(sig_names)*14], 'Outputs', num2str(numel(sig_names)));
@@ -88,6 +88,24 @@ for k = 1:numel(sig_names)
 end
 for k = 1:4, try, set_param(find_system(mdl, 'FindAll', 'on', 'Type', 'line', 'Name', ao_names{k}), 'DataLogging', 'on'); catch, end, end
 
+% ---- the model's data travels with it (2026-10-16): the Constant blocks refer to pv, y0 and the parameter objects by
+% name, and an .slx does not store workspace variables. Save them next to the model and load them whenever it opens, so
+% a fresh MATLAB session or the dSPACE PC never sees "undefined variable". pv / y0 are taken from the base workspace
+% as they are NOW (set them to the design point before building; rt_hil_check overwrites them per case afterwards,
+% which no longer matters). The loader keys on the model name: export to another release under the SAME file name
+% (a subfolder), not 'dcsim_rt_hil_R20xx.slx'.
+datafile = fullfile(here, [mdl '_data.mat']);
+if evalin('base', 'exist(''pv'', ''var'') && exist(''y0'', ''var'')')
+    vars = [{'pv', 'y0'}, names.fp, names.wp, names.cp];
+    evalin('base', sprintf('save(''%s'', %s);', strrep(datafile, '''', ''''''), strjoin(cellfun(@(v) ['''' v ''''], vars, 'UniformOutput', false), ', ')));
+    % tolerant loader (final-fixes F2): the model must open even if the data file fails on another release, so the
+    % README fallback (load the numbers-only .mat, recreate the parameters) can run before the first update
+    set_param(mdl, 'PreLoadFcn', sprintf(['try, load(fullfile(fileparts(which(''%s'')), ''%s_data.mat'')); ' ...
+        'catch e, warning(''%s: data file not loaded (%%s) - see README.txt'', e.message); end'], mdl, mdl, mdl));
+    fprintf('%s saved (pv, y0 and %d parameters); the model loads it in its PreLoadFcn\n', datafile, numel(vars) - 2);
+else
+    warning('build_dcsim_rt_hil:nodata', 'pv / y0 not in the base workspace: %s not written, the model will need them defined by hand', datafile);
+end
 save_system(mdl, slx, 'OverwriteIfChangedOnDisk', true);
 fprintf('%s saved (fixed-step discrete, hil_dt = %g us, %d tunable parameters). Validate: rt_hil_check(%g, ''slx'')\n', ...
         slx, dt * 1e6, numel(names.fp) + numel(names.wp) + numel(names.cp), dt);
