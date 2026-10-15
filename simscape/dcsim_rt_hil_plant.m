@@ -25,10 +25,11 @@ function [AO, sync, brk_f, brk_r, sig] = dcsim_rt_hil_plant(trip_f, trip_r, faul
 %                                       12 arc_ramp [s] ignition ramp of V_arc (0.1e-3 .. 2e-3)
 %                    Series-arc noise on the HIL: MODEL.md uses 1/f-weighted noise from 1 kHz to f_hi (up to 1 MHz),
 %                    generated offline by FFT. A real-time box cannot do that, so the model makes a pink-like band
-%                    (1 kHz .. min(100 kHz, 0.4/dt)) online: unit white (xorshift, 4-uniform sum) -> three one-pole
-%                    low-passes at 1 / 10 / min(100 kHz, 0.4/dt) summed with equal rms -> one-pole high-pass at 1 kHz
-%                    -> unit rms by the analytic one-pole variance. Approximation for the demo; the ALERT class rate is
-%                    NOT quoted from the HIL (README_RT check (k) note 2b).
+%                    (1 kHz .. min(100 kHz, 0.4/dt)) online: three independent unit-white sources (xorshift, 4-uniform
+%                    sums) -> one-pole low-passes at 1 / 10 / min(100 kHz, 0.4/dt), each scaled to unit rms by the
+%                    analytic one-pole variance, summed -> one-pole high-pass at 1 kHz -> fixed gain for unit rms.
+%                    Approximation for the demo; the ALERT class rate is NOT quoted from the HIL (README_RT check (k)
+%                    note 2b).
 %     wp (13x1)        workload generator (MODEL.md 5.1, two tiers):  1 on (0/1)  2 P0 [W]  3 dP1 [W]  4 T1 [s]  5 duty1
 %                                        6 ramp1 [s]  7 jit1 (fraction of T1)  8 dP2 [W] (0 = tier 2 off)  9 T2 [s]  10 duty2
 %                                       11 ramp2 [s]  12 jit2 (fraction of T2)  13 seed (integer > 0)
@@ -220,18 +221,22 @@ end
 
 function [eta, s, lp, hx, hy] = arc_pink(s, lp, hx, hy, dt)
 %ARC_PINK  One sample of unit-rms pink-like noise, 1 kHz .. min(100 kHz, 0.4/dt), see header.
+%   2026-10-16: each band gets its OWN white sample. With one shared sample the three low-passed bands are correlated
+%   and the sum came out at 1.27 rms (19 % modulation at arc_m 0.15 — visible in the first arc demo plot). Independent
+%   bands sum to unit rms; the 1 kHz high-pass then leaves 0.88, restored by the fixed gain 1.135 (rms 1.01 / 1.00 /
+%   0.97 at 2 / 5 / 10 us, measured on the Python transliteration).
 %#codegen
-u = 0.0;
-for i = 1:4, [v, s] = xs_unif(s); u = u + v; end
-w = (u - 2.0) * 1.7320508075688772;                       % 4-uniform sum -> unit variance, near-gaussian
 fc = [1e3; 1e4; min(1e5, 0.4 / dt)]; eta = 0.0;
 for i = 1:3
+    u = 0.0;
+    for m = 1:4, [v, s] = xs_unif(s); u = u + v; end
+    w = (u - 2.0) * 1.7320508075688772;                   % 4-uniform sum -> unit variance, near-gaussian
     a = exp(-2.0 * pi * fc(i) * dt);
     lp(i) = a * lp(i) + (1.0 - a) * w;
     g = sqrt((1.0 + a) / (1.0 - a));                      % one-pole LP of unit white has variance (1-a)/(1+a)
     eta = eta + g * lp(i);
 end
-eta = eta / 1.7320508075688772;                           % three equal-rms bands -> unit rms
+eta = eta * (1.135 / 1.7320508075688772);                 % three independent equal-rms bands -> unit rms after the HP
 ahp = exp(-2.0 * pi * 1e3 * dt);                          % one-pole high-pass at 1 kHz
 hy = ahp * (hy + eta - hx); hx = eta; eta = hy;
 end
